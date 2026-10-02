@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Matrice RACI — Connecté au Pivot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --vdl-red:#C00021; --vdl-red2:#E43C52;
+    --text:#2C2C2C; --panel:#ffffff; --bg:#F2F2F2;
+    --hdrH:104px; --tbH:56px;
+    --p1:#FFCDD2; --p1a:#E57373;
+    --p2:#FFE0B2; --p2a:#FFB74D;
+    --p3:#FFF9C4; --p3a:#FFF176;
+    --p4:#C8E6C9; --p4a:#81C784;
+    --p5:#BBDEFB; --p5a:#64B5F6;
+    --p6:#E1BEE7; --p6a:#BA68C8;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    height:100%;
+    display: flex;
+    flex-direction: column;
+  }
+  header{
+    flex-shrink: 0;
+    height:var(--hdrH);
+    color:#fff;
+    padding:12px 16px 14px;
+    background:linear-gradient(135deg, var(--vdl-red) 0%, var(--vdl-red2) 100%);
+    box-shadow:0 8px 22px rgba(192,0,33,0.18);
+  }
+  .hdr-wrap{height:100%;display:grid;grid-template-rows:auto 1fr;position:relative;}
+  .hdr-top{
+    position:absolute;right:8px;top:8px;font-size:12px;opacity:.9;
+    background:rgba(255,255,255,.10);padding:4px 8px;border-radius:8px;
+    border:1px solid rgba(255,255,255,.25);
+  }
+  .hdr-center{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;}
+  .hdr-title .project{
+    font-size:30px;font-weight:900;text-shadow:0 1px 0 rgba(0,0,0,.15);letter-spacing:.2px;
+  }
+
+  .toolbar{
+    flex-shrink: 0;
+    height:var(--tbH);
+    background:#fff;padding:8px 12px;display:flex;align-items:center;gap:8px;
+    flex-wrap:wrap;border-bottom:1px solid #e9e9ee;
+    box-shadow:0 6px 10px rgba(0,0,0,0.04);
+  }
+  .btn{
+    position:relative;
+    background:linear-gradient(180deg,var(--vdl-red2),var(--vdl-red));
+    border:none;color:#fff;padding:6px 12px;border-radius:10px;cursor:pointer;
+    box-shadow:0 4px 12px rgba(192,0,33,0.28);font-weight:700;font-size:12px;white-space:nowrap;
+    transition:all 0.2s;
+  }
+  .btn:hover{ transform:translateY(-1px); opacity:0.9; }
+  .btn.secondary{
+    background:#fff;color:var(--vdl-red);border:1px solid var(--vdl-red);box-shadow:none;
+  }
+  .btn.help{
+    background:#FFF4F6;color:var(--vdl-red);border:1px solid var(--vdl-red2);
+    box-shadow:none;font-weight:600;
+  }
+  .btn.action{ 
+    background:#e8f0fe; color:#1a73e8; border:1px solid #d2e3fc; box-shadow:none; font-size:13px; padding:8px 14px;
+  }
+  .toolbar .spacer{flex:1;min-width:4px;}
+  .toolbar .project-info{font-size:12px;color:#555;}
+
+  /* Tooltips */
+  .has-tooltip:hover::after{
+    content:attr(data-tooltip);
+    position:absolute;
+    left:50%;top:100%;
+    transform:translate(-50%,6px);
+    background:rgba(0,0,0,0.82);
+    color:#fff;
+    padding:4px 8px;
+    font-size:11px;
+    border-radius:6px;
+    white-space:normal;
+    max-width:260px;
+    z-index:100;
+    box-shadow:0 4px 10px rgba(0,0,0,0.35);
+  }
+  .has-tooltip:hover::before{
+    content:"";
+    position:absolute;
+    left:50%;top:100%;
+    transform:translate(-50%,1px);
+    border-width:5px;
+    border-style:solid;
+    border-color:rgba(0,0,0,0.82) transparent transparent transparent;
+    z-index:101;
+  }
+
+  .raci-strip{
+    flex-shrink: 0;
+    position:-webkit-sticky; position:sticky; top:0; z-index:40;
+    background:#fff;border-bottom:1px solid #e5e5f0;padding:4px 12px 5px;
+    display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#444;
+  }
+  .raci-item{display:flex;align-items:center;gap:4px;}
+  
+  .content{ flex: 1; display: flex; flex-direction: column; padding: 12px; overflow: hidden; }
+
+  .tabs-main{display:flex;gap:6px;margin-bottom:8px; flex-shrink: 0;}
+  .tab-main{
+    padding:4px 12px;font-size:12px;cursor:pointer;border-radius:999px;
+    border:1px solid #ccc;background:#e7e7f0;color:#444;
+  }
+  .tab-main.active{
+    background:#fff;border-color:var(--vdl-red);color:var(--vdl-red);
+    font-weight:bold;box-shadow:0 2px 6px rgba(0,0,0,0.06);
+  }
+  
+  .page{display:none; height: 100%;}
+  .page.active{display:flex; flex-direction: column; overflow: hidden;}
+
+  .panel{
+    background:var(--panel);border-radius:12px;border:1px solid #e1e3ef;
+    padding:10px;box-shadow:0 6px 18px rgba(0,0,0,0.04);
+    display: flex; flex-direction: column; flex: 1; overflow: hidden;
+  }
+  h2{font-size:16px;margin:4px 0 6px;}
+  h3{font-size:14px;margin:8px 0 4px;}
+
+  .sticky-controls {
+    background: #ffffff;
+    padding: 12px 14px;
+    border: 1px solid #d0d4f0;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  
+  .table-container {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #d2d4e0;
+    border-radius: 8px;
+  }
+
+  table{border-collapse:collapse;width:100%;}
+  th,td{border:1px solid #d2d4e0;padding:4px;font-size:12px;vertical-align:top;}
+  
+  th {
+    background:#f4f5fb;
+    font-weight:600; 
+    position:-webkit-sticky; 
+    position:sticky; 
+    top: 0; 
+    z-index:35; 
+    box-shadow:0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  input[type="text"],select{
+    font-size:12px;width:100%;padding:3px 6px;border-radius:8px;
+    border:1px solid #c6cbe0;background:#fbfcff;
+  }
+
+  .hint{
+    font-size:11px;color:#555;margin-top:4px;
+    background:#FFF4F6;border-left:3px solid var(--vdl-red2);
+    padding:4px 6px;border-radius:6px;
+  }
+
+  .row-p1 td{background:var(--p1);border-bottom-color:var(--p1a);}
+  .row-p2 td{background:var(--p2);border-bottom-color:var(--p2a);}
+  .row-p3 td{background:var(--p3);border-bottom-color:var(--p3a);}
+  .row-p4 td{background:var(--p4);border-bottom-color:var(--p4a);}
+  .row-p5 td{background:var(--p5);border-bottom-color:var(--p5a);}
+  .row-p6 td{background:var(--p6);border-bottom-color:var(--p6a);}
+
+  .phase-label{
+    display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;
+    margin:6px 0 4px;font-weight:bold;
+  }
+  .phase-p1{background:var(--p1);border:1px solid var(--p1a);}
+  .phase-p2{background:var(--p2);border:1px solid var(--p2a);}
+  .phase-p3{background:var(--p3);border:1px solid var(--p3a);}
+  .phase-p4{background:var(--p4);border:1px solid var(--p4a);}
+  .phase-p5{background:var(--p5);border:1px solid var(--p5a);}
+  .phase-p6{background:var(--p6);border:1px solid var(--p6a);}
+
+  .matrix-phase-table{
+    border:1px solid #d2d4e0;border-radius:10px;overflow:hidden;
+    margin-bottom:10px;background:#fff;
+    box-shadow:0 4px 12px rgba(0,0,0,0.03);
+  }
+  .matrix-phase-table table{margin:0;}
+
+  .tabs-sub{display:flex;gap:6px;margin-bottom:6px;margin-top:4px; flex-shrink: 0;}
+  .tab-sub{
+    padding:3px 8px;font-size:11px;cursor:pointer;border-radius:999px;
+    border:1px solid #ccc;background:#e7e7f0;
+  }
+  .tab-sub.active{
+    background:#fff;border-color:var(--vdl-red);color:var(--vdl-red);font-weight:bold;
+  }
+  .subview{display:none;}
+  .subview.active{display:flex; flex-direction:column; flex:1; overflow:hidden;}
+
+  .actor-card{
+    border:1px solid #ddd;border-radius:10px;padding:6px 8px;margin-bottom:6px;
+    background:#fafbff;box-shadow:0 3px 8px rgba(0,0,0,0.03);
+  }
+  .actor-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+  .actor-name{font-weight:bold;font-size:12px;}
+  .actor-role{font-size:11px;color:#555;}
+  .badge{
+    display:inline-block;padding:1px 4px;font-size:10px;border-radius:4px;background:#eee;
+  }
+  .badge-r{background:#C00021;color:#fff;}
+  .badge-a{background:#E57C04;color:#fff;}
+  .badge-c{background:#1565C0;color:#fff;}
+  .badge-i{background:#777;color:#fff;}
+
+  ul.compact{margin:2px 0 0 14px;padding:0;font-size:11px;}
+
+  .icon-btn{
+    width:24px;height:24px;border-radius:999px;border:none;
+    display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;padding:0;
+  }
+  .icon-btn.icon-delete{
+    background:linear-gradient(180deg,#FF8A80,#E53935);
+    box-shadow:0 3px 6px rgba(229,57,53,0.45);
+  }
+  .icon-btn.icon-delete .icon-trash{
+    font-size:14px;color:#fff;line-height:1;
+  }
+  .icon-btn.icon-copy{ background:linear-gradient(180deg,#bbdefb,#1976d2); box-shadow:0 3px 6px rgba(25,118,210,0.3); margin-right:4px; }
+
+  .instance-grid{display:flex;flex-wrap:wrap;gap:12px;}
+  .instance-block{
+    flex:1 1 260px;min-width:240px;
+    background:linear-gradient(135deg,#FFCDD2,#E53935);
+    border-radius:14px;padding:6px;color:#fff;
+    box-shadow:0 6px 16px rgba(0,0,0,0.18);
+  }
+  .instance-header{
+    font-weight:700;font-size:13px;padding:2px 4px 4px;
+    border-bottom:1px solid rgba(255,255,255,0.35);margin-bottom:4px;
+  }
+  .instance-body{display:flex;flex-wrap:wrap;gap:6px;padding:4px;}
+  .instance-card{
+    background:#fff;color:#000;border-radius:8px;padding:4px 6px;min-width:120px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.18);font-size:11px;
+  }
+  .instance-card-name{font-weight:600;margin-bottom:2px;}
+  .instance-card-role{font-size:10px;color:#555;}
+  .instance-card-type{font-size:10px;margin-top:1px;color:#C00021;font-weight:600;}
+
+  .instance-block.partners-block{
+    background:linear-gradient(135deg,#BBDEFB,#1565C0);
+  }
+  .instance-block.support-block{
+    background:linear-gradient(135deg,#C8E6C9,#2E7D32);
+    flex:1 1 100%;
+  }
+  .support-block .instance-card-type{color:#2E7D32;}
+  .partners-block .instance-card-type{color:#1565C0;}
+
+  .instance-checkboxes{max-height:90px;overflow:auto;padding:2px 0;}
+  .instance-checkboxes label{display:block;font-size:11px;cursor:pointer;margin-bottom:1px;}
+  .instance-checkboxes input[type="checkbox"]{margin-right:4px;}
+  .instance-checkboxes button{
+    margin-top:3px;font-size:10px;padding:2px 6px;border-radius:8px;
+    border:1px solid #ccc;background:#f7f7f9;cursor:pointer;
+  }
+
+  .matrix-checkboxes{max-height:90px;overflow:auto;padding:1px 0;}
+  .matrix-checkboxes label{
+    display:flex;align-items:center;font-size:11px;cursor:pointer;
+    margin-bottom:1px;gap:4px;
+  }
+  .matrix-checkboxes input[type="checkbox"]{margin:0 2px 0 0;}
+  .raci-check-r input[type="checkbox"]{accent-color:#C00021;}
+  .raci-check-c input[type="checkbox"]{accent-color:#1565C0;}
+  .raci-check-i input[type="checkbox"]{accent-color:#777777;}
+
+  .col-chantier{display:none;}
+  body.chantier-enabled .col-chantier{display:table-cell;}
+
+  @media (max-width:980px){
+    :root{--hdrH:88px;--tbH:64px;}
+    .hdr-title .project{font-size:24px;}
+  }
+
+  /* Overlay démarrage */
+  #startupOverlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.40);z-index:80;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #startupOverlay.hidden{display:none;}
+  .startup-card{
+    background:#fff;border-radius:14px;padding:0 18px 14px;
+    width:520px;max-width:95vw;box-shadow:0 10px 30px rgba(0,0,0,0.25);
+    border-top:6px solid var(--vdl-red2);
+  }
+  .startup-title{
+    font-size:16px;font-weight:700;margin:10px 0 4px;color:var(--vdl-red);
+  }
+  .startup-sub{font-size:12px;color:#666;margin-bottom:10px;}
+  .startup-options{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+  .startup-option{
+    border-radius:10px;border:1px solid #ddd;padding:8px;cursor:pointer;
+    background:#fafafa;display:flex;flex-direction:column;gap:2px;
+  }
+  .startup-option:hover{
+    border-color:var(--vdl-red2);box-shadow:0 4px 10px rgba(0,0,0,0.08);background:#fff;
+  }
+  .startup-option-title{font-size:13px;font-weight:600;}
+  .startup-option-desc{font-size:11px;color:#555;}
+  
+  /* Style pour le tri */
+  th.sortable { cursor: pointer; transition: background 0.2s; }
+  th.sortable:hover { background: #e0e4f5; }
+
+  /* GESTION IMPRESSION POUR CONTOURNER FLEXBOX ET BUGS DE SAUT DE PAGE */
+  @media print {
+    @page { size: A4 landscape; margin: 12mm 10mm; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    
+    body { background-color: #ffffff !important; height: auto !important; display: block !important; }
+    .hdr-top, .toolbar, .tabs-main, .sticky-controls { display: none !important; }
+    
+    header { position: static; background: linear-gradient(135deg, #C00021 0%, #E43C52 100%) !important; color: #fff !important; box-shadow: none !important; padding: 10px 16px !important; height: auto; }
+    .hdr-title .project { text-shadow: none !important; color: #fff !important; }
+    
+    .content { display: block !important; overflow: visible !important; height: auto !important; padding: 0 !important; }
+    .page { display: none !important; height: auto !important; overflow: visible !important; }
+    .page.active { display: block !important; }
+    
+    .panel { border: none !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; display: block !important; overflow: visible !important; }
+    
+    .table-container { overflow: visible !important; border: none !important; display: block !important;}
+    table { border-collapse: collapse !important; width: 100% !important; margin-top: 10px !important; page-break-inside: auto !important; display: table !important; }
+    table tr { page-break-inside: avoid !important; page-break-after: auto !important; }
+    
+    table thead { display: table-header-group !important; } 
+    table th { background-color: #f3f4f6 !important; border: 1px solid #b0b4c8 !important; border-bottom: 2px solid #C00021 !important; color: #111 !important; position: static !important; font-weight: bold !important; }
+    
+    table td { border: 1px solid #e5e7eb !important; vertical-align: middle !important; padding: 6px 4px !important; }
+    
+    th:last-child, td:last-child { display: none !important; } 
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-wrap">
+    <div class="hdr-top" id="hdrVer">RACI v2.7 — Recherche intelligente & Fixes</div>
+    <div class="hdr-center">
+      <div class="hdr-title">
+        <div class="project" id="hdrProject">Projet : non défini</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn has-tooltip" id="importJsonBtn"
+          data-tooltip="Importer un fichier JSON RACI déjà exporté (vous reprend votre travail précédent).">
+    Importer JSON RACI
+  </button>
+    <input type="file" id="fileInput" accept=".json" style="display:none">
+  <button class="btn secondary has-tooltip" id="exportJsonBtn"
+          data-tooltip="Exporter votre RACI au format JSON pour le sauvegarder ou le réutiliser plus tard.">
+    Exporter JSON RACI
+  </button>
+  <button class="btn secondary has-tooltip" id="prefillFromFrBtn"
+          data-tooltip="Créer une activité RACI par chantier/tâche de la Feuille de route portée par le Pivot.">
+    Pré-remplir depuis la feuille de route (Pivot)
+  </button>
+  <button class="btn secondary has-tooltip" id="checkRaciBtn"
+          data-tooltip="Vérifier que chaque activité a au moins un R, un seul A, et que tous les acteurs existent.">
+    Vérifier le RACI
+  </button>
+  <div class="spacer"></div>
+  <button class="btn help has-tooltip" id="helpBtn"
+          data-tooltip="Afficher la page d’aide : démarche globale, scénarios d’usage, liens avec la feuille de route (Pivot).">
+    ? Aide
+  </button>
+  <div class="project-info" id="projectTitleInfo">Projet : (non renseigné)</div>
+</div>
+
+<div class="raci-strip">
+  <span class="raci-item"><span class="badge badge-r">R</span> Réalise l’action</span>
+  <span class="raci-item"><span class="badge badge-a">A</span> Approuve / responsable final</span>
+  <span class="raci-item"><span class="badge badge-c">C</span> Est consulté</span>
+  <span class="raci-item"><span class="badge badge-i">I</span> Est informé</span>
+</div>
+
+<div class="content">
+  <div class="tabs-main">
+    <div class="tab-main active" data-page="page-actors">Acteurs</div>
+    <div class="tab-main" data-page="page-matrix">Matrice</div>
+    <div class="tab-main" data-page="page-views">Vues RACI</div>
+    <div class="tab-main" data-page="page-help">Aide</div>
+  </div>
+
+  <div id="page-actors" class="page active">
+    <div class="sticky-controls">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h2 style="margin:0;">Acteurs du projet</h2>
+        <input type="text" id="searchActorInput" placeholder="Rechercher (nom, rôle, type...) 🔍" style="flex:1; min-width:200px; max-width:300px; padding:6px 10px; border-radius:8px; border:1px solid #ccc; font-size:12px;">
+        <div style="display:flex; gap:10px;">
+          <button class="btn secondary has-tooltip" id="enableInstanceBtn"
+                  data-tooltip="Afficher la colonne des instances (COPIL, comité de projet, suivi hebdo…). Utile pour les projets structurés.">
+            Activer la colonne Instances (COPIL / Comités...)
+          </button>
+          <button class="btn action has-tooltip" id="addActorBtn"
+                  data-tooltip="Ajouter une nouvelle ligne d’acteur : nom, type, fonction et éventuelles instances.">
+            + Ajouter un acteur
+          </button>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:10px;">
+        Type = <b>obligatoire</b> (ÉLU, DG, MOA, MOE, DSI, Métier, Fournisseur…).<br>
+        Instances = cases à cocher (COPIL, Comité de projet, Suivi hebdo…), facultatif (surtout pour les gros projets).<br>
+        Fonction / rôle = liste pré-remplie, enrichissable avec « Autre (saisie libre…) ».
+      </div>
+    </div>
+
+    <div class="panel" style="padding:0; border:none; background:transparent; box-shadow:none;">
+      <div class="table-container">
+        <table id="actorsTable" style="margin:0;">
+          <thead>
+            <tr>
+              <th style="width:22%;" class="sortable has-tooltip" onclick="sortActors('name')" data-tooltip="Trier par nom complet">Nom complet ↕️</th>
+              <th style="width:16%;" class="sortable has-tooltip" onclick="sortActors('shortName')" data-tooltip="Trier par nom court">Nom court ↕️</th>
+              <th style="width:14%;" class="sortable has-tooltip" onclick="sortActors('type')" data-tooltip="Trier par type">Type ↕️</th>
+              <th style="width:22%;" class="col-instance">Instances</th>
+              <th style="width:16%;" class="sortable has-tooltip" onclick="sortActors('role')" data-tooltip="Trier par fonction/rôle">Fonction / rôle ↕️</th>
+              <th style="width:10%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-matrix" class="page">
+    <div class="sticky-controls">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h2 style="margin:0;">Matrice RACI par phase / activité</h2>
+        <button class="btn action has-tooltip" id="addMatrixRowBtn"
+                data-tooltip="Ajouter une activité (ligne) dans la matrice RACI pour décrire qui fait quoi.">
+          + Ajouter une activité
+        </button>
+      </div>
+      <div class="hint" style="margin-top:10px;">
+        Une ligne = <b>Phase</b> + (optionnel) <b>Chantier</b> + <b>Activité détaillée</b>.<br>
+        Pour chaque activité : au moins un R, un seul A, et éventuellement des C / I.<br>
+        Le bouton « Pré-remplir depuis la feuille de route (Pivot) » en haut initialise la matrice à partir de la Feuille de route.
+      </div>
+    </div>
+
+    <div class="panel" style="padding:0; border:none; background:transparent; box-shadow:none;">
+      <div class="table-container">
+        <table id="matrixTable" style="margin:0;">
+          <thead>
+            <tr>
+              <th style="width:12%;">Phase</th>
+              <th style="width:16%;" class="col-chantier">Chantier (optionnel)</th>
+              <th style="width:24%;">Activité</th>
+              <th style="width:14%;">R – Réalise<br><span style="font-weight:400;">(cases à cocher)</span></th>
+              <th style="width:14%;">A – Approuve<br><span style="font-weight:400;">(choix unique)</span></th>
+              <th style="width:9%;">C – Consulté<br><span style="font-weight:400;">(cases à cocher)</span></th>
+              <th style="width:9%;">I – Informé<br><span style="font-weight:400;">(cases à cocher)</span></th>
+              <th style="width:8%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-views" class="page">
+    <div class="sticky-controls" style="margin-bottom: 8px;">
+      <h2 style="margin:0 0 6px 0;">Vues graphiques du RACI</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn secondary has-tooltip" id="btnPrintMatrixPhase"
+                data-tooltip="Générer une version imprimable (PDF) de la matrice par phase (multi-pages si besoin).">
+          🖨️ PDF – Matrice par phase
+        </button>
+        <button class="btn secondary has-tooltip" id="btnPrintInstances"
+                data-tooltip="Générer une version imprimable (PDF) de la vue par instance (mise en page 1 page).">
+          🖨️ PDF – Vue par instance
+        </button>
+        <span style="font-size:11px;color:#666;">Astuce : pour une image, ouvrez le PDF ou utilisez une capture d’écran.</span>
+      </div>
+    </div>
+    
+    <div class="panel" style="padding:10px; display:flex; flex-direction:column; overflow:hidden;">
+      <div class="tabs-sub">
+        <div class="tab-sub active" data-sub="sub-matrix">Matrice</div>
+        <div class="tab-sub" data-sub="sub-actors">Vue par acteur</div>
+        <div class="tab-sub" data-sub="sub-instances">Vue par instance</div>
+      </div>
+      
+      <div id="sub-matrix" class="subview active">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0 8px; flex-shrink: 0;">
+          <button class="btn secondary" id="btnMatrixTruth">Activités (table de vérité)</button>
+          <button class="btn secondary" id="btnMatrixPhase">Par phase (groupée)</button>
+        </div>
+        <div id="matrixView" style="flex:1; overflow-y:auto; padding-right:4px;"></div>
+      </div>
+      <div id="sub-actors" class="subview"><div id="actorsView" style="flex:1; overflow-y:auto; padding-right:4px;"></div></div>
+      <div id="sub-instances" class="subview"><div id="instancesView" style="flex:1; overflow-y:auto; padding-right:4px;"></div></div>
+    </div>
+  </div>
+
+  <div id="page-help" class="page">
+    <div class="panel" style="overflow-y:auto;">
+      <h2>Aide — Comprendre la démarche RACI</h2>
+      <div class="hint">
+        Objectif : aider le chef de projet à savoir <b>par où commencer</b> et <b>quels boutons utiliser</b>
+        selon qu’il dispose déjà d’une Feuille de route ou non, et selon que le projet est simple ou structuré
+        (instances COPIL / comité…).
+      </div>
+
+      <h3>1. Par où commencer ?</h3>
+      <ul>
+        <li><b>Vous avez déjà un RACI JSON</b> → bouton <b>« Importer JSON RACI »</b>.</li>
+        <li><b>Vous avez une Feuille de route</b> → elle est déjà dans le <b>Pivot</b> (phases + chantiers).
+          Utilisez <b>« Pré-remplir depuis la feuille de route (Pivot) »</b> si vous souhaitez initialiser la matrice.</li>
+        <li><b>Vous démarrez de zéro</b> → dans la fenêtre de démarrage, choisir <b>« Créer un nouveau RACI vierge »</b> :
+          l’outil vous demande le <b>titre du projet</b> puis vous ajoutez acteurs et activités.</li>
+      </ul>
+
+      <h3>2. Scénarios typiques</h3>
+      <ul>
+        <li>
+          <b>Petit projet simple, sans instances formelles</b><br>
+          → Créer un RACI vierge → ajouter 3–5 acteurs (MOA, MOE, DSI…) → <b>ne pas activer</b> la colonne Instances → remplir quelques activités.
+        </li>
+        <li>
+          <b>Projet structuré avec COPIL & comités</b><br>
+          → Créer un RACI vierge ou importer un RACI existant → cliquer sur
+          <b>« Activer la colonne Instances… »</b> → cocher COPIL / Comité de projet / Suivi hebdo pour chaque acteur → utiliser la
+          <b>vue par instance</b> pour préparer l’organigramme de projet.
+        </li>
+        <li>
+          <b>Gros projet avec Feuille de route déjà saisie</b><br>
+          → <b>Importer la Feuille de route</b> → <b>Pré-remplir depuis la feuille de route (Pivot)</b> pour créer une activité par chantier → affiner les intitulés d’activités → affecter R / A / C / I.
+        </li>
+      </ul>
+
+      <h3>3. RACI vierge ou Feuille de route ?</h3>
+      <ul>
+        <li>
+          <b>Feuille de route pas encore faite</b> → vous pouvez quand même créer un RACI vierge, mais
+          la colonne <b>« Chantier »</b> restera vide (ou non utilisée).
+        </li>
+        <li>
+          <b>Feuille de route disponible</b> → l’import vous donne :
+          <ul>
+            <li>le <b>titre du projet</b> ;</li>
+            <li>la liste des <b>phases</b> ;</li>
+            <li>les <b>chantiers</b> par phase, que vous pouvez lier à chaque activité.</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>4. Instances ou pas ?</h3>
+      <ul>
+        <li>
+          Si vous ne cochez aucune instance, ce n’est pas bloquant : le RACI continue de fonctionner
+          (utile pour les projets <b>hors marché</b> ou très simples).
+        </li>
+        <li>
+          Si vous utilisez COPIL / comités, activez la colonne Instances pour :
+          <ul>
+            <li>voir quels acteurs siègent dans quelle instance ;</li>
+            <li>utiliser la <b>vue par instance</b> pour préparer vos supports de gouvernance.</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>5. Règles R / A / C / I (rappel rapide)</h3>
+      <ul>
+        <li><b>R – Réalise</b> : exécute concrètement l’activité.</li>
+        <li><b>A – Approuve</b> : porte la responsabilité finale (un seul A par activité).</li>
+        <li><b>C – Consulté</b> : donne un avis avant décision (échanges nécessaires).</li>
+        <li><b>I – Informé</b> : reçoit l’information, sans être consulté.</li>
+      </ul>
+      <p style="font-size:11px;color:#555;margin-top:4px;">
+        Le bouton <b>« Vérifier le RACI »</b> contrôle automatiquement la présence d’au moins un R,
+        l’unicité de A, et la cohérence avec la liste d’acteurs.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div id="startupOverlay">
+  <div class="startup-card">
+    <div class="startup-title">Comment souhaitez-vous démarrer votre RACI&nbsp;?</div>
+    <div class="startup-sub" id="startupProjectLabel">Projet : (non défini pour l’instant)</div>
+    <div class="startup-options">
+      <div class="startup-option" id="startImportRaciBtn">
+        <div class="startup-option-title">▶ Importer un RACI existant (.json)</div>
+        <div class="startup-option-desc">
+          Reprendre un fichier RACI déjà exporté pour ce projet (ou un autre) et continuer la saisie.
+        </div>
+      </div>
+      <div class="startup-option" id="startImportFrBtn">
+        <div class="startup-option-title">▶ Importer une Feuille de route (.json)</div>
+        <div class="startup-option-desc">
+          Utiliser la Feuille de route comme base pour construire un nouveau RACI, en créant une activité par chantier.
+        </div>
+      </div>
+      <div class="startup-option" id="startNewRaciBtn">
+        <div class="startup-option-title">▶ Créer un nouveau RACI vierge</div>
+        <div class="startup-option-desc">
+          Partir d’une matrice vide : l’outil vous demandera le titre du projet, puis vous ajouterez acteurs et activités.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================
+   Données & helpers
+   =========================== */
+const PHASES = [
+  "Pré-cadrage",
+  "Cadrage",
+  "Conception",
+  "Réalisation",
+  "Recette",
+  "Déploiement"
+];
+
+const FUNCTION_SUGGESTIONS = [
+  "Élue aux Finances",
+  "DGS Lille",
+  "DGS Lomme",
+  "DGS Hellemmes",
+  "DGA Pôle Ressources",
+  "Responsable transition numérique du Pôle Ressources",
+  "Directeur CCAS Lille",
+  "Directeur Numérique et Système d’Information",
+  "Directeur Commandes Public",
+  "Directrice Finance",
+  "Directrice adjointe des Finances de projet",
+  "Responsable Achat",
+  "Responsable Étude DNSI",
+  "Représentant Éditeur",
+  "Administratrice fonctionnelle du SI Finance",
+  "Acheteur",
+  "Responsable Finance CCAS et adjointe",
+  "Cheffe de projet Finance et assistante",
+  "Chef de projet DNSI",
+  "DNSI – Études",
+  "DNSI – Sécurité SI",
+  "DNSI – TIRS",
+  "DNSI – PITA",
+  "Com interne",
+  "Experts",
+  "Services pilote",
+  "Caisse des écoles",
+  "SIVU du Camp Français",
+  "SIVU des animaux errants",
+  "Régie des œuvres d’art",
+  "Responsable de service métier",
+  "Responsable applicatif",
+  "Pilote processus métier",
+  "Correspondant support utilisateur",
+  "Responsable DSI"
+];
+
+const INSTANCE_BASE = [
+  "COPIL (Comité de pilotage)",
+  "Comité de projet",
+  "Suivi hebdomadaire",
+  "Partenaires / satellites",
+  "Support / expertise"
+];
+
+let instanceEnabled=false;
+let rolesCatalog=[...FUNCTION_SUGGESTIONS];
+let instancesCatalog=[...INSTANCE_BASE];
+
+let feuilleRouteData=null;
+let currentImportMode=null;
+
+let raciData={
+  version:"2.3",
+  project:{id:"",title:""},
+  actors:[],
+  matrix:[]
+};
+
+let currentActorSearch = "";
+
+const searchActorInput = document.getElementById("searchActorInput");
+if(searchActorInput){
+  searchActorInput.addEventListener("input", (e) => {
+    currentActorSearch = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    renderActors();
+  });
+}
+
+/* ===========================
+   Nouveau système de tri
+   =========================== */
+let currentSort = { field: null, asc: true };
+
+function sortActors(field) {
+  if (currentSort.field === field) {
+    currentSort.asc = !currentSort.asc;
+  } else {
+    currentSort.field = field;
+    currentSort.asc = true;
+  }
+  
+  raciData.actors.sort((a, b) => {
+    let valA = (a[field] || "").toString().toLowerCase();
+    let valB = (b[field] || "").toString().toLowerCase();
+    
+    if (valA < valB) return currentSort.asc ? -1 : 1;
+    if (valA > valB) return currentSort.asc ? 1 : -1;
+    return 0;
+  });
+  
+  saveToLocalStorage();
+  renderActors();
+}
+
+/* ===========================
+   Pivot 1.1 (source de vérité) — auto-contexte
+   =========================== */
+const STORAGE_KEY_PIVOT = "currentProjectJson";
+let pivotData = null;      // contient le pivot 1.1 si chargé
+let pivotLoaded = false;   // vrai si le RACI est connecté au pivot
+
+function isPivot11(json){
+  return json && typeof json==="object"
+    && (json.version && String(json.version).startsWith("1."))
+    && Array.isArray(json.actors)
+    && (json.raci && Array.isArray(json.raci.matrix));
+}
+
+function pivotToRaciData(pivot){
+  const rd = {version:"2.3", project:{id:"",title:""}, actors:[], matrix:[]};
+  if(pivot.project){
+    rd.project.id = pivot.project.id || pivot.project.code || "";
+    rd.project.title = pivot.project.title || pivot.project.name || "";
+  }
+  // Actors
+  rd.actors = (pivot.actors||[]).map(a=>({
+    id: a.id || "",
+    name: a.name || "",
+    shortName: a.shortName || "",
+    role: a.role || "",
+    type: a.type || "",
+    instances: Array.isArray(a.instances)? a.instances : (a.instance? [a.instance] : [])
+  }));
+  // Matrix
+  rd.matrix = (pivot.raci.matrix||[]).map(r=>({
+    phase: r.phase || "",
+    activity: r.activity || r.label || "",
+    taskId: r.taskId || r.id || "",
+    chantierId: r.chantierId || "",
+    r: Array.isArray(r.r)? r.r.slice() : [],
+    a: Array.isArray(r.a)? r.a.slice() : [],
+    c: Array.isArray(r.c)? r.c.slice() : [],
+    i: Array.isArray(r.i)? r.i.slice() : []
+  }));
+  return rd;
+}
+
+function applyRaciDataToPivot(pivot, rd){
+  pivot.raci = pivot.raci || {version:"1.0", matrix:[], source:"RACI"};
+  pivot.raci.matrix = (rd.matrix||[]).map(r=>({
+    phase: r.phase || "",
+    activity: r.activity || "",
+    taskId: r.taskId || "",
+    chantierId: r.chantierId || "",
+    r: Array.isArray(r.r)? r.r.slice(): [],
+    a: Array.isArray(r.a)? r.a.slice(): [],
+    c: Array.isArray(r.c)? r.c.slice(): [],
+    i: Array.isArray(r.i)? r.i.slice(): []
+  }));
+    // Fusion des acteurs : si un acteur existe dans le RACI mais pas dans le pivot, on l’ajoute
+  pivot.actors = Array.isArray(pivot.actors)? pivot.actors : [];
+  const byId = new Set(pivot.actors.map(a=>a.id));
+  (rd.actors||[]).forEach(a=>{
+    if(!a || !a.id) return;
+    if(byId.has(a.id)) {
+        // Mise à jour de l'acteur existant si modifié dans le RACI
+        let existing = pivot.actors.find(pa => pa.id === a.id);
+        if(existing) {
+            existing.name = a.name || a.shortName || a.id;
+            existing.shortName = a.shortName || "";
+            existing.role = a.role || "";
+            existing.type = a.type || "";
+            existing.instances = Array.isArray(a.instances)? a.instances : [];
+        }
+        return;
+    }
+    pivot.actors.push({
+      id: a.id,
+      name: a.name || a.shortName || a.id,
+      shortName: a.shortName || "",
+      role: a.role || "",
+      type: a.type || "",
+      instances: Array.isArray(a.instances)? a.instances : []
+    });
+    byId.add(a.id);
+  });
+
+  // Suppression des acteurs retirés du RACI dans le pivot
+  const raciIds = new Set((rd.actors||[]).map(a => a.id));
+  pivot.actors = pivot.actors.filter(a => raciIds.has(a.id));
+
+  // Mise à jour timestamp si présent
+  if(pivot.project){
+    pivot.project.updatedAt = new Date().toISOString();
+  }
+  return pivot;
+}
+
+function saveToLocalStorage() {
+  if (pivotLoaded && pivotData) {
+    applyRaciDataToPivot(pivotData, raciData);
+    localStorage.setItem(STORAGE_KEY_PIVOT, JSON.stringify(pivotData));
+    try {
+        new BroadcastChannel('gold-project-sync').postMessage({ 
+            type: "PROJECT_UPDATED", 
+            source: "raci", 
+            payload: pivotData 
+        });
+    } catch(e) {}
+  }
+}
+
+const syncChannel = new BroadcastChannel('gold-project-sync');
+syncChannel.onmessage = (ev) => {
+  if (ev.data?.type === "PROJECT_UPDATED" && ev.data.source !== "raci") {
+    const payload = ev.data.payload;
+    if(payload && isPivot11(payload)) {
+        pivotData = payload;
+        pivotLoaded = true;
+        feuilleRouteData = pivotData;
+        raciData = normalizeImportedRaci(pivotToRaciData(pivotData));
+        renderActors(); 
+        renderMatrix(); 
+        renderViews();
+    }
+  }
+};
+
+
+function tryAutoLoadPivot(){
+  const raw = localStorage.getItem(STORAGE_KEY_PIVOT);
+  if(!raw) return false;
+  try{
+    const json = JSON.parse(raw);
+    if(!isPivot11(json)) return false;
+    pivotData = json;
+    pivotLoaded = true;
+    feuilleRouteData = pivotData;
+    raciData = normalizeImportedRaci(pivotToRaciData(pivotData));
+    return true;
+  }catch(e){
+    console.warn("Auto-contexte Pivot: lecture impossible", e);
+    return false;
+  }
+}
+
+function slugify(s){
+  return (s||"projet").toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "projet";
+}
+function timestamp(){
+  const d=new Date(); const p=n=>String(n).padStart(2,"0");
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());
+}
+function ensureActorId(){
+  let maxIdx=0;
+  (raciData.actors||[]).forEach(a=>{
+    const m=/^A(\d+)$/.exec(a.id||"");
+    if(m) maxIdx=Math.max(maxIdx,parseInt(m[1],10));
+  });
+  const next=maxIdx+1;
+  return "A" + String(next).padStart(3,"0");
+}
+function phaseKey(phase){
+  switch(phase){
+    case "Pré-cadrage":return "p1";
+    case "Cadrage":return "p2";
+    case "Conception":return "p3";
+    case "Réalisation":return "p4";
+    case "Recette":return "p5";
+    case "Déploiement":return "p6";
+    default:return "";
+  }
+}
+
+function getInstances(a){
+  if(Array.isArray(a.instances)) return a.instances;
+  if(a.instance) return [a.instance];
+  return [];
+}
+function setInstances(a,arr){
+  a.instances=(arr||[]).filter(v=>v);
+  delete a.instance;
+}
+function hasAnyInstance(){
+  return (raciData.actors||[]).some(a=>getInstances(a).length>0);
+}
+
+function isFeuilleRouteJson(json){
+  return json && typeof json==="object" && Array.isArray(json.phases||[]);
+}
+function getPhaseLabelFromFR(ph){
+  return ph.label || ph.name || "";
+}
+function getChantiersForPhaseLabel(label){
+  if(!feuilleRouteData || !Array.isArray(feuilleRouteData.phases)) return [];
+  const result=[];
+  (feuilleRouteData.phases||[]).forEach(ph=>{
+    const phaseLabel=getPhaseLabelFromFR(ph);
+    if(phaseLabel!==label) return;
+    if(Array.isArray(ph.chantiers) && ph.chantiers.length){
+      ph.chantiers.forEach(ch=>{
+        result.push({
+          id:ch.id || ch.chantierId || "",
+          label:ch.label || ch.title || ""
+        });
+      });
+    }else if(Array.isArray(ph.tasks) && ph.tasks.length){
+      ph.tasks.forEach(t=>{
+        result.push({
+          id:t.id || "",
+          label:t.label || t.title || ""
+        });
+      });
+    }
+  });
+  return result;
+}
+function findChantierLabelById(chantierId){
+  if(!chantierId || !feuilleRouteData || !Array.isArray(feuilleRouteData.phases)) return "";
+  let found="";
+  (feuilleRouteData.phases||[]).forEach(ph=>{
+    const lists=[];
+    if(Array.isArray(ph.chantiers)) lists.push(ph.chantiers);
+    if(Array.isArray(ph.tasks)) lists.push(ph.tasks);
+    lists.forEach(list=>{
+      list.forEach(ch=>{
+        const id=ch.id || ch.chantierId || "";
+        if(id===chantierId){
+          found=(ch.id?ch.id+" – ":"")+(ch.label || ch.title || "");
+        }
+      });
+    });
+  });
+  return found;
+}
+function updateChantierEnabledFlag(){
+  if(feuilleRouteData) document.body.classList.add("chantier-enabled");
+  else document.body.classList.remove("chantier-enabled");
+}
+
+/* Tabs */
+document.querySelectorAll(".tab-main").forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    document.querySelectorAll(".tab-main").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    const id=tab.getAttribute("data-page");
+    document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));
+  });
+});
+document.querySelectorAll(".tab-sub").forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    document.querySelectorAll(".tab-sub").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    const id=tab.getAttribute("data-sub");
+    document.querySelectorAll(".subview").forEach(v=>v.classList.toggle("active",v.id===id));
+  });
+});
+
+const helpBtn=document.getElementById("helpBtn");
+helpBtn.onclick=()=>{
+  const helpTab=document.querySelector('.tab-main[data-page="page-help"]');
+  if(helpTab) helpTab.click();
+};
+
+const actorsBody=document.querySelector("#actorsTable tbody");
+const addActorBtn=document.getElementById("addActorBtn");
+const enableInstanceBtn=document.getElementById("enableInstanceBtn");
+const projectTitleInfo=document.getElementById("projectTitleInfo");
+const hdrProjectEl=document.getElementById("hdrProject");
+
+function updateProjectTitleUI(){
+  const pt=raciData.project && raciData.project.title ? raciData.project.title : "(non renseigné)";
+  projectTitleInfo.textContent="Projet : "+pt;
+  hdrProjectEl.textContent="Projet : "+(pt==="(non renseigné)"?"non défini":pt);
+  const startupProjectLabel=document.getElementById("startupProjectLabel");
+  if(startupProjectLabel) startupProjectLabel.textContent="Projet : "+pt;
+}
+function updateInstanceColumnVisibility(){
+  const show=instanceEnabled || hasAnyInstance();
+  const display=show?"":"none";
+  document.querySelectorAll(".col-instance").forEach(el=>el.style.display=display);
+  document.querySelectorAll(".col-instance-td").forEach(el=>el.style.display=display);
+  enableInstanceBtn.style.display=show?"none":"inline-block";
+}
+
+function renderActors(){
+  actorsBody.innerHTML="";
+
+  // Filtrage basé sur la recherche intelligente
+  const filteredActors = (raciData.actors||[]).filter(a => {
+    if(!currentActorSearch) return true;
+    const searchableText = [
+      a.name, 
+      a.shortName, 
+      a.role, 
+      a.type, 
+      ...(a.instances || [])
+    ].join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    
+    return searchableText.includes(currentActorSearch);
+  });
+
+  filteredActors.forEach((a)=>{
+    // Fonction utilitaire pour trouver l'index réel dans raciData.actors 
+    // nécessaire car "filteredActors" fausse l'index de la boucle.
+    const getRealIdx = () => raciData.actors.findIndex(x => x.id === a.id);
+
+    const tr=document.createElement("tr");
+
+    const tdName=document.createElement("td");
+    const inpName=document.createElement("input");
+    inpName.type="text"; inpName.value=a.name||"";
+    inpName.onchange=()=>{
+      a.name=inpName.value;
+      saveToLocalStorage();
+      renderMatrix();
+      renderViews();
+    };
+    tdName.appendChild(inpName);tr.appendChild(tdName);
+
+    const tdShort=document.createElement("td");
+    const inpShort=document.createElement("input");
+    inpShort.type="text"; inpShort.value=a.shortName||"";
+    inpShort.onchange=()=>{
+      a.shortName=inpShort.value;
+      saveToLocalStorage();
+      renderMatrix();
+      renderViews();
+    };
+    tdShort.appendChild(inpShort);tr.appendChild(tdShort);
+
+    const tdType=document.createElement("td");
+    const selType=document.createElement("select");
+    const TYPE_VALUES=["ELU","DG","MOA","MOE","DSI","METIER","FOURNISSEUR","PARTENAIRE","SUPPORT","AUTRE"];
+    const optPH=document.createElement("option");
+    optPH.value="";optPH.textContent="(Choisir un type…)";optPH.disabled=true;
+    if(!a.type) optPH.selected=true;
+    selType.appendChild(optPH);
+    TYPE_VALUES.forEach(t=>{
+      const opt=document.createElement("option");
+      opt.value=t;opt.textContent=t;
+      if(a.type===t) opt.selected=true;
+      selType.appendChild(opt);
+    });
+    selType.onchange=()=>{
+        a.type=selType.value||"";
+        saveToLocalStorage();
+        renderViews();
+    };
+    tdType.appendChild(selType);tr.appendChild(tdType);
+
+    const tdInstance=document.createElement("td");
+    tdInstance.className="col-instance-td";
+    const wrapper=document.createElement("div");
+    wrapper.className="instance-checkboxes";
+    const actorInst=getInstances(a);
+    let allInst=[...instancesCatalog];
+    actorInst.forEach(inst=>{if(inst && !allInst.includes(inst)) allInst.push(inst);});
+    allInst.forEach(label=>{
+      const lab=document.createElement("label");
+      const cb=document.createElement("input");
+      cb.type="checkbox";cb.checked=actorInst.includes(label);cb.dataset.label=label;
+      cb.onchange=()=>{
+        const selected=[];
+        wrapper.querySelectorAll("input[type=checkbox]").forEach(box=>{
+          if(box.checked) selected.push(box.dataset.label);
+        });
+        setInstances(a,selected);
+        saveToLocalStorage();
+        renderViews();
+      };
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(" "+label));
+      wrapper.appendChild(lab);
+    });
+    const btnOther=document.createElement("button");
+    btnOther.type="button";btnOther.textContent="+ Autre…";
+    btnOther.onclick=()=>{
+      const saisie=prompt("Nouvelle instance / comité :", "");
+      if(saisie && saisie.trim()){
+        const label=saisie.trim();
+        if(!instancesCatalog.includes(label)) instancesCatalog.push(label);
+        const insts=getInstances(a);
+        if(!insts.includes(label)) insts.push(label);
+        setInstances(a,insts);
+        saveToLocalStorage();
+        renderActors();renderViews();updateInstanceColumnVisibility();
+      }
+    };
+    wrapper.appendChild(btnOther);
+    tdInstance.appendChild(wrapper);tr.appendChild(tdInstance);
+
+    const tdRole=document.createElement("td");
+    const selRole=document.createElement("select");
+    let localRoles=[...rolesCatalog];
+    if(a.role && !localRoles.includes(a.role)) localRoles.push(a.role);
+    localRoles.forEach(rLabel=>{
+      const opt=document.createElement("option");
+      opt.value=rLabel;opt.textContent=rLabel;
+      if((a.role||"")===rLabel) opt.selected=true;
+      selRole.appendChild(opt);
+    });
+    const optCustomRole=document.createElement("option");
+    optCustomRole.value="__custom__";optCustomRole.textContent="Autre (saisie libre…)";
+    selRole.appendChild(optCustomRole);
+    selRole.onchange=()=>{
+      const v=selRole.value;
+      if(v==="__custom__"){
+        const s=prompt("Nouvelle fonction / rôle :", a.role||"");
+        if(s && s.trim()){
+          a.role=s.trim();
+          if(!rolesCatalog.includes(a.role)) rolesCatalog.push(a.role);
+        }
+      }else a.role=v;
+      saveToLocalStorage();
+      renderActors();renderViews();
+    };
+    tdRole.appendChild(selRole);tr.appendChild(tdRole);
+
+    const tdActions=document.createElement("td");
+    tdActions.style.whiteSpace = "nowrap";
+
+    // BOUTON DUPLIQUER
+    const btnDup=document.createElement("button");
+    btnDup.className="icon-btn icon-copy";
+    btnDup.innerHTML="<span style='color:#fff;font-size:12px;'>📑</span>";
+    btnDup.title="Dupliquer l'acteur";
+    btnDup.onclick=()=>{
+      const realIdx = getRealIdx();
+      if(realIdx === -1) return;
+
+      const newId = ensureActorId();
+      const clone = JSON.parse(JSON.stringify(a));
+      clone.id = newId;
+      clone.name = clone.name ? clone.name + " (copie)" : "Nouvel acteur";
+      clone.shortName = clone.shortName ? clone.shortName + " (c)" : "";
+      
+      // Insérer l'acteur juste après la ligne courante dans le vrai tableau
+      raciData.actors.splice(realIdx + 1, 0, clone);
+      
+      // Copier les affectations matricielles
+      (raciData.matrix||[]).forEach(r=>{
+        ["r","a","c","i"].forEach(k=>{
+          if(r[k] && r[k].includes(a.id)) {
+            r[k].push(newId);
+          }
+        });
+      });
+      
+      saveToLocalStorage();
+      renderActors();renderMatrix();renderViews();updateInstanceColumnVisibility();
+    };
+    tdActions.appendChild(btnDup);
+
+    // BOUTON SUPPRIMER (AVEC CONFIRMATION)
+    const btnDel=document.createElement("button");
+    btnDel.className="icon-btn icon-delete";
+    btnDel.innerHTML="<span class='icon-trash'>🗑</span>";
+    btnDel.title="Supprimer l'acteur";
+    btnDel.onclick=()=>{
+      if(confirm("Confirmer la suppression de cet acteur ?")){
+        const realIdx = getRealIdx();
+        if(realIdx === -1) return;
+
+        const id=a.id;
+        (raciData.matrix||[]).forEach(r=>{
+          ["r","a","c","i"].forEach(k=>{
+            r[k]=(r[k]||[]).filter(v=>v!==id);
+          });
+        });
+        raciData.actors.splice(realIdx,1);
+        saveToLocalStorage();
+        renderActors();renderMatrix();renderViews();updateInstanceColumnVisibility();
+      }
+    };
+    tdActions.appendChild(btnDel);
+    
+    tr.appendChild(tdActions);
+
+    actorsBody.appendChild(tr);
+  });
+  updateProjectTitleUI();
+  updateInstanceColumnVisibility();
+}
+
+addActorBtn.onclick=()=>{
+  const id=ensureActorId();
+  raciData.actors.unshift({id,name:"",shortName:"",role:"",type:"",instances:[]});
+  // Remettre la barre de recherche à zéro si on ajoute pour bien voir l'acteur ajouté en haut
+  currentActorSearch = "";
+  if(searchActorInput) searchActorInput.value = "";
+  
+  saveToLocalStorage(); 
+  renderActors();renderMatrix();renderViews();
+};
+
+/* Matrice */
+const matrixBody=document.querySelector("#matrixTable tbody");
+const addMatrixRowBtn=document.getElementById("addMatrixRowBtn");
+
+function renderMatrix(){
+  matrixBody.innerHTML="";
+  (raciData.matrix||[]).forEach((row,idx)=>{
+    const tr=document.createElement("tr");
+    const pk=phaseKey(row.phase);
+    if(pk) tr.classList.add("row-"+pk);
+
+    const tdP=document.createElement("td");
+    const selP=document.createElement("select");
+    PHASES.forEach(p=>{
+      const opt=document.createElement("option");
+      opt.value=p;opt.textContent=p;
+      if(row.phase===p) opt.selected=true;
+      selP.appendChild(opt);
+    });
+    selP.onchange=()=>{row.phase=selP.value; saveToLocalStorage(); renderMatrix();renderViews();};
+    tdP.appendChild(selP);tr.appendChild(tdP);
+
+    const tdCh=document.createElement("td");
+    tdCh.className="col-chantier";
+    if(feuilleRouteData){
+      const selCh=document.createElement("select");
+      const optNone=document.createElement("option");
+      optNone.value="";optNone.textContent="(Aucun chantier)";
+      selCh.appendChild(optNone);
+      const chantiers=getChantiersForPhaseLabel(row.phase||"");
+      chantiers.forEach(ch=>{
+        const opt=document.createElement("option");
+        opt.value=ch.id||"";
+        const label=(ch.id?ch.id+" – ":"")+(ch.label||"");
+        opt.textContent=label || "(chantier sans libellé)";
+        if(row.chantierId && opt.value && row.chantierId===opt.value) opt.selected=true;
+        selCh.appendChild(opt);
+      });
+      selCh.onchange=()=>{row.chantierId=selCh.value||""; saveToLocalStorage(); renderViews();};
+      tdCh.appendChild(selCh);
+    }else{
+      tdCh.innerHTML="<span style='font-size:11px;color:#777;'>Feuille de route non importée</span>";
+    }
+    tr.appendChild(tdCh);
+
+    const tdA=document.createElement("td");
+    const inpA=document.createElement("input");
+    inpA.type="text";inpA.value=row.activity||"";
+    inpA.onchange=()=>{row.activity=inpA.value; saveToLocalStorage(); renderViews();};
+    tdA.appendChild(inpA);tr.appendChild(tdA);
+
+    const tdR=document.createElement("td");
+    const wrapR=document.createElement("div");
+    wrapR.className="matrix-checkboxes";
+    (raciData.actors||[]).forEach(a=>{
+      const lab=document.createElement("label");
+      lab.className="raci-check-r";
+      const cb=document.createElement("input");
+      cb.type="checkbox";cb.checked=(row.r||[]).includes(a.id);
+      cb.onchange=()=>{
+        row.r=row.r||[];
+        if(cb.checked){if(!row.r.includes(a.id)) row.r.push(a.id);}
+        else row.r=row.r.filter(id=>id!==a.id);
+        saveToLocalStorage();
+        renderViews();
+      };
+      const span=document.createElement("span");
+      span.textContent=a.shortName||a.name||a.id;
+      lab.appendChild(cb);lab.appendChild(span);wrapR.appendChild(lab);
+    });
+    tdR.appendChild(wrapR);tr.appendChild(tdR);
+
+    const tdAc=document.createElement("td");
+    const selA=document.createElement("select");
+    const optEmpty=document.createElement("option");
+    optEmpty.value="";optEmpty.textContent="(Aucun)";
+    selA.appendChild(optEmpty);
+    (raciData.actors||[]).forEach(a=>{
+      const opt=document.createElement("option");
+      opt.value=a.id;opt.textContent=a.shortName||a.name||a.id;
+      if((row.a||[])[0]===a.id) opt.selected=true;
+      selA.appendChild(opt);
+    });
+    selA.onchange=()=>{
+      const v=selA.value||"";
+      row.a=v?[v]:[];
+      saveToLocalStorage();
+      renderViews();
+    };
+    tdAc.appendChild(selA);tr.appendChild(tdAc);
+
+    const tdC=document.createElement("td");
+    const wrapC=document.createElement("div");
+    wrapC.className="matrix-checkboxes";
+    (raciData.actors||[]).forEach(a=>{
+      const lab=document.createElement("label");
+      lab.className="raci-check-c";
+      const cb=document.createElement("input");
+      cb.type="checkbox";cb.checked=(row.c||[]).includes(a.id);
+      cb.onchange=()=>{
+        row.c=row.c||[];
+        if(cb.checked){if(!row.c.includes(a.id)) row.c.push(a.id);}
+        else row.c=row.c.filter(id=>id!==a.id);
+        saveToLocalStorage();
+        renderViews();
+      };
+      const span=document.createElement("span");
+      span.textContent=a.shortName||a.name||a.id;
+      lab.appendChild(cb);
+      lab.appendChild(span);
+      wrapC.appendChild(lab);
+    });
+    tdC.appendChild(wrapC);tr.appendChild(tdC);
+
+    const tdI=document.createElement("td");
+    const wrapI=document.createElement("div");
+    wrapI.className="matrix-checkboxes";
+    (raciData.actors||[]).forEach(a=>{
+      const lab=document.createElement("label");
+      lab.className="raci-check-i";
+      const cb=document.createElement("input");
+      cb.type="checkbox";cb.checked=(row.i||[]).includes(a.id);
+      cb.onchange=()=>{
+        row.i=row.i||[];
+        if(cb.checked){if(!row.i.includes(a.id)) row.i.push(a.id);}
+        else row.i=row.i.filter(id=>id!==a.id);
+        saveToLocalStorage();
+        renderViews();
+      };
+      const span=document.createElement("span");
+      span.textContent=a.shortName||a.name||a.id;
+      lab.appendChild(cb);
+      lab.appendChild(span);
+      wrapI.appendChild(lab);
+    });
+    tdI.appendChild(wrapI);tr.appendChild(tdI);
+
+    // Ajout colonne Actions pour la matrice
+    const tdAct=document.createElement("td");
+    tdAct.style.whiteSpace="nowrap";
+
+    // BOUTON DUPLIQUER (Matrice)
+    const btnDupMatrix=document.createElement("button");
+    btnDupMatrix.className="icon-btn icon-copy";
+    btnDupMatrix.innerHTML="<span style='color:#fff;font-size:12px;'>📑</span>";
+    btnDupMatrix.title="Dupliquer l'activité";
+    btnDupMatrix.onclick=()=>{
+      const clone = JSON.parse(JSON.stringify(row));
+      clone.activity = clone.activity ? clone.activity + " (copie)" : "Nouvelle activité";
+      // S'assurer de la copie profonde des tableaux
+      clone.r = [...(row.r||[])];
+      clone.a = [...(row.a||[])];
+      clone.c = [...(row.c||[])];
+      clone.i = [...(row.i||[])];
+      // Insérer juste après
+      raciData.matrix.splice(idx + 1, 0, clone);
+      saveToLocalStorage();
+      renderMatrix();renderViews();
+    };
+
+    // BOUTON SUPPRIMER (AVEC CONFIRMATION)
+    const btnDelMatrix=document.createElement("button");
+    btnDelMatrix.className="icon-btn icon-delete";
+    btnDelMatrix.innerHTML="<span class='icon-trash'>🗑</span>";
+    btnDelMatrix.title="Supprimer l'activité";
+    btnDelMatrix.onclick=()=>{
+      if(confirm("Confirmer la suppression de cette activité ?")){
+        raciData.matrix.splice(idx, 1);
+        saveToLocalStorage();
+        renderMatrix();renderViews();
+      }
+    };
+
+    tdAct.appendChild(btnDupMatrix);
+    tdAct.appendChild(btnDelMatrix);
+    tr.appendChild(tdAct);
+
+    matrixBody.appendChild(tr);
+  });
+}
+
+addMatrixRowBtn.onclick=()=>{
+  raciData.matrix.push({
+    phase:PHASES[0],chantierId:"",activity:"",r:[],a:[],c:[],i:[]
+  });
+  saveToLocalStorage();
+  renderMatrix();renderViews();
+};
+
+/* Vues */
+const matrixViewDiv=document.getElementById("matrixView");
+const actorsViewDiv=document.getElementById("actorsView");
+const instancesViewDiv=document.getElementById("instancesView");
+
+// Vues matrice (Vues RACI)
+let matrixViewMode = "truth"; // "truth" | "phase"
+
+function getRaciCellContent(row,actorId){
+  const res=[];
+  if(row.r && row.r.includes(actorId)) res.push("<span class='badge badge-r'>R</span>");
+  if(row.a && row.a.includes(actorId)) res.push("<span class='badge badge-a'>A</span>");
+  if(row.c && row.c.includes(actorId)) res.push("<span class='badge badge-c'>C</span>");
+  if(row.i && row.i.includes(actorId)) res.push("<span class='badge badge-i'>I</span>");
+  return res.join(" ");
+}
+
+function renderMatrixTruthView(){
+  const actors=raciData.actors||[];
+  const matrix=raciData.matrix||[];
+  if(!actors.length || !matrix.length){
+    matrixViewDiv.innerHTML="<div class='hint'>Ajoutez des acteurs et des activités pour voir la matrice.</div>";
+    return;
+  }
+
+  const phaseOrder=new Map(PHASES.map((p,i)=>[p,i]));
+  const rows=[...matrix].sort((a,b)=>{
+    const pa=phaseOrder.has(a.phase)?phaseOrder.get(a.phase):999;
+    const pb=phaseOrder.has(b.phase)?phaseOrder.get(b.phase):999;
+    if(pa!==pb) return pa-pb;
+    return String(a.activity||'').localeCompare(String(b.activity||''));
+  });
+
+  let html="<div class='matrix-phase-table'>";
+  html+="<table><thead><tr><th style='min-width:260px;'>Activité</th>";
+  actors.forEach(a=>{ html+=`<th>${a.shortName || a.name || a.id}</th>`; });
+  html+="</tr></thead><tbody>";
+
+  rows.forEach(r=>{
+    const pk=phaseKey(r.phase);
+    const phaseClass=pk?`phase-label phase-${pk}`:"phase-label";
+    const chantierText=r.chantierId && feuilleRouteData ? findChantierLabelById(r.chantierId) : "";
+
+    const left=`<div style='display:flex;flex-direction:column;gap:4px;'>`+
+               `<div>${r.activity || "<i>(sans libellé)</i>"}</div>`+
+               `<div style='display:flex;gap:8px;align-items:center;flex-wrap:wrap;'>`+
+                 `<span class='${phaseClass}'>${r.phase || ""}</span>`+
+                 `${chantierText?`<span style='font-size:10px;color:#555;'>${chantierText}</span>`:""}`+
+               `</div>`+
+               `</div>`;
+
+    html+=`<tr><td>${left}</td>`;
+    actors.forEach(a=>{ html+=`<td style='text-align:center;'>${getRaciCellContent(r,a.id)}</td>`; });
+    html+="</tr>";
+  });
+
+  html+="</tbody></table></div>";
+  matrixViewDiv.innerHTML=html;
+}
+
+function renderMatrixPhaseGroupedView(){
+  const actors=raciData.actors||[];
+  const matrix=raciData.matrix||[];
+  if(!actors.length || !matrix.length){
+    matrixViewDiv.innerHTML="<div class='hint'>Ajoutez des acteurs et des activités pour voir la matrice.</div>";
+    return;
+  }
+  const phaseOrder=new Map(PHASES.map((p,i)=>[p,i]));
+  const rows=[...matrix].sort((a,b)=>{
+    const pa=phaseOrder.has(a.phase)?phaseOrder.get(a.phase):999;
+    const pb=phaseOrder.has(b.phase)?phaseOrder.get(b.phase):999;
+    if(pa!==pb) return pa-pb;
+    return String(a.activity||'').localeCompare(String(b.activity||''));
+  });
+
+  const byPhase=new Map();
+  rows.forEach(r=>{
+    const key=r.phase || "(Phase ?)";
+    if(!byPhase.has(key)) byPhase.set(key,[]);
+    byPhase.get(key).push(r);
+  });
+
+  let html="";
+  Array.from(byPhase.keys()).forEach(phase=>{
+    const pk=phaseKey(phase);
+    const phaseClass=pk?`phase-label phase-${pk}`:"phase-label";
+    html+=`<div style='margin:0 0 10px 0;'>`+
+          `<div style='display:flex;align-items:center;gap:8px;margin:4px 0 6px;'>`+
+            `<span class='${phaseClass}'>${phase}</span>`+
+            `<span style='font-size:11px;color:#555;'>Matrice RACI</span>`+
+          `</div>`+
+          `<div class='matrix-phase-table'>`+
+          `<table class='print-friendly'><thead><tr><th style='min-width:260px;'>Activité</th>`;
+    actors.forEach(a=>{ html+=`<th>${a.shortName || a.name || a.id}</th>`; });
+    html+=`</tr></thead><tbody>`;
+
+    byPhase.get(phase).forEach(r=>{
+      const chantierText=r.chantierId && feuilleRouteData ? findChantierLabelById(r.chantierId) : "";
+      const left=`<div style='display:flex;flex-direction:column;gap:3px;'>`+
+                 `<div>${r.activity || "<i>(sans libellé)</i>"}</div>`+
+                 `${chantierText?`<div style='font-size:10px;color:#555;'>${chantierText}</div>`:""}`+
+                 `</div>`;
+      html+=`<tr><td>${left}</td>`;
+      actors.forEach(a=>{ html+=`<td style='text-align:center;'>${getRaciCellContent(r,a.id)}</td>`; });
+      html+=`</tr>`;
+    });
+
+    html+=`</tbody></table></div></div>`;
+  });
+  matrixViewDiv.innerHTML=html;
+}
+
+function renderMatrixView(){
+  if(matrixViewMode==="phase") renderMatrixPhaseGroupedView();
+  else renderMatrixTruthView();
+}
+function renderActorsView(){
+  const actors=raciData.actors||[];
+  const matrix=raciData.matrix||[];
+  if(!actors.length){
+    actorsViewDiv.innerHTML="<div class='hint'>Ajoutez des acteurs pour voir la vue par acteur.</div>";
+    return;
+  }
+  let html="";
+  actors.forEach(a=>{
+    const linesR=[],linesA=[],linesC=[],linesI=[];
+    matrix.forEach(r=>{
+      if(r.r && r.r.includes(a.id)) linesR.push({phase:r.phase,activity:r.activity,chantierId:r.chantierId});
+      if(r.a && r.a.includes(a.id)) linesA.push({phase:r.phase,activity:r.activity,chantierId:r.chantierId});
+      if(r.c && r.c.includes(a.id)) linesC.push({phase:r.phase,activity:r.activity,chantierId:r.chantierId});
+      if(r.i && r.i.includes(a.id)) linesI.push({phase:r.phase,activity:r.activity,chantierId:r.chantierId});
+    });
+    const insts=getInstances(a);
+    html+=`<div class="actor-card">
+      <div class="actor-header">
+        <div>
+          <div class="actor-name">${a.name || "(Nom non renseigné)"}</div>
+          <div class="actor-role">${a.role || ""}</div>
+        </div>
+        <div class="badge">${a.type || ""}</div>
+      </div>`;
+    if(insts.length){
+      html+=`<div style="font-size:11px;color:#333;margin-bottom:2px;"><b>Instances :</b> ${insts.join(" / ")}</div>`;
+    }
+    const renderList=(label,cls,items)=>{
+      if(!items.length) return "";
+      let s=`<div><span class="badge ${cls}">${label}</span><ul class="compact">`;
+      items.forEach(it=>{
+        const chantierTxt = it.chantierId && feuilleRouteData ? findChantierLabelById(it.chantierId) : "";
+        s+=`<li>${it.phase ? "<b>"+it.phase+"</b> – " : ""}${it.activity || "(sans libellé)"}${chantierTxt ? " ["+chantierTxt+"]" : ""}</li>`;
+      });
+      s+=`</ul></div>`;
+      return s;
+    };
+    html+=renderList("R – Réalise","badge-r",linesR);
+    html+=renderList("A – Approuve","badge-a",linesA);
+    html+=renderList("C – Consulté","badge-c",linesC);
+    html+=renderList("I – Informé","badge-i",linesI);
+    html+=`</div>`;
+  });
+  actorsViewDiv.innerHTML=html;
+}
+function renderInstancesView(){
+  const actors=raciData.actors||[];
+  if(!actors.length){
+    instancesViewDiv.innerHTML="<div class='hint'>Ajoutez des acteurs (et des instances) pour voir la vue par instance.</div>";
+    return;
+  }
+  const groups={};
+  actors.forEach(a=>{
+    const insts=getInstances(a);
+    if(!insts.length){
+      return;
+    }else{
+      insts.forEach(inst=>{
+        if(!inst) return;
+        if(!groups[inst]) groups[inst]=[];
+        groups[inst].push(a);
+      });
+    }
+  });
+  const order=[
+    "COPIL (Comité de pilotage)",
+    "Comité de projet",
+    "Suivi hebdomadaire",
+    "Partenaires / satellites",
+    "Support / expertise"
+  ];
+  const keys=Object.keys(groups).sort((k1,k2)=>{
+    const i1=order.indexOf(k1), i2=order.indexOf(k2);
+    const v1=i1===-1?999:i1, v2=i2===-1?999:i2;
+    if(v1!==v2) return v1-v2;
+    return String(k1).localeCompare(String(k2));
+  });
+  let html="<div class='instance-grid'>";
+  keys.forEach(key=>{
+    const list=groups[key];
+    const label=key;
+    const cls = (key==="Partenaires / satellites") ? "instance-block partners-block" :
+                (key==="Support / expertise") ? "instance-block support-block" :
+                "instance-block";
+    html+=`<div class="${cls}">
+      <div class="instance-header">${label}</div>
+      <div class="instance-body">`;
+    list.forEach(a=>{
+      html+=`<div class="instance-card">
+        <div class="instance-card-name">${a.name || "(Nom non renseigné)"}</div>
+        <div class="instance-card-role">${a.role || ""}</div>
+        <div class="instance-card-type">${a.type || ""}</div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  html+="</div>";
+  instancesViewDiv.innerHTML=html;
+}
+function renderViews(){
+  renderMatrixView();
+  renderActorsView();
+  renderInstancesView();
+}
+
+/* ===== Impression / Export PDF (Vues) ===== */
+const btnMatrixTruth = document.getElementById("btnMatrixTruth");
+const btnMatrixPhase = document.getElementById("btnMatrixPhase");
+const btnPrintMatrixPhase = document.getElementById("btnPrintMatrixPhase");
+const btnPrintInstances = document.getElementById("btnPrintInstances");
+
+function escHtml(s){
+  return String(s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function openPrintWindow(title, innerHtml){
+  const w = window.open("", "_blank");
+  if(!w){
+    alert("Impossible d’ouvrir la fenêtre d’impression (pop-up bloquée). Autorisez les pop-ups puis réessayez.");
+    return;
+  }
+  const css = `
+    :root{--vdl-red:#C00021;--text:#2C2C2C;}
+    *{box-sizing:border-box;}
+    body{font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);margin:0;padding:0;}
+    header{padding:10mm 10mm 4mm;border-bottom:2px solid var(--vdl-red);} 
+    header h1{margin:0;font-size:16pt;color:var(--vdl-red);} 
+    header .sub{margin-top:2mm;font-size:10pt;color:#444;}
+    main{padding:6mm 10mm 10mm;}
+    table{width:100%;border-collapse:collapse;}
+    th,td{border:1px solid #ddd;padding:6px;font-size:9.5pt;vertical-align:top;}
+    thead{display:table-header-group;}
+    tr{page-break-inside:avoid;}
+    .matrix-phase-table{overflow:visible !important;}
+    .phase-block{break-inside:avoid;page-break-inside:avoid;margin-bottom:8mm;}
+    .phase-title{font-weight:800;margin:0 0 3mm;color:#111;}
+    .instance-grid{display:flex;flex-wrap:wrap;gap:8mm;}
+    .instance-block{flex:1 1 240px;min-width:220px;border-radius:12px;padding:4mm;color:#fff;box-shadow:none;}
+    .instance-header{font-size:12pt;font-weight:800;border-bottom:1px solid rgba(255,255,255,.45);padding-bottom:2mm;margin-bottom:3mm;}
+    .instance-body{display:flex;flex-wrap:wrap;gap:2.5mm;}
+    .instance-card{background:#fff;color:#000;border-radius:8px;padding:2.5mm 3mm;min-width:46mm;box-shadow:none;font-size:9.5pt;}
+    .instance-card-role{font-size:9pt;color:#555;}
+    .instance-card-type{font-size:9pt;font-weight:700;}
+    .partners-block{background:linear-gradient(135deg,#BBDEFB,#1565C0);} 
+    .support-block{background:linear-gradient(135deg,#C8E6C9,#2E7D32);flex:1 1 100%;}
+    .support-block .instance-card-type{color:#2E7D32;}
+    .partners-block .instance-card-type{color:#1565C0;}
+    @page{size:A4 landscape;margin:8mm;}
+
+    .print-toolbar{position:sticky;top:0;background:#fff;padding:6mm 10mm 0;z-index:5;}
+    .print-btn{border:none;border-radius:999px;padding:8px 14px;font-weight:800;background:var(--vdl-red);color:#fff;cursor:pointer;}
+    .print-hint{margin-left:10px;font-size:10pt;color:#444;}
+    @media print{ .print-toolbar{display:none;} }
+  `;
+  const project = (raciData?.project?.title ? raciData.project.title : "(projet non renseigné)");
+  w.document.open();
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${title}</title><style>${css}</style></head><body>`);
+  w.document.write(`
+    <div class="print-toolbar">
+      <button class="print-btn" onclick="window.print()">🖨️ Imprimer / Exporter PDF</button>
+      <span class="print-hint">Astuce : si l’aperçu est vide, relancez via ce bouton (certains navigateurs mobiles ont un bug de rendu).</span>
+    </div>
+  `);
+  w.document.write(`<header><h1>${title}</h1><div class="sub">Projet : ${escHtml(project)} — Généré le ${new Date().toLocaleString('fr-FR')}</div></header>`);
+  w.document.write(`<main>${innerHtml}</main>`);
+  w.document.write(`</body></html>`);
+  w.document.close();
+  w.focus();
+  const tryAutoPrint = ()=>{ try{ w.print(); }catch(e){} };
+  w.addEventListener('load', ()=>{
+    setTimeout(tryAutoPrint, 800);
+    setTimeout(tryAutoPrint, 2000);
+  });
+}
+
+function withTempMatrixMode(mode, fn){
+  const prev = matrixViewMode;
+  matrixViewMode = mode;
+  renderMatrixView();
+  try{ fn(); } finally {
+    matrixViewMode = prev;
+    renderMatrixView();
+    updateMatrixModeButtons();
+  }
+}
+
+function updateMatrixModeButtons(){
+  if(!btnMatrixTruth || !btnMatrixPhase) return;
+  const a = (matrixViewMode==="truth");
+  btnMatrixTruth.classList.toggle("primary", a);
+  btnMatrixTruth.classList.toggle("secondary", !a);
+  btnMatrixPhase.classList.toggle("primary", !a);
+  btnMatrixPhase.classList.toggle("secondary", a);
+}
+
+if(btnMatrixTruth){
+  btnMatrixTruth.addEventListener("click", ()=>{
+    matrixViewMode = "truth";
+    renderMatrixView();
+    updateMatrixModeButtons();
+  });
+}
+if(btnMatrixPhase){
+  btnMatrixPhase.addEventListener("click", ()=>{
+    matrixViewMode = "phase";
+    renderMatrixView();
+    updateMatrixModeButtons();
+  });
+}
+updateMatrixModeButtons();
+
+if(btnPrintMatrixPhase){
+  btnPrintMatrixPhase.addEventListener("click", ()=>{
+    if(!raciData || !(raciData.actors||[]).length || !(raciData.matrix||[]).length){
+      alert("Aucune donnée à imprimer : ajoutez des acteurs et des activités.");
+      return;
+    }
+    withTempMatrixMode("phase", ()=>{
+      openPrintWindow("RACI — Matrice par phase", matrixViewDiv.innerHTML);
+    });
+  });
+}
+if(btnPrintInstances){
+  btnPrintInstances.addEventListener("click", ()=>{
+    if(!raciData || !(raciData.actors||[]).length){
+      alert("Aucune donnée à imprimer : ajoutez des acteurs.");
+      return;
+    }
+    renderInstancesView();
+    openPrintWindow("RACI — Vue par instance", instancesViewDiv.innerHTML);
+  });
+}
+
+/* Vérification RACI */
+document.getElementById("checkRaciBtn").onclick=()=>{
+  const matrix=raciData.matrix||[];
+  const actors=raciData.actors||[];
+  const actorIds=new Set(actors.map(a=>a.id));
+  const errors=[];
+  actors.forEach(a=>{
+    if(!a.type) errors.push(`Acteur "${a.name || a.id}" sans type (MOA / MOE / DSI / …).`);
+  });
+  matrix.forEach((r,idx)=>{
+    const label=(r.phase||"(Phase ?)")+" – "+(r.activity||"(Activité ?)")+" (ligne "+(idx+1)+")";
+    if((r.a||[]).length>1) errors.push("Plus d’un A pour "+label);
+    if(!(r.r && r.r.length)) errors.push("Aucun R défini pour "+label);
+    ["r","a","c","i"].forEach(k=>{
+      (r[k]||[]).forEach(id=>{
+        if(!actorIds.has(id)) errors.push("Acteur "+id+" inexistant pour "+label);
+      });
+    });
+  });
+  if(!errors.length) alert("RACI valide : type renseigné, 1 seul A par activité, au moins 1 R, et acteurs existants.");
+  else alert("Erreurs RACI :\n- "+errors.join("\n- "));
+};
+
+/* Import / export */
+const importJsonBtn=document.getElementById("importJsonBtn");
+const exportJsonBtn=document.getElementById("exportJsonBtn");
+const fileInput=document.getElementById("fileInput");
+const prefillFromFrBtn=document.getElementById("prefillFromFrBtn");
+
+function isRaciJson(json){
+  return json && typeof json==="object" && Array.isArray(json.actors) && Array.isArray(json.matrix);
+}
+function normalizeImportedRaci(json){
+  json.version="2.3";
+  (json.actors||[]).forEach(a=>{
+    if(Array.isArray(a.instances)){} else if(a.instance){a.instances=[a.instance];delete a.instance;} else a.instances=[];
+  });
+  return json;
+}
+function handleRaciImport(json){
+  if(isPivot11(json)){
+    pivotData = json;
+    pivotLoaded = true;
+    feuilleRouteData = pivotData; 
+    raciData = normalizeImportedRaci(pivotToRaciData(pivotData));
+    localStorage.setItem(STORAGE_KEY_PIVOT, JSON.stringify(pivotData));
+    updateChantierEnabledFlag();
+    fileInput.value="";
+    renderActors();renderMatrix();renderViews();
+    return;
+  }
+  if(!isRaciJson(json)){
+    alert("Format JSON RACI non reconnu.");
+    return;
+  }
+  raciData=normalizeImportedRaci(json);
+  updateChantierEnabledFlag();
+  fileInput.value="";
+  renderActors();renderMatrix();renderViews();
+}
+
+function handleFeuilleRouteImport(json,fromStartup){
+  if(!isFeuilleRouteJson(json)){alert("Ce JSON ne ressemble pas à une Feuille de route (phases[] manquant).");return;}
+  feuilleRouteData=json;
+  updateChantierEnabledFlag();
+  if(!raciData.project) raciData.project={};
+  if(feuilleRouteData.project){
+    raciData.project.id=raciData.project.id || feuilleRouteData.project.id || "";
+    raciData.project.title=raciData.project.title || feuilleRouteData.project.title || "";
+  }
+  fileInput.value="";
+  renderActors();renderMatrix();renderViews();
+  if(
+    fromStartup ||
+    confirm(
+      "Feuille de route importée.\n\n" +
+      "Voulez-vous que l’outil crée automatiquement une activité dans la matrice RACI " +
+      "pour chaque tâche / chantier de la Feuille de route ?\n\n" +
+      "Si vous acceptez, la matrice RACI actuelle sera remplacée."
+    )
+  ){
+    prefillFromFeuilleRoute(true);
+  }
+}
+importJsonBtn.onclick=()=>{currentImportMode="raci";fileInput.click();};
+fileInput.onchange=(evt)=>{
+  const file=evt.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const json=JSON.parse(reader.result);
+      handleRaciImport(json);
+      hideStartupOverlay();
+    }catch(e){console.error(e);alert("JSON invalide.");}
+  };
+  reader.readAsText(file,"utf-8");
+};
+exportJsonBtn.onclick=()=>{
+  raciData.version="2.3";
+
+  if(pivotLoaded && pivotData){
+    try{
+      applyRaciDataToPivot(pivotData, raciData);
+      localStorage.setItem(STORAGE_KEY_PIVOT, JSON.stringify(pivotData));
+
+      const jsonStr=JSON.stringify(pivotData,null,2);
+      const blob=new Blob([jsonStr],{type:"application/json"});
+      const a=document.createElement("a");
+      const slug=slugify((pivotData.project && (pivotData.project.title||pivotData.project.name)) || (raciData.project && raciData.project.title) || "projet");
+      a.download=`pivot_${slug}_${timestamp()}.json`;
+      a.href=URL.createObjectURL(blob);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      alert("✅ Pivot mis à jour (localStorage) + exporté.");
+      return;
+    }catch(e){
+      console.error(e);
+      alert("Erreur lors de la mise à jour du Pivot. Export RACI en fallback.");
+    }
+  }
+
+  const jsonStr=JSON.stringify(raciData,null,2);
+  const blob=new Blob([jsonStr],{type:"application/json"});
+  const a=document.createElement("a");
+  const slug=slugify(raciData.project && raciData.project.title || "projet");
+  a.download=`raci_${slug}_${timestamp()}.json`;
+  a.href=URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+/* Pré-remplissage depuis FR */
+function prefillFromFeuilleRoute(force){
+  if(!feuilleRouteData){alert("Aucune Feuille de route importée.");return;}
+  if(!force && raciData.matrix && raciData.matrix.length>0){
+    const ok=confirm("La matrice contient déjà des activités. Voulez-vous la remplacer par une activité par tâche ?");
+    if(!ok) return;
+  }
+  const newMatrix=[];
+  (feuilleRouteData.phases||[]).forEach(ph=>{
+    const phaseLabel=getPhaseLabelFromFR(ph);
+    if(Array.isArray(ph.chantiers) && ph.chantiers.length){
+      ph.chantiers.forEach(ch=>{
+        newMatrix.push({
+          phase:phaseLabel,
+          chantierId:ch.id || ch.chantierId || "",
+          activity:(ch.id?ch.id+" – ":"")+(ch.label || ch.title || ""),
+          r:[],a:[],c:[],i:[]
+        });
+      });
+    }else if(Array.isArray(ph.tasks) && ph.tasks.length){
+      ph.tasks.forEach(t=>{
+        newMatrix.push({
+          phase:phaseLabel,
+          chantierId:t.id || "",
+          activity:(t.id?t.id+" – ":"")+(t.label || t.title || ""),
+          r:[],a:[],c:[],i:[]
+        });
+      });
+    }
+  });
+  raciData.matrix=newMatrix;
+  saveToLocalStorage();
+  renderMatrix();renderViews();
+}
+prefillFromFrBtn.onclick=()=>prefillFromFeuilleRoute(false);
+
+enableInstanceBtn.onclick = () => {
+  instanceEnabled = true;
+  updateInstanceColumnVisibility();
+};
+
+const startupOverlay=document.getElementById("startupOverlay");
+const startImportRaciBtn=document.getElementById("startImportRaciBtn");
+const startImportFrBtn=document.getElementById("startImportFrBtn");
+const startNewRaciBtn=document.getElementById("startNewRaciBtn");
+function showStartupOverlay(){startupOverlay.classList.remove("hidden");}
+function hideStartupOverlay(){startupOverlay.classList.add("hidden");}
+startImportRaciBtn.onclick=()=>{currentImportMode="raci";fileInput.click();};
+startImportFrBtn.onclick=()=>{currentImportMode="fr";fileInput.click();};
+startNewRaciBtn.onclick=()=>{
+  raciData={version:"2.3",project:{id:"",title:""},actors:[],matrix:[]};
+  feuilleRouteData=null;updateChantierEnabledFlag();
+  const titre=prompt("Titre du projet :", raciData.project.title || "");
+  raciData.project.title=titre && titre.trim()?titre.trim():"";
+  updateProjectTitleUI();
+  
+  // 🟢 CORRECTION SPRINT 3 : On déverrouille la sauvegarde pour le mode vierge !
+  pivotLoaded = true;
+  pivotCurrent = raciData;
+  saveToLocalStorage(); 
+  
+  renderActors();renderMatrix();renderViews();hideStartupOverlay();
+};
+function init(){
+  const loaded = tryAutoLoadPivot();
+  updateProjectTitleUI();
+  renderActors();renderMatrix();renderViews();updateChantierEnabledFlag();
+
+  if(loaded){
+    hideStartupOverlay();
+  }else{
+    showStartupOverlay();
+  }
+}
+init();
+// --- 🛡️ ESPION SENTINELLE : Signale l'ouverture ---
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        const raw = localStorage.getItem('currentProjectJson');
+        if(raw) {
+            const p = JSON.parse(raw);
+            if(p.config && p.config.sentinelleActive) {
+                new BroadcastChannel('gold-project-sync').postMessage({ 
+                    type: "DEBUG_LOG", 
+                    action: "📂 Ouverture du support", 
+                    support: document.title 
+                });
+            }
+        }
+    } catch(e) {}
+});
+</script>
+</body>
+</html>

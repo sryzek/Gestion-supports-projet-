@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>🛡️ La Vigie - Moniteur d'Intégrité</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    h1 { color: #61dafb; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .dashboard { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-top: 20px; }
+    .card { background: #252526; padding: 15px; border-radius: 8px; border: 1px solid #333; }
+    button {
+      background-color: #0e639c; color: white; border: none; padding: 10px 15px;
+      border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px;
+    }
+    button:hover { background-color: #1177bb; }
+    button.danger { background-color: #ab3737; }
+    button.danger:hover { background-color: #c13d3d; }
+    .status-banner {
+      padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px;
+      background: #333; color: #fff; text-align: center;
+    }
+    .status-banner.ok { background: #1b5e20; color: #a5d6a7; }
+    .status-banner.error { background: #b71c1c; color: #ffcdd2; }
+    pre { background: #000; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    .log-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; }
+    .log-list li { padding: 8px; border-bottom: 1px solid #333; font-family: monospace; font-size: 13px; }
+    .log-list li .time { color: #888; margin-right: 10px; }
+    .log-list li.error { color: #ff8a80; background: rgba(183, 28, 28, 0.2); }
+    .log-list li.ok { color: #b9f6ca; }
+  </style>
+</head>
+<body>
+
+  <h1>🛡️ La Vigie - Tour de Contrôle du Pivot</h1>
+  
+  <div id="banner" class="status-banner">
+    ⏳ Initialisation de la référence en cours...
+  </div>
+
+  <div class="dashboard">
+    <div class="card">
+      <h3>🛠️ Actions</h3>
+      <button id="btn-restore" class="danger" onclick="restoreBaseline()">⏪ Restaurer la Référence</button>
+      <button onclick="simulateCorruption()" class="danger" style="margin-top: 10px; background-color: #8b0000;">⚠️ Simuler une perte de données (Test)</button>
+      
+      <hr style="border-color: #333; margin: 15px 0;">
+      
+      <h3>📊 État des Nœuds (En direct)</h3>
+      <p>Surveillance des structures clés :</p>
+      <ul id="monitored-keys" style="font-family: monospace; font-size: 13px; list-style: none; padding: 0;">
+        <li style="color: #888;">En attente de capture...</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>📜 Journal des Événements (Temps Réel)</h3>
+      <ul id="log-area" class="log-list">
+        <li><span class="time">Maintenant</span> Initialisation de l'écoute du BroadcastChannel ('gold-project-sync') et du LocalStorage...</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const syncChannel = new BroadcastChannel('gold-project-sync');
+    let baselineJson = null;
+    let lastKnownJson = null; 
+    const CRITICAL_KEYS = ['project', 'phases', 'charges', 'actors', 'raci', 'leaves', 'planningDetailed', 'budget', 'chargesProjet', 'feuilleDeRoute'];
+
+    // Capture automatisée
+    function captureBaseline() {
+      const currentRaw = localStorage.getItem('currentProjectJson');
+      if (!currentRaw) {
+        document.getElementById('banner').className = 'status-banner error';
+        document.getElementById('banner').innerHTML = "❌ Aucun JSON trouvé dans 'currentProjectJson'. Ouvrez un support valide d'abord.";
+        addLog("❌ Échec de la capture automatique : Aucun JSON disponible.", "error");
+        return;
+      }
+      try {
+        baselineJson = JSON.parse(currentRaw);
+        lastKnownJson = JSON.parse(currentRaw); 
+        document.getElementById('banner').className = 'status-banner ok';
+        document.getElementById('banner').innerHTML = '✅ Référence active. Surveillance de l\'intégrité en cours...';
+        
+        checkIntegrity(baselineJson, "Capture Initiale");
+        addLog("📸 Nouveau JSON de référence capturé automatiquement avec succès.", "ok");
+      } catch(e) {
+        document.getElementById('banner').className = 'status-banner error';
+        document.getElementById('banner').innerHTML = "❌ Erreur critique de lecture du JSON de référence.";
+      }
+    }
+
+    // Déclenchement automatique au chargement de la page
+    window.addEventListener('DOMContentLoaded', () => {
+      captureBaseline();
+    });
+
+    function checkIntegrity(newData, source) {
+      if (!baselineJson || !lastKnownJson) return;
+
+      let missingKeys = [];
+      let suspiciousDrops = []; 
+      let additionsLogs = [];
+      let hasMutations = false;
+      
+      const keysList = document.getElementById('monitored-keys');
+      keysList.innerHTML = ''; 
+
+      CRITICAL_KEYS.forEach(key => {
+        const wasInReference = lastKnownJson.hasOwnProperty(key);
+        const isInNewData = newData && newData.hasOwnProperty(key);
+        
+        let statusText = "";
+        let statusClass = "";
+
+        if (wasInReference && !isInNewData) {
+          missingKeys.push(key);
+          statusText = "🔴 KO (PERDU)";
+          statusClass = "color: #ff8a80; font-weight: bold;";
+        } 
+        else if (isInNewData) {
+            let isSuspicious = false;
+            let isAdded = false;
+            let isModified = false;
+
+            const oldDataString = JSON.stringify(lastKnownJson[key]);
+            const newDataString = JSON.stringify(newData[key]);
+            
+            // DEEP TRACKING POUR LE NOEUD 'phases' (Chantiers/Tasks)
+            if (key === 'phases' && Array.isArray(lastKnownJson[key]) && Array.isArray(newData[key])) {
+                let deepDrops = [];
+                let deepAdds = [];
+
+                newData[key].forEach((newPhase, index) => {
+                    const oldPhase = lastKnownJson[key][index];
+                    if (oldPhase && oldPhase.tasks && newPhase.tasks) {
+                        const oldLen = oldPhase.tasks.length;
+                        const newLen = newPhase.tasks.length;
+
+                        if (newLen < oldLen) {
+                            deepDrops.push(`${newPhase.phase} (-${oldLen - newLen} task)`);
+                        } else if (newLen > oldLen) {
+                            deepAdds.push(`${newPhase.phase} (+${newLen - oldLen} task)`);
+                        }
+                    }
+                });
+
+                if (deepDrops.length > 0) {
+                    suspiciousDrops.push(`phases.tasks: ${deepDrops.join(', ')}`);
+                    isSuspicious = true;
+                } else if (deepAdds.length > 0) {
+                    isAdded = true;
+                    statusText = `🔵 AJOUT (${deepAdds.join(', ')})`;
+                    statusClass = "color: #4fc3f7; font-weight: bold;";
+                    additionsLogs.push(`phases: ${deepAdds.join(', ')}`);
+                } else if (oldDataString !== newDataString) {
+                    isModified = true;
+                    statusText = "🟡 MODIFIÉ";
+                    statusClass = "color: #ffeb3b;";
+                }
+            }
+            // TRACKING CLASSIQUE POUR LES AUTRES TABLEAUX
+            else if (Array.isArray(lastKnownJson[key]) && Array.isArray(newData[key])) {
+                const oldLen = lastKnownJson[key].length;
+                const newLen = newData[key].length;
+                
+                if (newLen < oldLen) {
+                    suspiciousDrops.push(`${key} (-${oldLen - newLen} élément(s))`);
+                    isSuspicious = true;
+                } else if (newLen > oldLen) {
+                    isAdded = true;
+                    statusText = `🔵 AJOUT (+${newLen - oldLen})`;
+                    statusClass = "color: #4fc3f7; font-weight: bold;";
+                    additionsLogs.push(`${key} (+${newLen - oldLen})`);
+                } else if (oldDataString !== newDataString) {
+                    isModified = true;
+                    statusText = "🟡 MODIFIÉ";
+                    statusClass = "color: #ffeb3b;";
+                }
+            } 
+            // TRACKING GENERIQUE (Modifications de texte)
+            else {
+                if (oldDataString !== newDataString) {
+                    isModified = true;
+                    statusText = "🟡 MODIFIÉ";
+                    statusClass = "color: #ffeb3b;";
+                }
+            }
+
+            if (isSuspicious) {
+                statusText = "🟠 ALERTE PERTE (RÉGRESSION)";
+                statusClass = "color: #ffb74d; font-weight: bold;";
+            } else if (!isAdded && !isModified) {
+                statusText = "🟢 OK (Stable)";
+                statusClass = "color: #b9f6ca;";
+            }
+
+            if (isAdded || isModified) hasMutations = true;
+
+        } else {
+          statusText = "⚪ Absent (Base)";
+          statusClass = "color: #888;";
+        }
+
+        keysList.innerHTML += `<li style="${statusClass}; padding: 3px 0;">${key} : ${statusText}</li>`;
+      });
+
+      const sourceName = source || "Support inconnu";
+      if (sourceName === "Capture Initiale") return;
+
+      // Déclenchement des Alarmes
+      if (missingKeys.length > 0) {
+        document.getElementById('banner').className = 'status-banner error';
+        document.getElementById('banner').innerHTML = `🚨 ALERTE CRITIQUE : Nœuds supprimés ! Source : ${sourceName}`;
+        addLog(`❌ [${sourceName}] CORRUPTION ! Nœuds perdus : ${missingKeys.join(', ')}`, "error");
+        syncChannel.postMessage({ type: "INTEGRITY_ALARM", source: sourceName });
+
+      } else if (suspiciousDrops.length > 0) {
+        document.getElementById('banner').className = 'status-banner error';
+        document.getElementById('banner').style.backgroundColor = '#ff9800'; 
+        document.getElementById('banner').innerHTML = `⚠️ ALERTE RÉGRESSION : Données évaporées ! Source : ${sourceName}`;
+        addLog(`⚠️ [${sourceName}] PERTE DÉTECTÉE ! ${suspiciousDrops.join(' | ')}`, "error");
+        syncChannel.postMessage({ type: "INTEGRITY_ALARM", source: sourceName + " (Régression)" });
+
+      } else {
+        document.getElementById('banner').className = 'status-banner ok';
+        if (hasMutations) {
+            document.getElementById('banner').innerHTML = '✅ Référence active. Nouvelles données détectées et validées.';
+            if (additionsLogs.length > 0) {
+                 addLog(`✔️ [${sourceName}] Ajouts validés : ${additionsLogs.join(' | ')}`, "ok");
+            } else {
+                 addLog(`✔️ [${sourceName}] Mise à jour validée. Modification de contenu détectée.`, "ok");
+            }
+        } else {
+            document.getElementById('banner').innerHTML = '✅ Référence active. Intégrité des structures garantie à 100%.';
+            addLog(`✔️ [${sourceName}] Mise à jour reçue. Structure et contenu stables.`, "ok");
+        }
+      }
+
+      // Maj Tracker
+      if (missingKeys.length === 0 && suspiciousDrops.length === 0) {
+          lastKnownJson = JSON.parse(JSON.stringify(newData));
+      }
+    }
+
+    function restoreBaseline() {
+      if (!baselineJson) {
+        alert("⚠️ Aucune référence en mémoire à restaurer.");
+        return;
+      }
+      if (confirm("⚠️ Voulez-vous vraiment écraser les données actuelles par la référence en mémoire ?")) {
+        const payload = JSON.stringify(baselineJson);
+        localStorage.setItem('currentProjectJson', payload);
+        lastKnownJson = JSON.parse(JSON.stringify(baselineJson)); 
+        
+        syncChannel.postMessage({ type: "PROJECT_UPDATED", payload: baselineJson, source: "vigie-restore" });
+        
+        checkIntegrity(baselineJson, "Restauration Vigie");
+        addLog("⏪ RESTAURATION D'URGENCE : Le JSON de référence a été renvoyé à tous les supports.", "ok");
+        document.getElementById('banner').className = 'status-banner ok';
+        document.getElementById('banner').innerHTML = '✅ Restauration effectuée. Intégrité rétablie.';
+      }
+    }
+    
+    function simulateCorruption() {
+      if (!baselineJson) {
+        alert("Veuillez d'abord capturer un Pivot de référence.");
+        return;
+      }
+
+      if (confirm("⚠️ ATTENTION : Cela va volontairement effacer le nœud 'leaves' (Absences) et le nœud 'budget' pour tester les alarmes. Voulez-vous continuer ?")) {
+        let corruptedJson = JSON.parse(JSON.stringify(lastKnownJson)); 
+        
+        delete corruptedJson.leaves;
+        if(corruptedJson.budget) delete corruptedJson.budget;
+        if(corruptedJson.project && corruptedJson.project.meteo) delete corruptedJson.project.meteo;
+
+        localStorage.setItem("currentProjectJson", JSON.stringify(corruptedJson));
+        syncChannel.postMessage({ type: "PROJECT_UPDATED", payload: corruptedJson, source: "Simulateur-de-Bug" });
+        
+        addLog("💥 CRASH-TEST : Fichier corrompu injecté dans le système.", "error");
+      }
+    }
+
+    function addLog(message, type) {
+      const logArea = document.getElementById('log-area');
+      const time = new Date().toLocaleTimeString();
+      const li = document.createElement('li');
+      li.className = type;
+      li.innerHTML = `<span class="time">${time}</span> ${message}`;
+      logArea.prepend(li);
+    }
+
+    syncChannel.onmessage = (ev) => {
+      if (ev.data?.type === "DEBUG_LOG") {
+        addLog(`📢 [${ev.data.support}] Action signalée : ${ev.data.action}`, "ok");
+      } else if (ev.data?.type === "PROJECT_UPDATED") {
+        checkIntegrity(ev.data.payload, ev.data.source);
+      }
+    };
+
+    window.addEventListener("storage", (ev) => {
+      if (ev.key === "currentProjectJson" && ev.newValue) {
+        try {
+          const newData = JSON.parse(ev.newValue);
+          if (newData && (newData.project || newData.phases || newData.feuilleDeRoute)) {
+            checkIntegrity(newData, "Storage Direct");
+          }
+        } catch(e) {
+          console.warn("Vigie : Tentative de lecture JSON incomplète, attente de la suite...");
+        }
+      }
+    });
+  </script>
+</body>
+</html>

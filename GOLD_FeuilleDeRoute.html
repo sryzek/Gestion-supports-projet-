@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Feuille de Route – v1.1.3</title>
+<style>
+  :root{
+    --vdl-red:#C00021; --vdl-red2:#E43C52;
+    --text:#2C2C2C; --panel:#ffffff; --bg:#F2F2F2;
+    --shadow:0 8px 24px rgba(0,0,0,.10);
+    --hdrH: 104px; --tbH: 56px;
+    --p1:#FFCDD2; --p1a:#E57373; --p2:#FFE0B2; --p2a:#FFB74D;
+    --p3:#FFF9C4; --p3a:#FFF176; --p4:#C8E6C9; --p4a:#81C784;
+    --p5:#BBDEFB; --p5a:#64B5F6; --p6:#E1BEE7; --p6a:#BA68C8;
+    --milestone:#B30000; /* jalon rouge */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#F2F2F2;color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;height:100%}
+
+  /* Header */
+  header{
+    position:sticky; top:0; z-index:50; height:var(--hdrH);
+    color:#fff; padding:12px 16px 14px;
+    background:linear-gradient(135deg, var(--vdl-red) 0%, var(--vdl-red2) 100%);
+    box-shadow:0 8px 22px rgba(192,0,33,.18);
+  }
+  .hdr-wrap{height:100%; display:grid; grid-template-rows:auto 1fr; position:relative;}
+  .hdr-top{ position:absolute; right:8px; top:8px; font-size:12px; opacity:.9; background:rgba(255,255,255,.10); padding:4px 8px; border-radius:8px; border:1px solid rgba(255,255,255,.25)}
+  .hdr-center{ height:100%; display:flex; align-items:center; justify-content:center; text-align:center; cursor:pointer }
+  .hdr-title{ line-height:1.1 }
+  .hdr-title .project{ font-size:42px; font-weight:900; text-shadow:0 1px 0 rgba(0,0,0,.15); letter-spacing:.2px }
+
+  /* Toolbar */
+  .toolbar{
+    position:sticky; top:var(--hdrH); z-index:45; height:var(--tbH);
+    background:#fff; padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    border-bottom:1px solid #e9e9ee; box-shadow:0 6px 10px rgba(0,0,0,.04);
+  }
+  .btn{
+    background:linear-gradient(180deg,var(--vdl-red2),var(--vdl-red));
+    border:none; color:#fff; padding:8px 12px; border-radius:10px; cursor:pointer;
+    box-shadow:0 4px 12px rgba(192,0,33,.28); font-weight:700; font-size:13px;
+  }
+  .btn.secondary{
+    background:linear-gradient(180deg,#ffffff,#f6f7fb); color:#2c2c2c; border:1px solid #d7d9e2; box-shadow:var(--shadow);
+  }
+  .btn.icon{
+    width:32px; height:30px; display:grid; place-items:center; padding:0; font-size:15px;
+  }
+  .btn.icon.disabled{ opacity:.4; pointer-events:none }
+
+  .star-btn{
+    border-radius:50%; border:1px solid #d7d9e2; background:#ffffff;
+    display:grid; place-items:center; cursor:pointer; font-size:16px;
+    width:30px; height:30px; box-shadow:0 2px 6px rgba(0,0,0,.08);
+    color:#c0c4cf;
+  }
+  .row.key .star-btn{
+    border-color:var(--vdl-red2);
+    background:linear-gradient(180deg,var(--vdl-red2),var(--vdl-red));
+    color:#fff;
+  }
+
+  .zoom{ margin-left:auto; font-weight:700; font-size:13px }
+  .zoom input{ vertical-align:middle }
+
+  /* Layout */
+  .main{ display:grid; grid-template-columns: 560px 1fr; gap:8px; padding:8px 12px 12px; height: calc(100vh - var(--hdrH) - var(--tbH)); }
+  .main.single{ grid-template-columns: 1fr; }
+  .left{ overflow:auto; padding-right:6px; }
+  .right{ background:var(--panel); border:1px solid #eef0f6; border-radius:16px; box-shadow:var(--shadow); overflow:auto; }
+
+  /* Phases + saisie (compact) */
+  .phase{ border-radius:14px; padding:8px 8px 6px; margin-bottom:10px; overflow:hidden; box-shadow:var(--shadow); border:1px solid #eef0f6; }
+  .phase h3{ margin:0 0 4px 0; font-size:14px }
+  .hint{ margin:2px 0 4px 0; font-size:10px; color:#4b5563 }
+  .row{
+    display:grid;
+    grid-template-columns: 2fr 120px 120px auto auto;
+    gap:6px; align-items:center; margin:0 0 6px 0;
+  }
+  .row input{
+    height:30px; font-size:12px; padding:4px 8px; border:1px solid #d1d7e4;
+    border-radius:10px; background:#fbfcff; outline:none;
+  }
+  .row input.invalid{ border-color:#E43C52; background:#fff4f5 }
+
+  /* Modal d’accueil */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(8,12,20,.45); display:flex; align-items:center; justify-content:center; z-index:1000;
+  }
+  .modal{
+    background:#fff; width:min(560px,92vw); border-radius:16px; box-shadow:0 30px 80px rgba(0,0,0,.25);
+    padding:20px 18px 16px; border:1px solid #eef0f6;
+  }
+  .modal h2{ margin:0 0 8px 0; font-size:20px }
+  .modal p{ margin:0 0 12px 0; color:#555 }
+  .modal .rowx{ display:flex; gap:8px; }
+  .modal input[type="text"]{ flex:1; height:38px; font-size:14px; padding:6px 10px; border:1px solid #d1d7e4; border-radius:10px; }
+
+  @media (max-width:980px){
+    :root{ --hdrH: 88px; --tbH: 64px; }
+    .hdr-title .project{ font-size:28px }
+    .main{ grid-template-columns: 1fr; }
+    .row{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr-wrap">
+    <div class="hdr-top" id="hdrVer" title="Version de l’application">v1.1.4</div>
+    <div class="hdr-center" id="titleClick" title="Cliquez pour renommer le projet">
+      <div class="hdr-title">
+        <div class="project" id="hdrProject">Projet : non défini</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn" id="toggle" title="Masquer/Afficher la colonne de saisie">Masquer la saisie</button>
+  <button class="btn secondary" id="exportJson" title="Exporter le projet (titre + phases + chantiers) au format JSON pivot v1.0">Exporter JSON</button>
+  <button class="btn secondary" id="importJsonBtn" title="Importer un projet au format JSON (pivot v1.x ou JSON commun)">Importer JSON</button>
+  <input type="file" id="file" accept=".json" style="display:none">
+  <button class="btn" id="exportPdf" title="Générer un PDF du Gantt (la taille s’adapte automatiquement)">Exporter PDF</button>
+  <div class="zoom">Zoom : <input type="range" id="zoom" min="0" max="200" value="0" title="Ajuste l’échelle du Gantt (influe aussi sur le rendu PDF : plus le zoom est élevé, plus le Gantt est détaillé et large dans le PDF)"> <span id="zv">0%</span></div>
+</div>
+
+<div class="main" id="main">
+  <div class="left" id="left"></div>
+  <div class="right"><canvas id="gantt" height="680" title="Le Gantt se met à jour automatiquement. Ajustez le zoom si besoin."></canvas></div>
+</div>
+
+<div class="modal-backdrop" id="welcome">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h2 id="mTitle">Démarrer votre feuille de route</h2>
+    <p>Indiquez l’<b>intitulé du projet</b> ou bien <b>importez un modèle</b> (JSON).</p>
+    <div class="rowx">
+      <input type="text" id="modalTitle" placeholder="Ex. « SIGF – Renouvellement »" autofocus />
+      <button class="btn" id="modalUseTitle" title="Valider le titre et commencer">Utiliser ce titre</button>
+    </div>
+    <div class="actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+      <button class="btn secondary" id="modalImport" title="Importer un fichier JSON (titre + phases + chantiers)">Importer un JSON…</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ---------- État ---------- */
+let projectTitle = "";
+let zoomFactor = 0;
+let isBuildingUI = false; // FLAG POUR BLOQUER LA SAUVEGARDE AU CHARGEMENT
+const PORTAL_STORAGE_KEY = "currentProjectJson"; // UNIFICATION DE LA CLE DE STOCKAGE
+
+/* ----- Helper : savoir si on vient du portail ----- */
+function fromPortal(){
+  try{
+    const params = new URLSearchParams(window.location.search);
+    return params.get("from") === "portal";
+  }catch(e){
+    return false;
+  }
+}
+
+/* ---------- Phases + tooltips par phase ---------- */
+const PHASES_META=[
+  {name:"Pré-cadrage", tip:"Phase d’analyse initiale — identifiez le besoin, les acteurs et la faisabilité du projet.", color:"#FFCDD2", accent:"#E57373"},
+  {name:"Cadrage",     tip:"Phase de cadrage — définissez les objectifs, le périmètre et les chantiers majeurs du projet.", color:"#FFE0B2", accent:"#FFB74D"},
+  {name:"Conception",  tip:"Phase de conception — décrivez les chantiers et travaux de conception de la solution.", color:"#FFF9C4", accent:"#FFF176"},
+  {name:"Réalisation", tip:"Phase de réalisation — saisissez les chantiers de développements, paramétrages et intégrations.", color:"#C8E6C9", accent:"#81C784"},
+  {name:"Recette",     tip:"Phase de recette — indiquez les chantiers de tests, validations et corrections avant MEP.", color:"#BBDEFB", accent:"#64B5F6"},
+  {name:"Déploiement", tip:"Phase de déploiement — planifiez les chantiers de démarrage et de suivi post-mise en service.", color:"#E1BEE7", accent:"#BA68C8"},
+];
+
+const leftPane = document.getElementById('left');
+const hdrProject = document.getElementById('hdrProject');
+const mainGrid = document.getElementById('main');
+
+/* ----- Helpers généraux ----- */
+function slugify(s){
+  return (s||"projet").toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
+    .slice(0,60)||"projet";
+}
+function timestamp(){
+  const d=new Date();
+  const p=(n)=> String(n).padStart(2,'0');
+  return d.getFullYear()+ p(d.getMonth()+1)+ p(d.getDate()) + "-" + p(d.getHours())+ p(d.getMinutes());
+}
+
+/* ----- Titre cliquable ----- */
+document.getElementById('titleClick').addEventListener('click', ()=>{
+  const v = prompt("Titre du projet :", projectTitle || "");
+  if(v!=null){ projectTitle = v.trim(); hdrProject.textContent = "Projet : " + (projectTitle || "non défini"); draw(); syncToPivot(); }
+});
+
+/* ----- Saisie : helpers ----- */
+function refreshDeleteStates(container){
+  const rows = Array.from(container.querySelectorAll('.row'));
+  rows.forEach((r,i)=>{
+    const [t,s,e]=r.querySelectorAll('input');
+    const del = r.querySelector('.del');
+    const isLast = (i === rows.length-1);
+    const isEmpty = !(t.value||s.value||e.value);
+    if(isLast && isEmpty) del.classList.add('disabled');
+    else del.classList.remove('disabled');
+  });
+}
+function forceDates(row){
+  const [t,s,e]=row.querySelectorAll('input');
+  s.classList.remove('invalid'); e.classList.remove('invalid');
+  if(!s.value || !e.value) return;
+  const sd=new Date(s.value), ed=new Date(e.value);
+  if(ed < sd){
+    e.value = s.value; // forcer jalon
+    e.title = "La date de fin a été ajustée pour être ≥ à la date de début (jalon).";
+  }else{
+    e.title = "Date de fin (automatiquement forcée à être ≥ à la date de début)";
+  }
+}
+
+/* ---- Ajout d'une ligne avec étoile isKey ---- */
+function addRow(container, values=null){
+  const row=document.createElement('div'); row.className='row';
+  const isKey = values && values.isKey ? true : false;
+  if(isKey) row.classList.add('key');
+
+  row.innerHTML = `
+    <input type="text" placeholder="Intitulé du chantier" value="${values? (values.title||'') : ''}" required title="Nom lisible du chantier (ou jalon). Ex : « Gestion du marché », « Recette »">
+    <input type="date" class="start" value="${values? (values.start||'') : ''}" required title="Date de début (pour un jalon, début = fin)">
+    <input type="date" class="end"   value="${values? (values.end  ||'') : ''}" required title="Date de fin (automatiquement forcée à être ≥ à la date de début)">
+    <button class="btn icon del" type="button" title="Supprimer ce chantier">🗑️</button>
+    <button class="star-btn" type="button" title="${isKey ? 'Retirer le statut de chantier clé (macro planning)' : 'Marquer comme chantier clé (macro planning)'}">★</button>
+  `;
+  
+  const [t,s,e]=row.querySelectorAll('input');
+  const del=row.querySelector('.del');
+  const star=row.querySelector('.star-btn');
+
+  // --- RESTAURATION DE LA MÉCANIQUE DES DATES ---
+  s.addEventListener('change', () => {
+    if (!e.value && s.value) { e.value = s.value; }
+    e.min = s.value || "";
+    if(typeof forceDates === "function") forceDates(row);
+    if(typeof syncToPivot === "function") syncToPivot();
+  });
+
+  e.min = s.value || "";
+
+  [t, s, e].forEach(input => {
+    input.addEventListener('input', () => { if(typeof syncToPivot === "function") syncToPivot(); });
+  });
+
+  // VERIFICATION DU FLAG isBuildingUI POUR NE PAS ECRASER AU CHARGEMENT
+  setTimeout(() => { if(typeof syncToPivot === "function" && !isBuildingUI) syncToPivot(); }, 100);
+  // ---------------------------------------------------
+
+  [s,e].forEach(inp=>inp.addEventListener('change', ()=>{ forceDates(row); sortContainerByStart(container); refreshDeleteStates(container); draw(); syncToPivot(); }));
+  t.addEventListener('input', ()=>{ refreshDeleteStates(container); });
+  t.addEventListener('change', ()=>{ syncToPivot(); }); 
+
+  del.addEventListener('click', ()=>{
+    if(del.classList.contains('disabled')) return;
+    row.remove();
+    const hasValid = Array.from(container.querySelectorAll('.row')).some(r=>{
+      const [tt,ss,ee]=r.querySelectorAll('input');
+      return tt.value && ss.value && ee.value;
+    });
+    if(!hasValid) addRow(container);
+    refreshDeleteStates(container); draw(); syncToPivot();
+  });
+
+  star.addEventListener('click', ()=>{
+    row.classList.toggle('key');
+    star.title = row.classList.contains('key') ? "Retirer le statut" : "Marquer comme clé";
+    draw(); syncToPivot();
+  });
+
+  container.appendChild(row);
+  refreshDeleteStates(container);
+}
+
+function buildPhase(parent, meta){
+  const wrap=document.createElement('div'); wrap.className='phase';
+  wrap.style.background = meta.color; wrap.style.borderColor = meta.accent;
+  wrap.title = meta.tip;
+  wrap.innerHTML = `<h3>${meta.name}</h3><div class="hint">Saisir l’intitulé du chantier + deux dates (début/fin). Une nouvelle ligne apparaît automatiquement quand la dernière est complète. Utilisez l’étoile pour marquer les chantiers clés.</div>`;
+  const list=document.createElement('div'); wrap.appendChild(list); addRow(list);
+  list.addEventListener('input', ()=>{
+    const rows = list.querySelectorAll('.row'); const last = rows[rows.length-1];
+    if(!last) return;
+    const [t,s,e] = last.querySelectorAll('input');
+    if(t.value && s.value && e.value){ addRow(list); }
+    refreshDeleteStates(list);
+  });
+  parent.appendChild(wrap);
+}
+
+function sortContainerByStart(container){
+  const rows = Array.from(container.querySelectorAll('.row'));
+  rows.sort((a,b)=>{
+    const sa=a.querySelector('.start').value, sb=b.querySelector('.start').value;
+    const ea=a.querySelector('.end').value,   eb=b.querySelector('.end').value;
+    const da = sa? new Date(sa).getTime(): Number.MAX_SAFE_INTEGER;
+    const db = sb? new Date(sb).getTime(): Number.MAX_SAFE_INTEGER;
+    if(da===db){
+      const ja = sa&&ea&&sa===ea ? 0:1, jb = sb&&eb&&sb===eb ? 0:1;
+      if(ja!==jb) return ja-jb;
+    }
+    return da-db;
+  });
+  rows.forEach(r=>container.appendChild(r));
+}
+
+function collect(){
+  const phases=[];
+  Array.from(leftPane.children).forEach((wrap,idx)=>{
+    const meta=PHASES_META[idx]; const tasks=[];
+    wrap.querySelectorAll('.row').forEach(r=>{
+      const [t,s,e]=r.querySelectorAll('input');
+      const isKey = r.classList.contains('key');
+      if(t.value && s.value && e.value){
+        if(new Date(e.value) < new Date(s.value)) e.value = s.value;
+        tasks.push({
+          title:t.value,
+          start:s.value,
+          end:e.value,
+          color:meta.color,
+          accent:meta.accent,
+          isKey:isKey
+        });
+      }
+    });
+    phases.push({phase:meta.name, color:meta.color, accent:meta.accent, tasks});
+  });
+  return { title: projectTitle, phases };
+}
+
+/* ----- Utils dessin ----- */
+function formatFR(d){ const dt=new Date(d); return dt.toLocaleDateString('fr-FR'); }
+function textEllipsis(ctx, text, maxWidth){
+  if(!text) return '';
+  if(ctx.measureText(text).width <= maxWidth) return text;
+  const ell='…'; let lo=0, hi=text.length;
+  while(lo < hi){
+    const mid = Math.floor((lo+hi)/2);
+    const t = text.slice(0,mid).trim()+ell;
+    if(ctx.measureText(t).width <= maxWidth) lo=mid+1; else hi=mid;
+  }
+  return text.slice(0, lo-1).trim()+ell;
+}
+function drawOutsideLabel(ctx, xEdge, y, h, label, side, canvasW, opts={}){
+  const { bold=false, color='#111' } = opts;
+  ctx.textBaseline = 'middle';
+  ctx.font = `${bold? '700':'400'} 12px Inter, Arial`;
+  ctx.fillStyle = color;
+  const padding = 20;
+  if(side==='right'){
+    const lineTo = xEdge + 12;
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xEdge, y + h/2); ctx.lineTo(lineTo, y + h/2); ctx.stroke();
+    const avail = Math.max(40, canvasW - (lineTo + 8) - padding);
+    const txt = textEllipsis(ctx, label, avail);
+    ctx.textAlign = 'left'; ctx.fillText(txt, lineTo + 8, y + h/2 + 1);
+  }else{
+    const lineTo = xEdge - 12;
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xEdge, y + h/2); ctx.lineTo(lineTo, y + h/2); ctx.stroke();
+    const avail = Math.max(40, lineTo - padding);
+    const txt = textEllipsis(ctx, label, avail);
+    ctx.textAlign = 'right'; ctx.fillText(txt, lineTo - 8, y + h/2 + 1);
+  }
+}
+
+/* ----- Gantt ----- */
+function drawTwoLineLabel(ctx, monthTxt, yearTxt, centerX, headerH, maxWidth){
+  let size=13, ok=false;
+  while(size>=8){
+    ctx.font=`700 ${size}px Inter, Arial`;
+    if(Math.max(ctx.measureText(monthTxt).width,ctx.measureText(yearTxt).width) <= maxWidth-4){ ok=true; break; }
+    size -= 1;
+  }
+  if(!ok) return false;
+  ctx.fillStyle='#111'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  const lineGap=Math.max(2,Math.round(size*.25)); const midY=headerH/2;
+  ctx.fillText(monthTxt, centerX, midY-(size/2)-(lineGap/2));
+  ctx.fillText(yearTxt,  centerX, midY+(size/2)+(lineGap/2));
+  return true;
+}
+function drawMonthsHeader(ctx, months, headerH){
+  const tryDraw=(step)=>{ for(let i=0;i<months.length;i++){ if(i%step) continue;
+      const m=months[i]; const lab=m.start.toLocaleDateString('fr-FR',{month:'short'}); const yy=String(m.start.getFullYear()).slice(-2);
+      if(!drawTwoLineLabel(ctx, lab, yy, m.x+m.w/2, headerH, m.w)) return false;
+    } return true; };
+  if(tryDraw(1)) return; if(tryDraw(2)) return; if(tryDraw(3)) return; if(tryDraw(4)) return;
+  for(let i=0;i<months.length;i+=3){
+    const m0=months[i]; if(!m0) break;
+    const q=Math.floor(m0.start.getMonth()/3)+1; const yy=String(m0.start.getFullYear()).slice(-2);
+    const m1=months[i+1]||m0, m2=months[i+2]||m0;
+    const xMid = (m0.x+m0.w/2 + m2.x+m2.w/2)/2;
+    drawTwoLineLabel(ctx, `T${q}`, yy, xMid, headerH, (m0.w+m1.w+m2.w));
+  }
+}
+function draw(){
+  const data = collect();
+  const all = data.phases.flatMap(p=>p.tasks);
+  const canvas = document.getElementById('gantt');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  if(all.length===0){
+    ctx.fillStyle="#f7f7fb"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#999"; ctx.font="18px Inter, Arial"; ctx.fillText("Ajoutez des chantiers à gauche pour générer le Gantt…", 24, 46);
+    return;
+  }
+
+  const minDate=new Date(Math.min(...all.map(t=>new Date(t.start))));
+  const maxDate=new Date(Math.max(...all.map(t=>new Date(t.end))));
+  const totalDays=Math.max(1, Math.round((maxDate-minDate)/86400000)+1);
+
+  const rightPane=canvas.parentElement;
+  const containerW=Math.max(900, rightPane.clientWidth);
+
+  const leftPad  = (zoomFactor<=0)? 110 : 180;
+  const rightPad = 180;
+  const usableW  = containerW - leftPad - rightPad;
+  const baseRatio = usableW/totalDays;
+  const ratio = (zoomFactor<=0)? baseRatio : baseRatio*(1+zoomFactor*2);
+  const widthNeeded = leftPad + totalDays*ratio + rightPad;
+  canvas.width = (zoomFactor<=0)? containerW : Math.ceil(widthNeeded);
+
+  const rowH=50, headerH=48;
+  canvas.height = headerH + (all.length + data.phases.length)*rowH + 60;
+
+  // fond & quadrillage mensuel bi-ton
+  const grad=ctx.createLinearGradient(0,0,0,canvas.height);
+  grad.addColorStop(0,'#fafafa'); grad.addColorStop(1,'#f6f6f6');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  let cursor=new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  const months=[];
+  while(cursor <= maxDate){
+    const mStart=new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const next=new Date(cursor.getFullYear(), cursor.getMonth()+1, 1);
+    const dayIdx=Math.floor((mStart-minDate)/86400000);
+    const x = leftPad + dayIdx*ratio;
+    const days=Math.max(1, Math.floor((next-mStart)/86400000));
+    const w=days*ratio;
+    months.push({start:mStart, next, x, w});
+    cursor=next;
+  }
+  months.forEach(m=>{
+    ctx.fillStyle = (m.start.getMonth()%2===0)? '#e1e4ec' : '#d5dae6';
+    ctx.fillRect(m.x, 0, m.w, canvas.height);
+    ctx.strokeStyle='#c2c8d3'; ctx.beginPath(); ctx.moveTo(m.x, 0); ctx.lineTo(m.x, canvas.height); ctx.stroke();
+  });
+  const endX = leftPad + totalDays*ratio; ctx.beginPath(); ctx.moveTo(endX,0); ctx.lineTo(endX,canvas.height); ctx.stroke();
+
+  // en-tête
+  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.fillRect(0,0,canvas.width,headerH);
+  drawMonthsHeader(ctx, months, headerH);
+
+  // dernier chantier global
+  let lastTaskEnd = -Infinity, lastTaskRef = null;
+  data.phases.forEach(p=>{
+    p.tasks.forEach(t=>{
+      const e=new Date(t.end).getTime();
+      if(e>lastTaskEnd){ lastTaskEnd=e; lastTaskRef=t; }
+    });
+  });
+
+  // chantiers
+  let y=headerH+18;
+  const labelNeed = 220;
+  const margin = 16;
+
+  data.phases.forEach(p=>{
+    p.tasks.forEach(t=>{
+      const s=new Date(t.start), e=new Date(t.end);
+      const d1=Math.max(0, Math.floor((s-minDate)/86400000));
+      const d2=Math.max(0, Math.floor((e-minDate)/86400000));
+      const x1=leftPad + d1*ratio; const x2=leftPad + d2*ratio; const h=14;
+
+      if(t.start===t.end){
+        const cx=x1, cy=y+h/2, r=7;
+        ctx.save(); ctx.shadowColor='rgba(34,40,55,.18)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
+        ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--milestone')||'#B30000';
+        ctx.beginPath(); ctx.moveTo(cx,cy-r); ctx.lineTo(cx+r,cy); ctx.lineTo(cx,cy+r); ctx.lineTo(cx-r,cy); ctx.closePath(); ctx.fill(); ctx.restore();
+        const label=`${t.title} (le ${formatFR(t.start)})`;
+        const preferRight = (cx + labelNeed <= canvas.width - margin);
+        const side = (t===lastTaskRef)? 'left' : (preferRight?'right':'left');
+        drawOutsideLabel(ctx, cx + (side==='right'?6:0), y, h, label, side, canvas.width, {bold:true, color:'#B30000'});
+      }else{
+        const w=Math.max(12,(x2-x1)), r=7;
+        ctx.save(); ctx.shadowColor='rgba(34,40,55,.16)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
+        const grad=ctx.createLinearGradient(x1,y,x1+w,y+h); grad.addColorStop(0,t.color); grad.addColorStop(1,t.accent);
+        ctx.fillStyle=grad; ctx.strokeStyle='rgba(0,0,0,.08)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(x1+r,y); ctx.lineTo(x1+w-r,y);
+        ctx.quadraticCurveTo(x1+w,y,x1+w,y+r); ctx.lineTo(x1+w,y+h-r);
+        ctx.quadraticCurveTo(x1+w,y+h,x1+w-r,y+h); ctx.lineTo(x1+r,y+h);
+        ctx.quadraticCurveTo(x1,y+h,x1,y+h-r); ctx.lineTo(x1,y+r);
+        ctx.quadraticCurveTo(x1,y,x1+r,y); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+
+        const label = `${t.title} (du ${formatFR(t.start)} au ${formatFR(t.end)})`;
+        const preferRight = (x1 + w + labelNeed <= canvas.width - margin);
+        const side = (t===lastTaskRef)? 'left' : (preferRight?'right':'left');
+        const xEdge = (side==='right')? (x1+w) : x1;
+        drawOutsideLabel(ctx, xEdge, y, h, label, side, canvas.width);
+      }
+      y+=50;
+    });
+    y+=6;
+  });
+}
+
+/* ----- JSON pivot v1.0 : construction à partir de collect() ----- */
+function buildPivotJsonV1(){
+  const raw = collect();
+  const now = new Date().toISOString();
+  const title = raw.title || "Projet sans titre";
+
+  const phases = (raw.phases || []).map((p, idx) => {
+    const tasks = (p.tasks || []).map((t, j) => {
+      const start = t.start || null;
+      const end   = t.end   || t.start || null;
+      return {
+        id: `P${idx+1}-T${j+1}`,
+        title: t.title || "",
+        start: start,
+        end: end,
+        type: (start && end && start === end) ? "milestone" : "period",
+        status: "en cours",
+        percent: 0,
+        isKey: !!t.isKey
+      };
+    });
+
+    let phaseStart = null;
+    let phaseEnd   = null;
+    if(tasks.length > 0){
+      const dates = tasks.flatMap(t => [t.start, t.end]).filter(Boolean).sort();
+      phaseStart = dates[0] || null;
+      phaseEnd   = dates[dates.length-1] || null;
+    }
+
+    return {
+      code: null,
+      name: p.phase || `Phase ${idx+1}`,
+      start: phaseStart,
+      end: phaseEnd,
+      status: "en cours",
+      tasks: tasks
+    };
+  });
+
+  let projectStart = null;
+  let projectEnd   = null;
+  const phaseDates = phases.flatMap(ph => [ph.start, ph.end]).filter(Boolean).sort();
+  if(phaseDates.length>0){
+    projectStart = phaseDates[0];
+    projectEnd   = phaseDates[phaseDates.length-1];
+  }
+
+  return {
+    version: "1.0",
+    project: {
+      id: slugify(title),
+      title: title,
+      description: "",
+      domain: "",
+      status: "en cours",
+      start: projectStart,
+      end: projectEnd,
+      owner: "",
+      updatedAt: now
+    },
+    phases: phases
+  };
+}
+
+// --- Pivot 1.1 : on évite de "dégrader" le projet (on conserve météo / RACI / congés / planning, etc.)
+function buildPivotJsonV11Merged(){
+  const core = buildPivotJsonV1();
+
+  let base = null;
+  try{
+    const raw = localStorage.getItem(PORTAL_STORAGE_KEY);
+    if(raw) base = JSON.parse(String(raw).trim());
+  }catch(e){ base = null; }
+
+  const out = (base && typeof base === "object" && base.project) ? base : {};
+
+  out.version = "1.1";
+  out.project = Object.assign({}, out.project || {}, core.project || {});
+  out.phases  = Array.isArray(core.phases) ? core.phases : (out.phases || []);
+
+  if(!Array.isArray(out.actors)) out.actors = (base && Array.isArray(base.actors)) ? base.actors : [];
+  if(!out.raci || typeof out.raci !== "object") out.raci = (base && base.raci && typeof base.raci === "object") ? base.raci : { version:"1.1", matrix:[] };
+  if(!out.meteo || typeof out.meteo !== "object") out.meteo = (base && base.meteo && typeof base.meteo === "object") ? base.meteo : {};
+  if(!Array.isArray(out.leaves)) out.leaves = (base && Array.isArray(base.leaves)) ? base.leaves : [];
+
+  if(!out.planningDetailed || typeof out.planningDetailed !== "object"){
+    out.planningDetailed = (base && base.planningDetailed && typeof base.planningDetailed === "object")
+      ? base.planningDetailed
+      : { timeWindow:{ start:(core.project && core.project.start) || "", end:(core.project && core.project.end) || "" }, phases:[], actions:[], links:[], globalConflicts:[] };
+  }
+
+  return out;
+}
+
+/* ----- Import : détection pivot v1.x vs JSON commun vs ancien format ----- */
+function isPivotJsonV1(json){
+  return json
+    && typeof json.project === "object"
+    && Array.isArray(json.phases)
+    && (json.version === "1.0" || json.version === "1.1-common" || json.version === "1.1");
+}
+
+function isCommonJsonV1(json){
+  return json
+    && typeof json === "object"
+    && json.meta
+    && json.project
+    && (Array.isArray(json.roadmapFeuilleRoute) || Array.isArray(json.roadmap));
+}
+
+function commonToPivot(common){
+  const fr = Array.isArray(common.roadmapFeuilleRoute) ? common.roadmapFeuilleRoute : [];
+  const roadmap = Array.isArray(common.roadmap) ? common.roadmap : [];
+  const p = common.project || {};
+  const now = new Date().toISOString();
+
+  let minDate = null;
+  let maxDate = null;
+
+  const scanTask = (task) => {
+    if(task.start){
+      const dS = new Date(task.start);
+      if(!minDate || dS < minDate) minDate = dS;
+    }
+    if(task.end){
+      const dE = new Date(task.end);
+      if(!maxDate || dE > maxDate) maxDate = dE;
+    }
+  };
+
+  fr.forEach(phaseBlock => { (phaseBlock.tasks || []).forEach(scanTask); });
+  if(!minDate && !maxDate){ roadmap.forEach(scanTask); }
+
+  const projectPivot = {
+    id: p.id || slugify(p.title || "projet"),
+    title: p.title || "Projet sans titre",
+    description: p.description || "",
+    domain: p.domain || "",
+    status: (common.meteo && common.meteo.status) || p.status || "en cours",
+    start: minDate ? minDate.toISOString().slice(0,10) : (p.start || null),
+    end:   maxDate ? maxDate.toISOString().slice(0,10) : (p.end   || null),
+    owner: p.owner || "",
+    updatedAt: (common.meta && common.meta.lastUpdated) || now
+  };
+
+  const tasksByPhaseLabel = {};
+  fr.forEach(phaseBlock => {
+    const label = phaseBlock.phaseLabel || phaseBlock.phase || "Phase";
+    const arr = tasksByPhaseLabel[label] || (tasksByPhaseLabel[label] = []);
+    (phaseBlock.tasks || []).forEach(task => {
+      const type = task.type || "";
+      const isMilestone = type === "jalon" || (task.start && task.end && task.start === task.end);
+      arr.push({
+        id: task.id || null,
+        title: task.label || "",
+        start: task.start || null,
+        end: task.end || task.start || null,
+        type: isMilestone ? "milestone" : "period",
+        status: task.status || "planifie",
+        isKey: !!task.isKey
+      });
+    });
+  });
+
+  const phases = PHASES_META.map(meta => {
+    const label = meta.name;
+    const tasks = tasksByPhaseLabel[label] || [];
+    return { name: label, color: meta.color, accent: meta.accent, tasks: tasks };
+  });
+
+  return { version: "1.1-common", project: projectPivot, phases };
+}
+
+function isLegacyJson(json){
+  return json && json.title !== undefined && Array.isArray(json.phases);
+}
+
+function convertPivotToInternal(json){
+  const title = json.project?.title || "Projet sans titre";
+  const pivotPhases = json.phases || [];
+
+  const internalPhases = PHASES_META.map(meta => {
+    const match = pivotPhases.find(p => p.name === meta.name || p.phase === meta.name) || {};
+    const tasks = (match.tasks || []).map(t => ({
+      title: t.title || "",
+      start: t.start || "",
+      end:   t.end   || t.start || "",
+      color: meta.color,
+      accent: meta.accent,
+      isKey: !!t.isKey
+    }));
+    return { phase: meta.name, color: meta.color, accent: meta.accent, tasks: tasks };
+  });
+
+  return { title, phases: internalPhases };
+}
+
+// MISE A JOUR : SILENCE PENDANT LE CHARGEMENT DE L'UI
+function loadInternalToUI(data){
+  isBuildingUI = true; // ON BLOQUE LES SAUVEGARDES
+  
+  projectTitle = data.title || "";
+  hdrProject.textContent = "Projet : " + (projectTitle || "non défini");
+
+  leftPane.innerHTML = "";
+  PHASES_META.forEach((meta, idx) => buildPhase(leftPane, meta));
+
+  (data.phases || []).forEach((blk, idx) => {
+    const wrap = leftPane.children[idx];
+    if(!wrap) return;
+    const container = wrap.querySelector('div:last-child');
+    container.innerHTML = "";
+    (blk.tasks || []).forEach(t => addRow(container, t));
+    sortContainerByStart(container);
+    addRow(container);
+    refreshDeleteStates(container);
+  });
+
+  const w = document.getElementById('welcome');
+  if(w) w.style.display = 'none';
+  draw();
+  
+  // ON ATTEND LA FIN DES setTimeout de addRow AVANT DE RELACHER LE VERROU
+  setTimeout(() => { isBuildingUI = false; }, 200); 
+}
+
+/* ----- Chargement automatique depuis le portail ----- */
+function tryLoadFromPortal(){
+  let raw = null;
+  try{
+    raw = localStorage.getItem(PORTAL_STORAGE_KEY);
+  }catch(e){
+    return false;
+  }
+  if(!raw) return false;
+
+  let parsed;
+  try{ parsed = JSON.parse(raw); }catch(e){ return false; }
+
+  let internal;
+  if(isPivotJsonV1(parsed)){
+    internal = convertPivotToInternal(parsed);
+  }else if(isCommonJsonV1(parsed)){
+    const pivot = commonToPivot(parsed);
+    internal = convertPivotToInternal(pivot);
+  }else if(isLegacyJson(parsed)){
+    internal = parsed;
+  }else{
+    return false;
+  }
+
+  loadInternalToUI(internal);
+  return true;
+}
+
+const refreshBtn = document.getElementById('refreshBtn');
+if(refreshBtn) refreshBtn.addEventListener('click', refreshFromStorage);
+
+/* ----- UI ----- */
+document.getElementById('toggle').addEventListener('click', ()=>{
+  const left=document.querySelector('.left');
+  const hide = left.style.display!=='none';
+  left.style.display = hide? 'none':'block';
+  mainGrid.classList.toggle('single', hide);
+  if(hide){ document.getElementById('zoom').value = "0"; document.getElementById('zv').textContent="0%"; zoomFactor=0; }
+  draw();
+  document.getElementById('toggle').textContent = hide? 'Afficher la saisie' : 'Masquer la saisie';
+});
+document.getElementById('zoom').addEventListener('input', (e)=>{
+  zoomFactor = (parseInt(e.target.value,10)||0)/100;
+  document.getElementById('zv').textContent = (parseInt(e.target.value,10)||0) + '%';
+  draw();
+});
+
+/* ----- Export JSON : Pivot 1.1 (merge) ----- */
+document.getElementById('exportJson').addEventListener('click', ()=>{
+  const pivot = buildPivotJsonV11Merged();
+  try{ localStorage.setItem(PORTAL_STORAGE_KEY, JSON.stringify(pivot)); }catch(e){}
+  const slug = slugify(pivot.project.title || projectTitle || "projet");
+  const name = `feuille-de-route_${slug}_${timestamp()}.json`;
+  const blob=new Blob([JSON.stringify(pivot,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+/* ----- Import JSON : pivot v1.x, JSON commun ou ancien format ----- */
+document.getElementById('importJsonBtn').addEventListener('click', ()=>document.getElementById('file').click());
+document.getElementById('file').addEventListener('change', (evt)=>{
+  const f=evt.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const parsed=JSON.parse(r.result);
+      localStorage.setItem(PORTAL_STORAGE_KEY, JSON.stringify(parsed));
+      let internal;
+      if(isPivotJsonV1(parsed)){
+        internal = convertPivotToInternal(parsed);
+      }else if(isCommonJsonV1(parsed)){
+        const pivot = commonToPivot(parsed);
+        internal = convertPivotToInternal(pivot);
+      }else if(isLegacyJson(parsed)){
+        internal = parsed;
+      }else{
+        alert("Format JSON non reconnu.");
+        return;
+      }
+      loadInternalToUI(internal);
+      syncToPivot(); 
+    }catch(e){
+      alert('JSON invalide');
+    }
+  };
+  r.readAsText(f);
+});
+
+/* ----- PDF ----- */
+document.getElementById('exportPdf').addEventListener('click', ()=>{
+  if(!(window.jspdf && window.jspdf.jsPDF)){ alert("jsPDF indisponible"); return; }
+  const pxToMm = (px)=> px*25.4/96;
+  const { jsPDF } = window.jspdf;
+  const canvas=document.getElementById('gantt');
+
+  const canvasWmm=pxToMm(canvas.width), canvasHmm=pxToMm(canvas.height), aspect=canvasWmm/canvasHmm;
+
+  const pdf=new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  const pageW=pdf.internal.pageSize.getWidth(), pageH=pdf.internal.pageSize.getHeight();
+  const margin=10, topBandH=22, legendW=26, gap=4;
+
+  pdf.setDrawColor(224,60,82); pdf.setFillColor(224,60,82);
+  pdf.rect(0,0,pageW,topBandH,'F');
+  pdf.setDrawColor(220); pdf.setFillColor(220); pdf.rect(0,topBandH-1,pageW,1,'F');
+
+  const title=(projectTitle||"Projet (titre non renseigné)");
+  pdf.setTextColor(255); pdf.setFont(undefined,'bold'); let size=22;
+  while(size>=12){ pdf.setFontSize(size); if(pdf.getTextWidth(title)<=pageW-2*margin-40) break; size--; }
+  pdf.text(title, pageW/2, topBandH/2+4, {align:'center'});
+
+  const maxW=(pageW-2*margin)-legendW-gap, maxH=pageH-topBandH-2*margin;
+  let w=Math.min(maxW, canvasWmm), h=w/aspect; if(h>maxH){ h=maxH; w=h*aspect; }
+  const imgX=margin, imgY=topBandH+(pageH-topBandH-h)/2;
+  pdf.addImage(canvas.toDataURL('image/png'),'PNG', imgX, imgY, w, h);
+
+  const legendX=imgX+w+gap; let ly=imgY+2;
+  pdf.setTextColor(40); pdf.setFontSize(9); pdf.text('Légende', legendX, ly); ly+=4; pdf.setFontSize(7.5);
+  const toRGB=h=>{const n=parseInt(h.replace('#',''),16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};};
+  PHASES_META.forEach(p=>{const c=toRGB(p.color); pdf.setFillColor(c.r,c.g,c.b); pdf.rect(legendX,ly-3,5,5,'F'); pdf.text(p.name,legendX+6.5,ly+1); ly+=6;});
+
+  pdf.setFontSize(8); pdf.setTextColor(90);
+  pdf.text(`Généré le ${new Date().toLocaleString('fr-FR')}`, pageW-margin, pageH-5, {align:'right'});
+
+  const slug = slugify(projectTitle);
+  pdf.save(`feuille-de-route_${slug}_${timestamp()}.pdf`);
+});
+
+/* ----- Modal d’accueil ----- */
+(function setupWelcome(){
+  const w = document.getElementById('welcome');
+  const i = document.getElementById('modalTitle');
+  const bUse = document.getElementById('modalUseTitle');
+  const bImport = document.getElementById('modalImport');
+
+  if(fromPortal() && tryLoadFromPortal()){
+    w.style.display = 'none';
+    return;
+  }
+
+  const close = ()=>{ w.style.display='none'; };
+
+  const useTitle = ()=>{
+    const v = (i.value||"").trim();
+    if(!v){ i.focus(); i.style.borderColor='#E43C52'; return; }
+    projectTitle = v;
+    hdrProject.textContent = "Projet : " + v;
+    close(); draw(); syncToPivot();
+  };
+
+  bUse.addEventListener('click', useTitle);
+  i.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') useTitle(); });
+
+  bImport.addEventListener('click', ()=>{ document.getElementById('file').click(); });
+
+  setTimeout(()=> i?.focus(), 50);
+})();
+
+/* --- MODULE DE SYNCHRONISATION (GOLD SYNC) --- */
+const syncChannel = new BroadcastChannel('gold-project-sync');
+window.isReceivingSync = false;
+
+// 1. L'ANTIDOTE : Fusion intelligente des données
+function buildPivotJsonV11Merged() {
+  let existingData = {};
+  try {
+    const raw = localStorage.getItem(PORTAL_STORAGE_KEY);
+    if (raw) existingData = JSON.parse(raw);
+  } catch(e) {}
+
+  const frData = collect();
+
+  return {
+    ...existingData, 
+    version: "1.1",
+    project: {
+      ...existingData.project,
+      title: projectTitle
+    },
+    phases: frData.phases,
+    feuilleDeRoute: frData
+  };
+}
+
+function syncToPivot() {
+  // VERROU DE SECURITE ICI AUSSI
+  if (window.isReceivingSync || isBuildingUI) return; 
+  try {
+    const pivot = buildPivotJsonV11Merged();
+    syncChannel.postMessage({ type: "PROJECT_UPDATED", payload: pivot, source: "feuille-de-route" });
+    localStorage.setItem(PORTAL_STORAGE_KEY, JSON.stringify(pivot));
+  } catch (e) {
+    console.error("Erreur de synchronisation :", e);
+  }
+}
+
+// 3. MISE A JOUR DU CANAL DE RECEPTION
+syncChannel.onmessage = (ev) => {
+  if (ev.data?.type === "PROJECT_UPDATED" && ev.data.source !== "feuille-de-route") {
+    const p = ev.data.payload;
+    if (p) {
+      window.isReceivingSync = true;
+      try {
+        let internal;
+        if(isPivotJsonV1(p)){
+          internal = convertPivotToInternal(p);
+        }else if(isCommonJsonV1(p)){
+          const pivot = commonToPivot(p);
+          internal = convertPivotToInternal(pivot);
+        }else if(isLegacyJson(p)){
+          internal = p;
+        }
+        
+        if (internal) {
+          loadInternalToUI(internal);
+        }
+      } finally {
+        window.isReceivingSync = false;
+      }
+    }
+  }
+};
+
+// 2. L'ESPION : Signal d'ouverture
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        const raw = localStorage.getItem(PORTAL_STORAGE_KEY);
+        if(raw) {
+            const p = JSON.parse(raw);
+            if(p.config && p.config.sentinelleActive) {
+                syncChannel.postMessage({ 
+                    type: "DEBUG_LOG", 
+                    action: "📂 Ouverture de la Feuille de Route", 
+                    support: "Feuille de Route" 
+                });
+            }
+        }
+    } catch(e) {}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Portail GOLD Suite</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C00021">
+<style>
+  :root {
+    --vdl-red: #C00021; 
+    --vdl-red2: #E43C52;
+    --text: #2C2C2C; 
+    --bg: #F2F2F2;
+    --nav-bg: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    height: 100vh;
+    font-family: Inter, Segoe UI, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header Global */
+  header {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--vdl-red) 0%, var(--vdl-red2) 100%);
+    color: #fff;
+    padding: 12px 16px;
+    box-shadow: 0 4px 12px rgba(192,0,33,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+  }
+  .header-left { display: flex; flex-direction: column; }
+  .app-title { font-size: 20px; font-weight: 900; letter-spacing: 0.5px; margin: 0; }
+  .project-title { font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60vw; }
+  
+  .header-actions { display: flex; gap: 8px; }
+  .btn-import {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+  }
+  .btn-import:hover { background: rgba(255,255,255,0.3); }
+
+  /* Navigation */
+  nav {
+    flex-shrink: 0;
+    background: var(--nav-bg);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    border-bottom: 1px solid #e1e3ef;
+    scrollbar-width: none; /* Firefox */
+  }
+  nav::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+  
+  .nav-item {
+    background: #f0f2f5;
+    border: 1px solid #e1e3ef;
+    color: #444;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .nav-item.active {
+    background: var(--vdl-red);
+    color: #fff;
+    border-color: var(--vdl-red);
+    box-shadow: 0 2px 6px rgba(192,0,33,0.3);
+  }
+
+  /* Zone d'affichage Iframe */
+  main {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+  /* Overlay Importation Vierge */
+  #empty-state {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+    text-align: center;
+  }
+  .empty-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    max-width: 400px;
+    width: 100%;
+    border-top: 6px solid var(--vdl-red);
+  }
+  .empty-card h2 { margin-top: 0; color: var(--vdl-red); font-size: 18px; }
+  .empty-card p { color: #555; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
+  .btn-big-import {
+    background: linear-gradient(180deg, var(--vdl-red2), var(--vdl-red));
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(192,0,33,0.3);
+    width: 100%;
+  }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1 class="app-title">GOLD Suite</h1>
+    <div class="project-title" id="globalProjectTitle">Aucun projet chargé</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-import" onclick="document.getElementById('fileInput').click()">
+      📥 Importer JSON
+    </button>
+    <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+  </div>
+</header>
+
+<nav id="mainNav">
+  <div class="nav-item active" data-target="GOLD_FicheProjet.html">Fiche Projet</div>
+  <div class="nav-item" data-target="GOLD_FeuilleDeRoute.html">Feuille de Route</div>
+  <div class="nav-item" data-target="GOLD_FicheMeteo.html">Météo</div>
+  <div class="nav-item" data-target="GOLD_Planning.html">Planning</div>
+  <div class="nav-item" data-target="GOLD_RACI.html">RACI</div>
+  <div class="nav-item" data-target="GOLD_Conges.html">Congés</div>
+</nav>
+
+<main>
+  <div id="empty-state">
+    <div class="empty-card">
+      <h2>Bienvenue sur le portail GOLD</h2>
+      <p>Pour commencer, veuillez importer votre fichier pivot contenant les données de votre projet. Les données seront sauvegardées localement sur votre appareil.</p>
+      <button class="btn-big-import" onclick="document.getElementById('fileInput').click()">
+        Charger le fichier Pivot (.json)
+      </button>
+    </div>
+  </div>
+  <iframe id="contentFrame" src="about:blank"></iframe>
+</main>
+
+<script>
+  const STORAGE_KEY = "currentProjectJson";
+  const projectTitleEl = document.getElementById("globalProjectTitle");
+  const emptyStateEl = document.getElementById("empty-state");
+  const contentFrame = document.getElementById("contentFrame");
+  const navItems = document.querySelectorAll(".nav-item");
+  const fileInput = document.getElementById("fileInput");
+
+  // Enregistrement du Service Worker pour la PWA (mode hors-ligne)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service Worker enregistré avec succès.', reg))
+        .catch(err => console.error('Erreur lors de l\'enregistrement du Service Worker.', err));
+    });
+  }
+
+  // Initialisation au lancement
+  function initPortal() {
+    const rawData = localStorage.getItem(STORAGE_KEY);
+    if (rawData) {
+      try {
+        const parsed = JSON.parse(rawData);
+        updateProjectTitle(parsed);
+        emptyStateEl.style.display = 'none';
+        loadModule(document.querySelector(".nav-item.active").getAttribute("data-target"));
+      } catch (e) {
+        console.error("Erreur de lecture du localStorage", e);
+      }
+    }
+  }
+
+  function updateProjectTitle(data) {
+    if (data && data.project && data.project.title) {
+      projectTitleEl.textContent = data.project.title;
+    } else if (data && data.title) {
+      projectTitleEl.textContent = data.title;
+    } else {
+      projectTitleEl.textContent = "Projet en cours";
+    }
+  }
+
+  function loadModule(targetUrl) {
+    // Ajout du paramètre from=portal pour indiquer aux modules qu'ils sont dans le portail
+    contentFrame.src = targetUrl + "?from=portal";
+  }
+
+  // Gestion de la navigation
+  navItems.forEach(item => {
+    item.addEventListener("click", () => {
+      if (emptyStateEl.style.display !== 'none') {
+        alert("Veuillez d'abord charger un fichier de projet.");
+        return;
+      }
+      navItems.forEach(nav => nav.classList.remove("active"));
+      item.classList.add("active");
+      loadModule(item.getAttribute("data-target"));
+    });
+  });
+
+  // Gestion de l'importation JSON globale
+  fileInput.addEventListener("change", (evt) => {
+    const f = evt.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        updateProjectTitle(parsed);
+        emptyStateEl.style.display = 'none';
+        
+        // Alerte visuelle pour l'utilisateur
+        alert("Projet chargé et sauvegardé localement avec succès !");
+        
+        // Recharger le module actif pour qu'il lise les nouvelles données
+        const activeTarget = document.querySelector(".nav-item.active").getAttribute("data-target");
+        loadModule(activeTarget);
+        
+        // Diffuser la mise à jour via BroadcastChannel si nécessaire pour d'autres onglets
+        try {
+          new BroadcastChannel('gold-project-sync').postMessage({ 
+              type: "PROJECT_UPDATED", 
+              source: "portal", 
+              payload: parsed 
+          });
+        } catch(err) {}
+
+      } catch (err) {
+        alert("Erreur : Le fichier JSON est invalide.");
+      }
+    };
+    reader.readAsText(f);
+    evt.target.value = ""; // Reset de l'input
+  });
+
+  // Lancement
+  initPortal();
+
+  // Écoute des mises à jour provenant des iframes (si une modif est sauvegardée dans un module)
+  try {
+    const syncChannel = new BroadcastChannel('gold-project-sync');
+    syncChannel.onmessage = (ev) => {
+      if (ev.data && ev.data.type === "PROJECT_UPDATED") {
+        updateProjectTitle(ev.data.payload);
+      }
+    };
+  } catch(e) {}
+
+</script>
+</body>
+</html>

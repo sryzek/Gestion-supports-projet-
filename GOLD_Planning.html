@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Planning détaillé du projet – GOLD v6.0 (Volets figés & PDF)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* === VARIABLES ET RESET === */
+:root{ --vdl-red:#C00021; --vdl-red2:#E43C52; --text:#2C2C2C; --bg:#F2F2F2; --hdrH:96px; --tbH:56px; }
+*{box-sizing:border-box;}
+html,body{ margin:0; padding:0; height:100vh; overflow:hidden; font-family:Inter,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; }
+
+/* === EN-TÊTE FIGÉ === */
+#top-fixed { flex-shrink:0; display:flex; flex-direction:column; box-shadow:0 4px 12px rgba(0,0,0,0.08); z-index:100; background:#fff; }
+header { padding:12px 20px; color:#fff; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, var(--vdl-red) 0%, var(--vdl-red2) 100%); }
+.hdr-title { font-size:22px; font-weight:900; margin:0; }
+.hdr-sub { font-size:12px; opacity:0.9; }
+
+.toolbar { padding:10px 20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #e1e3ef; background:#fff; }
+.btn { border:none; cursor:pointer; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:6px; }
+.btn:hover { filter:brightness(0.95); }
+.btn.primary { background:var(--vdl-red); color:#fff; }
+.btn.excel { background:#107C41; color:#fff; }
+.btn.secondary { background:#eee; color:#333; border:1px solid #ccc; }
+.btn.action { background:#334155; color:white; border:1px solid #1E293B; }
+.btn.danger { background:#fff; color:#D32F2F; border:1px solid #D32F2F; }
+
+.filters-area { padding:12px 20px; display:flex; gap:20px; align-items:flex-end; background:#fdfdfd; border-bottom:2px solid #e1e3ef; }
+.filter-group label { display:block; font-size:11px; margin-bottom:4px; font-weight:600; color:#555; }
+.filter-group select { font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid #c6cbe0; background:#fbfcff; }
+.summary { font-size:11px; color:#444; background:#F9FAFF; border-radius:8px; padding:6px 10px; border:1px dashed #d0d4f0; display:flex; gap:10px; align-items:center; margin-left:auto;}
+
+/* === BLOC DU BAS (GESTION DYNAMIQUE DE LA HAUTEUR) === */
+#bottom-scroll { flex-grow: 1; display: flex; flex-direction: column; padding: 15px 20px; gap: 15px; overflow: hidden; min-height: 0; }
+
+/* === VUE TABLEAU === */
+#view-table { display: flex; flex-direction: column; flex-grow: 1; min-height: 0; overflow: hidden; }
+.plan-wrapper { flex-grow: 1; overflow: auto; border: 1px solid #d0d4f0; border-radius: 8px; background: #fff; }
+table.plan-grid { width: 100%; min-width: 1450px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.plan-cell { padding: 8px; font-size: 11px; border-bottom: 1px solid #e1e3ef; border-right: 1px solid #e1e3ef; vertical-align: middle; transition: background-color 0.3s ease; }
+.plan-cell:last-child { border-right: none; }
+thead .plan-cell { background: #EEF1FA !important; font-weight: 700; color: #334155; position: sticky; top: 0; z-index: 50; border-bottom: 2px solid #cbd5e1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.plan-grid input, .plan-grid select, .plan-grid textarea { width: 100%; font-size: 11px; padding: 4px; border-radius: 6px; border: 1px solid #c6cbe0; background: rgba(255,255,255,0.85); box-sizing: border-box; }
+.plan-grid textarea { resize: vertical; min-height: 32px; font-family: inherit;}
+.row-actions { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+.row-actions button { width:22px; height:22px; border-radius:4px; border:1px solid #c6cbe0; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; }
+.row-actions button:hover { background:#e2e8f0; }
+.alerts-badges { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; }
+.badge { width:28px; height:26px; clip-path:polygon(50% 0%, 0% 100%, 100% 100%); display:flex; align-items:flex-end; justify-content:center; font-size:11px; padding-bottom:2px; cursor:help; }
+.badge.red { background:#FCA5A5; color:#7F1D1D; }
+.badge.orange { background:#FDBA74; color:#7C2D12; }
+
+/* === VUE GANTT === */
+#view-gantt { display: none; flex-direction: column; flex-grow: 1; min-height: 0; overflow: hidden; }
+.gantt-container { flex-grow: 1; overflow: auto; background: #fff; border: 1px solid #d0d4f0; border-radius: 8px; display: flex; flex-direction: column; }
+.g-hdr { display:flex; position:sticky; top:0; z-index:50; background:#EEF1FA; border-bottom:2px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.g-month { border-right:1px solid #cbd5e1; padding:8px; text-align:center; font-size:11px; font-weight:bold; color:#475569; text-transform: capitalize;}
+.g-row { display:flex; border-bottom:1px solid #eee; position:relative; min-height:45px; align-items:stretch; transition:filter 0.2s; }
+.g-row:hover { filter:brightness(0.96); }
+.g-label { width:350px; flex-shrink:0; padding:8px 10px; font-size:11px; position:sticky; left:0; z-index:15; border-right:2px solid #cbd5e1; display:flex; flex-direction:column; justify-content:center; box-shadow:2px 0 5px rgba(0,0,0,0.05); background:inherit; }
+.g-hdr .g-label { z-index: 60; background: #EEF1FA; }
+.g-track { flex:1; position:relative; background-image:linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px); background-size:20px 100%; }
+.g-connector { position:absolute; height:1px; border-bottom:1px dashed #94a3b8; top:22px; left:0; z-index:1; }
+.g-bar { position:absolute; height:14px; top:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.15); display:flex; align-items:center; color:#fff; font-size:9px; padding:0 8px; white-space:nowrap; overflow:hidden; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,0.4); z-index:5; background-image: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 100%); border: 1px solid rgba(0,0,0,0.1); transition: all 0.2s; }
+.g-alert-text { position: absolute; font-size: 9px; font-weight: 600; white-space: nowrap; z-index: 7; }
+.g-bar-missing-r { background: repeating-linear-gradient(45deg, #fff, #fff 5px, #fca5a5 5px, #fca5a5 10px) !important; border: 1px solid #dc2626 !important; color: #dc2626 !important; text-shadow: none; box-shadow: none;}
+.g-leave-overlay { position: absolute; height: 20px; top: 12px; z-index: 6; border-radius: 4px; pointer-events: none; background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9) 4px, transparent 4px, transparent 8px); border: 1px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.g-drift-overlay { position: absolute; height: 16px; top: 14px; z-index: 6; border-radius: 8px; pointer-events: none; background: repeating-linear-gradient(45deg, rgba(220, 38, 38, 0.8), rgba(220, 38, 38, 0.8) 4px, transparent 4px, transparent 8px); }
+.g-chantier-deadline { position: absolute; width: 2px; height: 45px; top: 0; background: #DC2626; z-index: 4; box-shadow: 0 0 6px rgba(220, 38, 38, 0.6); }
+.g-warning-icon-container { width: 24px; height: 24px; position: absolute; top: 10px; z-index: 7; background: white; border: 2px solid #DC2626; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: help; transform: translateX(-50%); }
+.g-warning-icon-container svg { width: 18px; height: 18px; }
+
+/* === LÉGENDES === */
+.legend-box { flex-shrink: 0; padding:12px; background:#fff; border:1px solid #d0d4f0; border-radius:8px; font-size:11px; }
+.legend-row { display:flex; flex-wrap:wrap; gap:15px; align-items:center; margin-bottom:8px; }
+.legend-item { display:flex; align-items:center; gap:6px; }
+.color-swatch { width:14px; height:14px; border-radius:4px; border:1px solid rgba(0,0,0,0.1); }
+
+/* === ACI === */
+.aci-dropdown { position:relative; width:100%; }
+.aci-trigger { width:100%; min-height:26px; padding:2px 4px; border-radius:6px; border:1px solid #c6cbe0; background:rgba(255,255,255,0.85); cursor:pointer; display:flex; flex-wrap:wrap; gap:4px; align-items:center;}
+.aci-content { display:none; position:absolute; top:100%; left:0; background:#fff; border:1px solid #ccc; width:180px; max-height:200px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15); padding:5px; border-radius:6px; z-index:100; }
+.aci-dropdown:hover .aci-content { display:block; }
+.aci-item { display:flex; align-items:center; gap:6px; padding:4px; cursor:pointer; border-radius:4px; }
+.aci-item:hover { background:#f1f5f9; }
+.tag { background:#e2e8f0; padding:2px 4px; border-radius:4px; font-weight:600; font-size:9px; color:#333;}
+
+/* === IMPRESSION PDF === */
+@media screen { .print-only { display: none !important; } }
+@media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    #top-fixed, .toolbar, .filters-area, .legend-box, .row-actions { display: none !important; }
+    html, body { height: auto; overflow: visible; background: #fff; display: block; }
+    #bottom-scroll { padding: 0; overflow: visible; position: static; display: flex; flex-direction: column; height: auto;}
+    #view-gantt { display: block !important; order: 1; margin-bottom: 30px; page-break-after: always; overflow: visible; height: auto;}
+    .gantt-container { width: 100% !important; min-width: 100% !important; overflow: visible !important; border: none; }
+    .g-months-container { min-width: 0 !important; width: 100% !important; flex: 1; }
+    .g-track { min-width: 0 !important; width: 100% !important; }
+    .g-label { position: static; box-shadow: none; border-right: 1px solid #cbd5e1; width: 220px !important; } 
+    .g-month { font-size: 9px; padding: 4px; }
+    #view-table { display: block !important; order: 2; overflow: visible; height: auto;}
+    .plan-wrapper { overflow: visible !important; margin:0; border: none;}
+    table.plan-grid { border: none; width: 100%; min-width: 100%; }
+    thead { display: table-header-group; } tfoot { display: table-footer-group; } tr { page-break-inside: avoid; break-inside: avoid; } 
+    .plan-grid input, .plan-grid select, .plan-grid textarea { border: none; background: transparent; appearance: none; -moz-appearance: none; -webkit-appearance: none; resize: none; overflow: hidden; font-family: inherit; color: #000; padding:0; margin:0; }
+    @page { size: landscape; margin: 10mm; }
+}
+
+/* Modale */
+.modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; }
+.modal-box { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; width:650px; border-radius:12px; padding:25px; box-shadow:0 20px 50px rgba(0,0,0,0.3);}
+.mapping-row { display:flex; gap:10px; margin-bottom:10px; align-items:center; background:#f9faff; padding:10px; border-radius:8px; border:1px solid #eee; }
+.mapping-select { width:100%; padding:6px; border-radius:6px; border:1px solid #c6cbe0; font-size:12px; background:#fff; }
+
+/* --- KPI Dashboard --- */
+.kpi-badge { padding:6px 10px; border-radius:6px; font-size:12px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1); cursor:default; transition: all 0.3s; }
+#col-menu { display:none; position:absolute; right:20px; top:60px; background:#fff; border:1px solid #ccc; padding:10px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; flex-direction:column; gap:5px; }
+/* Troncature Textarea */
+.plan-grid textarea { resize: none; overflow: hidden; height: 32px !important; white-space: nowrap; text-overflow: ellipsis; transition: all 0.2s ease; cursor: pointer; }
+.plan-grid textarea:focus, .plan-grid textarea:hover { white-space: normal; height: auto !important; min-height: 80px !important; position: absolute; z-index: 100; width: 350px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); background: #fff; border: 1px solid #005A9E; }
+/* Chantier Header */
+.chantier-header td { background: #E8ECEF !important; font-weight: bold; font-size: 14px; padding: 10px 12px !important; cursor: pointer; border-bottom: 2px solid #fff; }
+/* Milestones & Icons */
+.milestone-marker { width: 14px; height: 14px; background: #D32F2F; transform: rotate(45deg); display:inline-block; vertical-align:middle; box-shadow:0 2px 4px rgba(0,0,0,0.3); }
+.gantt-alert-icon { position: absolute; right: -20px; top: 50%; transform: translateY(-50%); font-size: 14px; cursor: pointer; z-index: 10; }
+
+</style>
+</head>
+<body>
+
+<div id="top-fixed">
+    <header>
+        <div>
+            <h1 class="hdr-title" id="hdrProject">Projet : Chargement...</h1>
+            <div class="hdr-sub" id="hdrWindow">GOLD v6.0 - Volets Figés</div>
+        </div>
+    </header>
+
+    <div class="toolbar">
+        <button class="btn excel" id="btnImportExcel">📂 Importer Excel</button>
+        <button class="btn config" onclick="openMappingModal()">⚙️ Config Mapping</button>
+        <div style="width: 2px; height: 20px; background: #ccc; margin: 0 10px;"></div>
+        
+        <button class="btn action" id="btnToggleView">📊 Vue Gantt Global</button>
+        
+        <select id="ganttZoomSelect" class="btn secondary" style="display:none;" onchange="changeGanttZoom(this.value)">
+            <option value="15">🔍 Zoom Jours</option>
+            <option value="3">🔍 Zoom Semaines</option>
+            <option value="1">🔍 Zoom Mois</option>
+        </select>
+
+        <button class="btn secondary" onclick="window.print()">📄 Exporter PDF (Gantt + Tableau)</button>
+        <button class="btn secondary" id="btnRefreshSort">⟳ Rafraîchir</button>
+        
+        <div style="flex:1"></div>
+        <div id="kpi-dashboard" style="display:flex; gap:12px; align-items:center;">
+            <div class="kpi-badge" style="background:#E3F2FD; color:#1565C0;">Total Actions: <span id="kpi-total">0</span></div>
+            <div class="kpi-badge" style="background:#FFF3E0; color:#E65100; cursor:pointer;" onclick="toggleAlertFilter()" title="Filtrer les alertes">⚠️ Alertes: <span id="kpi-alerts">0</span></div>
+            <div class="kpi-badge" style="background:#E8F5E9; color:#2E7D32;">✅ Terminées: <span id="kpi-done">0</span></div>
+            <button class="btn secondary" onclick="toggleColumnMenu()">⚙️ Colonnes</button>
+        </div>
+        <div id="col-menu">
+            <label><input type="checkbox" checked onchange="toggleCol('col-theme')"> Thème & Chantier</label>
+            <label><input type="checkbox" checked onchange="toggleCol('col-comment')"> Commentaires</label>
+            <label><input type="checkbox" checked onchange="toggleCol('col-raci')"> Matrice RACI</label>
+        </div>
+        <button class="btn danger" id="btnReset">🗑️ Réinitialiser</button>
+        <button class="btn primary" onclick="document.getElementById('fileInput').click()">Importer JSON</button>
+        <button class="btn secondary" id="btnExport">Exporter JSON</button>
+        <input type="file" id="fileInput" accept=".json" style="display:none">
+        <input type="file" id="fileInputExcel" accept=".xlsx, .xls, .csv" style="display:none">
+    </div>
+
+    <div class="filters-area">
+        <div class="filter-group">
+            <label>Thème / Périmètre</label>
+            <select id="filterPhase"><option value="">(Tous les thèmes)</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Acteur (R, A, C, I)</label>
+            <select id="filterActor"><option value="">(Tous les acteurs)</option></select>
+        </div>
+        <div class="filter-group" style="padding-bottom:4px;">
+            <label style="margin-bottom:8px;">Statut</label>
+            <div style="display:flex; gap:10px; font-size:12px;">
+                <label style="font-weight:normal"><input type="checkbox" id="stActive" checked> En cours</label>
+                <label style="font-weight:normal"><input type="checkbox" id="stTodo" checked> À venir</label>
+                <label style="font-weight:normal"><input type="checkbox" id="stDone" checked> Terminées</label>
+                <label style="font-weight:normal"><input type="checkbox" id="stObsolete"> Obsolètes</label>
+            </div>
+        </div>
+        <div class="summary" id="summaryText">0 action(s) affichée(s)</div>
+    </div>
+</div>
+
+<div id="bottom-scroll">
+    <div id="view-table"><div class="plan-wrapper" id="planWrapper"></div></div>
+    <div id="view-gantt"><div class="gantt-container" id="ganttWrapper"></div></div>
+    <div class="legend-box">
+        <div class="legend-row">
+            <strong style="color:var(--vdl-red); width:130px;">Alertes Gantt :</strong>
+            <div class="legend-item"><span class="badge red">👤</span> Resp. manquant (Barre rayée rouge/blanc)</div>
+            <div class="legend-item"><span class="badge red">📅</span> Hors Roadmap (Zone rayée rouge + texte)</div>
+            <div class="legend-item"><span class="badge orange">🏖️</span> Absence(s) (Zone rayée blanche + texte)</div>
+        </div>
+        <div class="legend-row" id="legendChantiers" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+            <strong style="color:var(--vdl-red); width:130px;">Chantiers :</strong>
+        </div>
+    </div>
+</div>
+
+<div id="mappingModalDyn" class="modal-overlay">
+  <div class="modal-box">
+    <h2 style="margin-top:0; color:var(--vdl-red);">Mapping Périmètres ➔ Chantiers</h2>
+    <p style="font-size:12px; color:#555;">Associez les Périmètres détectés dans l'Excel avec les Chantiers de votre projet.</p>
+    <div id="mappingListDyn" style="max-height:350px; overflow-y:auto; margin:15px 0;"></div>
+    <div style="text-align:right;"><button class="btn primary" onclick="closeMappingModal()">Fermer</button></div>
+  </div>
+</div>
+
+<script>
+let planningData = null;
+let pivotProject = null;          
+let chantierIndex = [];           
+let leaveIndex = [];              
+let isGanttView = false;
+let currentGanttZoom = 15; // VARIABLE DE ZOOM INITIALISÉE
+
+const chantierPalette = [
+    { bg: "#EBF5FF", bar: "#6BA5DA" }, { bg: "#F0FDF4", bar: "#7CBA80" }, { bg: "#FFF7ED", bar: "#E8A75D" }, 
+    { bg: "#FAF5FF", bar: "#A775B3" }, { bg: "#FEF2F2", bar: "#D96C6C" }, { bg: "#ECFEFF", bar: "#52B2BF" }, 
+    { bg: "#FEFCE8", bar: "#D4B65B" }, { bg: "#F8FAFC", bar: "#8A9BA8" }  
+];
+
+function getChantierColors(chantierId) {
+    if(!chantierId) return { bg: "#FFFFFF", bar: "#94A3B8" };
+    const idx = chantierIndex.findIndex(c => String(c.id) === String(chantierId));
+    if(idx === -1) return { bg: "#FFFFFF", bar: "#94A3B8" };
+    return chantierPalette[idx % chantierPalette.length];
+}
+
+function saveToLocalStorage() {
+  if (!planningData) return;
+  if(!planningData.mappings) planningData.mappings = {};
+  if (pivotProject) {
+      pivotProject.planningDetailed = JSON.parse(JSON.stringify(planningData));
+      localStorage.setItem("currentProjectJson", JSON.stringify(pivotProject));
+  } else localStorage.setItem("currentProjectJson", JSON.stringify(planningData));
+}
+
+function parseDate(str){
+  if(!str) return null; const p = str.split("-"); if(p.length!==3) return null;
+  return new Date(Date.UTC(+p[0], +p[1]-1, +p[2]));
+}
+function formatDateFR(str){
+  const d = parseDate(str); if(!d) return str||"?";
+  const mois = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+  return `${d.getUTCDate()} ${mois[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+function esc(t){ return (t==null) ? "" : String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function overlap(aStart,aEnd,bStart,bEnd){ return !(aEnd < bStart || aStart > bEnd); }
+
+function getAutoStatus(a){
+  if (a.status === "obsolete" || a.status === "DONE") return a.status; 
+  if (a.status === "ACTIVE") return "ACTIVE";
+  const s = parseDate(a.start), e = parseDate(a.end); if(!s || !e) return "TODO";
+  const tUTC = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
+  if(e < tUTC) return "DONE";
+  if(s <= tUTC && tUTC <= e) return "ACTIVE";
+  return "TODO";
+}
+
+function buildIndexes(json){
+  chantierIndex = []; leaveIndex = [];
+  try{ (json?.phases||[]).forEach(ph=>{(ph?.tasks||[]).forEach(t=>{ if(t) chantierIndex.push({ id:String(t.id||t.taskId||""), label:String(t.title||t.label||t.name||t.id||"").trim(), start:(t.start||""), end:(t.end||"") }); }); }); }catch(e){}
+  try{ (json?.feuilleDeRoute?.chantiers||[]).forEach(c=>{ if(!chantierIndex.find(x=>String(x.id)===String(c.id))) chantierIndex.push({id:String(c.id), label:c.label, start:c.start, end:c.end}); }); }catch(e){}
+  try{ leaveIndex = (json?.leaves||[]).filter(l=>l && (l.actorId||l.id) && (l.start||l.startDate) && (l.end||l.endDate)).map(l=>({ actorId:String(l.actorId||l.id), start:String(l.start||l.startDate), end:String(l.end||l.endDate), label:String(l.label||l.type||"Absence") })); }catch(e){}
+}
+
+function normalizeActors(arr){ return (Array.isArray(arr)?arr:[]).map((a,idx)=>({...a, actorId:String(a?.actorId||a?.id||a?.email||a?.shortName||a?.name||("ACT_"+(idx+1)))})); }
+function normalizeRaci(r){ const toArr=x=>(Array.isArray(x)?x:[]).map(v=>String(v)); return {R:toArr(r?.R||r?.r),A:toArr(r?.A||r?.a),C:toArr(r?.C||r?.c),I:toArr(r?.I||r?.i)}; }
+
+function normalizePlanningImport(json){
+  if(json && typeof json==="object" && json.version){
+    pivotProject = json; buildIndexes(json);
+    const plan = JSON.parse(JSON.stringify(json.planningDetailed || {}));
+    plan.project = json.project || {id:"",title:"Projet sans titre"};
+    let acts = [];
+    if(json.actors && typeof json.actors === "object" && !Array.isArray(json.actors)){
+      for(const [role, name] of Object.entries(json.actors)) if(name) acts.push({actorId: name, shortName: name});
+    } else acts = Array.isArray(json.actors) ? json.actors : (json.project?.actors || []);
+    plan.actors = normalizeActors(acts);
+    plan.phases = Array.isArray(plan.phases)? plan.phases : [];
+    plan.actions = Array.isArray(plan.actions)? plan.actions : [];
+    plan.mappings = plan.mappings || {};
+    plan.actions = plan.actions.map(a=>({ actionId: String(a.actionId||a.id||""), phaseId: a.phaseId||"", chantierId: a.chantierId?String(a.chantierId):"", label: a.label||"", start: a.start||"", end: a.end||"", raci: normalizeRaci(a.raci), comment: a.comment||"", order: a.order||0, _sortIndex: a._sortIndex||0, alerts: [], status: a.status||"" }));
+    return plan;
+  }
+  return null;
+}
+
+function loadPlanning(json){
+  if(!json || typeof json!=="object") return;
+  if(!json.actions || json.actions.length === 0) json.actions = [{ actionId: "A1", phaseId: "", chantierId: "", label: "Nouvelle action", start: "", end: "", raci: {R:[],A:[],C:[],I:[]}, comment: "", order: 1, _sortIndex: 1, alerts: [], status:"TODO" }];
+  planningData = json;
+  if(!planningData.mappings) planningData.mappings = {};
+  refreshSortState(true); saveToLocalStorage(); updateHeader(); updateFilters(); renderLegend(); renderView();
+}
+
+function computeAlertsForAction(a){
+  const alerts = [];
+  if (a.status === "obsolete" || a.status === "DONE") return alerts; 
+  const rId = a.raci?.R?.[0] ? String(a.raci.R[0]) : "";
+  if(!rId) alerts.push({lvl:"RED", icon: "👤", msg:"Le Responsable (R) est manquant", type:"R_MISSING"});
+  
+  if(a.chantierId){
+    const ch = chantierIndex.find(x=>String(x.id) === String(a.chantierId));
+    if(ch && ch.start && ch.end && a.start && a.end && (a.start < ch.start || a.end > ch.end)) alerts.push({lvl:"RED", icon: "📅", msg:`Hors chantier (${ch.start} → ${ch.end})`, type:"ROADMAP"});
+  }
+  if(rId && a.start && a.end && leaveIndex.length){
+    const hit = leaveIndex.find(l=>l.actorId===rId && overlap(a.start,a.end,l.start,l.end));
+    if(hit) alerts.push({lvl:"ORANGE", icon: "🏖️", msg:`Absence du responsable (${hit.start} → ${hit.end})`, type:"ABSENCE"});
+  }
+  return alerts;
+}
+
+function refreshSortState(silent = false) {
+    if(!planningData) return;
+    planningData.actions.forEach(a => {
+        a.alerts = computeAlertsForAction(a);
+        a._sortIndex = a.alerts.some(x => x.lvl === "RED") ? (a.order || 0) : (100000 + (a.order || 0));
+    });
+    if(!silent) renderView();
+}
+
+function updateHeader(){ if(!planningData) return; document.getElementById("hdrProject").textContent = "Projet : " + (planningData.project?.title || "non défini"); }
+
+function updateFilters(){
+  if(!planningData) return;
+  const fPhase = document.getElementById("filterPhase"); const fActor = document.getElementById("filterActor");
+  fPhase.innerHTML = "<option value=''>(Tous les thèmes)</option>";
+  (planningData.phases || []).slice().sort((a,b)=>(a.order||0)-(b.order||0)).forEach(p=>{ const opt = document.createElement("option"); opt.value = p.phaseId; opt.textContent = p.label || p.phaseId; fPhase.appendChild(opt); });
+  fActor.innerHTML = "<option value=''>(Tous les acteurs)</option>";
+  (planningData.actors || []).forEach(a=>{ const opt = document.createElement("option"); opt.value = a.actorId; opt.textContent = a.shortName || a.name || a.actorId; fActor.appendChild(opt); });
+}
+
+function renderLegend(){
+  if(!planningData) return;
+  let html=""; if(chantierIndex.length === 0) html += "<span style='color:#666'>Aucun chantier détecté.</span>";
+  chantierIndex.forEach((c)=>{ 
+      const colors = getChantierColors(c.id);
+      html += `<div class='legend-item'><span class='color-swatch' style='background:${colors.bg}; border-color:${colors.bar}'></span><span class='color-swatch' style='background:${colors.bar}; width:20px; height:6px;'></span><span>${esc(c.label)}</span></div>`; 
+  });
+  document.getElementById("legendChantiers").innerHTML = html;
+}
+
+function getFilteredActions() {
+  const fPhase = document.getElementById("filterPhase").value; 
+  const fActor = document.getElementById("filterActor").value;
+  const allowedStatuses = []; 
+  
+  if(document.getElementById("stActive")?.checked) allowedStatuses.push("ACTIVE"); 
+  if(document.getElementById("stTodo")?.checked) allowedStatuses.push("TODO"); 
+  if(document.getElementById("stDone")?.checked) allowedStatuses.push("DONE");
+  
+  const showObsolete = document.getElementById("stObsolete")?.checked;
+
+  const filtered = planningData.actions.filter(a=>{
+    if(fPhase && a.phaseId!==fPhase) return false;
+    const computedStat = getAutoStatus(a);
+    
+    // GESTION OBSOLÈTES MISE À JOUR
+    if(computedStat === "obsolete" && !showObsolete) return false;
+    if(computedStat !== "obsolete" && allowedStatuses.length && !allowedStatuses.includes(computedStat)) return false;
+    
+    if(fActor){
+      const allIds = [].concat(a.raci?.R||[]).concat(a.raci?.A||[]).concat(a.raci?.C||[]).concat(a.raci?.I||[]);
+      if(!allIds.map(String).includes(String(fActor))) return false;
+    }
+    return true;
+  });
+  filtered.sort((a,b)=> (a._sortIndex || 0) - (b._sortIndex || 0));
+  return filtered;
+}
+
+// === NOUVELLES FONCTIONS DE CONTRÔLE DE VUE (KPI, COLONNES, ZOOM) ===
+function updateKPIs(filtered) {
+    if(!filtered) return;
+    const total = filtered.length;
+    const done = filtered.filter(a => getAutoStatus(a) === "DONE").length;
+    const alerts = filtered.filter(a => a.alerts && a.alerts.length > 0).length;
+    
+    document.getElementById("kpi-total").textContent = total;
+    document.getElementById("kpi-done").textContent = done;
+    document.getElementById("kpi-alerts").textContent = alerts;
+}
+
+function toggleColumnMenu() {
+    const menu = document.getElementById("col-menu");
+    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+}
+
+function toggleCol(colClass) {
+    const inputCheckbox = document.querySelector(`input[onchange="toggleCol('${colClass}')"]`);
+    const isChecked = inputCheckbox ? inputCheckbox.checked : true;
+    document.querySelectorAll(`.${colClass}`).forEach(el => {
+        el.style.display = isChecked ? "" : "none";
+    });
+}
+
+function changeGanttZoom(val) {
+    currentGanttZoom = parseInt(val);
+    renderView();
+}
+// ======================================================================
+
+function renderView() {
+    if(!planningData) return;
+    const filtered = getFilteredActions();
+    document.getElementById("summaryText").textContent = `${filtered.length} action(s) affichée(s).`;
+    
+    // APPEL À LA MISE À JOUR DES KPIs
+    updateKPIs(filtered);
+    
+    renderGantt(filtered); 
+    renderTable(filtered); 
+    
+    // Réappliquer l'état des colonnes après le render
+    ['col-theme', 'col-comment', 'col-raci'].forEach(c => toggleCol(c));
+}
+
+function renderTable(filtered){
+  let html = `<table class='plan-grid'>
+    <thead><tr>
+      <th class='plan-cell header' style='width:75px'>Actions</th><th class='plan-cell header' style='width:70px'>Alertes</th>
+      <th class='plan-cell header col-theme' style='width:130px'>Thème</th><th class='plan-cell header col-theme' style='width:150px'>Chantier</th>
+      <th class='plan-cell header' style='width:auto'>Action / Livrable</th><th class='plan-cell header col-comment' style='width:200px'>Commentaire</th>
+      <th class='plan-cell header' style='width:105px'>Début</th><th class='plan-cell header' style='width:105px'>Fin</th>
+      <th class='plan-cell header col-raci' style='width:110px'>R</th><th class='plan-cell header col-raci' style='width:80px'>A</th>
+      <th class='plan-cell header col-raci' style='width:80px'>C</th><th class='plan-cell header col-raci' style='width:80px'>I</th>
+    </tr></thead><tbody>`;
+
+  let currentChantier = null;
+  filtered.forEach(a=>{
+    const autoStat = getAutoStatus(a);
+    const isObsolete = autoStat === "obsolete";
+    const isDone = autoStat === "DONE";
+    const chantierColors = getChantierColors(a.chantierId);
+    let rowStyle = `background-image: linear-gradient(to bottom, ${chantierColors.bg}, #ffffff); background-color: ${chantierColors.bg};`;
+    if(isObsolete || isDone) rowStyle += `opacity: 0.6; text-decoration: ${isObsolete ? 'line-through' : 'none'};`;
+    
+    // Grouping Chantier Header
+    const safeChantier = a.chantierId || "Non assigné";
+    const safeChantierClass = safeChantier.replace(/\W+/g, "_");
+    if(safeChantier !== currentChantier){
+        html += `<tr class='chantier-header' onclick="toggleChantierGrp('grp_${safeChantierClass}')"><td colspan='12'>
+            <span style='display:inline-block; width:20px;' id='ico_grp_${safeChantierClass}'>▼</span> 📁 Chantier : ${safeChantier}
+        </td></tr>`;
+        currentChantier = safeChantier;
+    }
+
+    html += `<tr class='grp_${safeChantierClass}' style='${rowStyle}'>`;
+    html += `<td class='plan-cell'><div class='row-actions'>
+                <button class='row-add' data-action-id='${esc(a.actionId)}'>+</button>
+                <button class='row-dup' data-action-id='${esc(a.actionId)}'>⎘</button>
+                <button class='row-del' data-action-id='${esc(a.actionId)}' style='color:var(--vdl-red)'>🗑</button>
+             </div></td>`;
+    
+    let badgesHtml = a.alerts.map(al => `<span class='badge ${al.lvl==="RED"?"red":"orange"}' title='${esc(al.msg)}'>${al.icon}</span>`).join("");
+    html += `<td class='plan-cell'><div class='alerts-badges'>${badgesHtml}</div></td>`;
+
+    let pOpts = "<option value=''></option>"; (planningData.phases||[]).forEach(p=> pOpts += `<option value='${esc(p.phaseId)}' ${p.phaseId===a.phaseId?"selected":""}>${esc(p.label||p.phaseId)}</option>`);
+    html += `<td class='plan-cell col-theme'><select class='cell-phase' data-action-id='${esc(a.actionId)}'>${pOpts}</select></td>`;
+
+    let cOpts = "<option value=''></option>"; chantierIndex.forEach(ch=> cOpts += `<option value='${esc(ch.id)}' ${String(ch.id)===String(a.chantierId||"")?"selected":""}>${esc(ch.label)}</option>`);
+    html += `<td class='plan-cell col-theme'><select class='cell-chantier' data-action-id='${esc(a.actionId)}'>${cOpts}</select></td>`;
+
+    html += `<td class='plan-cell'><textarea class='cell-label' rows='2' data-action-id='${esc(a.actionId)}'>${esc(a.label||"")}</textarea></td>`;
+    html += `<td class='plan-cell col-comment'><textarea class='cell-comment' rows='2' data-action-id='${esc(a.actionId)}' placeholder="Commentaire...">${esc(a.comment||"")}</textarea></td>`;
+
+    const isDrift = a.alerts.some(x=>x.type==="ROADMAP");
+    html += `<td class='plan-cell'><input type='date' class='cell-start ${isDrift?"input-alert-drift":""}' data-action-id='${esc(a.actionId)}' value='${esc(a.start||"")}'></td>`;
+    html += `<td class='plan-cell'><input type='date' class='cell-end ${isDrift?"input-alert-drift":""}' data-action-id='${esc(a.actionId)}' value='${esc(a.end||"")}'></td>`;
+
+    let rVal = a.raci?.R?.[0] ? String(a.raci.R[0]) : ""; let rOptions = "<option value=''></option>"; 
+    (planningData.actors||[]).forEach(ac=> { rOptions += `<option value='${esc(ac.actorId)}' ${String(ac.actorId)===rVal?"selected":""}>${esc(ac.shortName||ac.name)}</option>`; });
+    html += `<td class='plan-cell col-raci'><select class='cell-R' data-action-id='${esc(a.actionId)}'>${rOptions}</select></td>`;
+
+    ["A","C","I"].forEach(role=>{
+      const vals = new Set((a.raci?.[role]||[]).map(String)); let tagsHTML = ""; let cbHTML = "";
+      (planningData.actors||[]).forEach(ac=>{
+         const isChecked = vals.has(String(ac.actorId));
+         if(isChecked) tagsHTML += `<span class='tag'>${esc(ac.shortName||ac.name)}</span>`;
+         cbHTML += `<label class='aci-item' onclick='event.stopPropagation()'><input type='checkbox' class='aci-cb' data-action-id='${esc(a.actionId)}' data-role='${role}' value='${esc(ac.actorId)}' ${isChecked?"checked":""}> ${esc(ac.shortName||ac.name)}</label>`;
+      });
+      html += `<td class='plan-cell col-raci'><div class='aci-dropdown'><div class='aci-trigger' data-action-id='${esc(a.actionId)}'>${tagsHTML || "<span style='color:#aaa;'>...</span>"}</div><div class='aci-content'>${cbHTML}</div></div></td>`;
+    });
+    html += `</tr>`;
+  });
+  html += "</tbody></table>"; document.getElementById("planWrapper").innerHTML = html; attachCellEditors();
+}
+
+function renderGantt(filtered){
+    const wrapper = document.getElementById("ganttWrapper");
+    let minD = Infinity, maxD = -Infinity;
+    filtered.forEach(a => { if(a.start) minD = Math.min(minD, new Date(a.start).getTime()); if(a.end) maxD = Math.max(maxD, new Date(a.end).getTime()); });
+    if (minD === Infinity) { wrapper.innerHTML = "<div style='padding:20px'>Aucune date saisie dans les actions filtrées.</div>"; return; }
+
+    // UTILISATION DE LA VARIABLE GLOBALE AU LIEU DE 15 FIXE
+    const pxPerDay = currentGanttZoom; 
+    let startGantt = new Date(minD); startGantt.setDate(1); 
+    let endGantt = new Date(maxD); endGantt.setMonth(endGantt.getMonth() + 1); endGantt.setDate(0); 
+
+    const totalDays = Math.round((endGantt - startGantt) / 86400000) + 1;
+    const minGanttWidth = totalDays * pxPerDay;
+
+    let html = `<div class="g-hdr"><div class="g-label" style="font-weight:700; background:#EEF1FA;">Action / Livrable</div><div class="g-months-container" style="display:flex; flex:1; min-width:${minGanttWidth}px; position:relative;">`;
+    let curr = new Date(startGantt);
+    while(curr <= endGantt) {
+        let y = curr.getFullYear(), m = curr.getMonth(); let daysInMonth = new Date(y, m+1, 0).getDate();
+        if(curr.getTime() === startGantt.getTime()) daysInMonth = daysInMonth - startGantt.getDate() + 1;
+        let monthPct = (daysInMonth / totalDays) * 100;
+        // Ajustement visuel pour le texte selon le niveau de zoom
+        let monthLabel = currentGanttZoom === 1 ? curr.toLocaleString('fr-FR', {month:'narrow'}) : curr.toLocaleString('fr-FR', {month:'short', year:'2-digit'});
+        html += `<div class="g-month" style="width:${monthPct}%">${monthLabel}</div>`;
+        curr.setMonth(m+1); curr.setDate(1);
+    }
+    html += `</div></div>`;
+
+    filtered.forEach(a => {
+        const chantierColors = getChantierColors(a.chantierId);
+        const rId = a.raci?.R?.[0]; const rName = (planningData.actors||[]).find(x=>x.actorId === rId)?.shortName || "";
+        const autoStat = getAutoStatus(a);
+        const rowOpacity = (autoStat === "DONE" || autoStat === "obsolete") ? 0.6 : 1;
+
+        html += `<div class="g-row" style="background-image: linear-gradient(to bottom, ${chantierColors.bg}, #ffffff); background-color: ${chantierColors.bg}; opacity:${rowOpacity};">
+                    <div class="g-label">
+                        <div style="font-weight:700; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="flex:1; overflow:hidden; text-overflow:ellipsis; ${autoStat==='obsolete'?'text-decoration:line-through;':''}" title="${esc(a.label)}">${esc(a.label)}</span>
+                        </div>
+                        <div style="font-size:10px; color:#64748b; margin-top:4px;">${rName ? `👤 ${esc(rName)}` : ''}</div>
+                    </div>
+                    <div class="g-track" style="min-width:${minGanttWidth}px;">`;
+
+        if(a.start && a.end) {
+            const dStart = new Date(a.start).getTime(); const dEnd = new Date(a.end).getTime();
+            if(dStart <= dEnd) {
+                const leftPct = (Math.round((dStart - startGantt) / 86400000) / totalDays) * 100;
+                const widthPct = ((Math.round((dEnd - dStart) / 86400000) + 1) / totalDays) * 100;
+                
+                let classes = "g-bar"; let extraOverlays = "";
+                if(a.alerts.some(x=>x.type==="R_MISSING")) { classes += " g-bar-missing-r"; extraOverlays += `<div class="g-alert-text" style="left:${leftPct}%; top:30px; color:#DC2626;">👤 Responsable manquant</div>`; }
+
+                if(rId && leaveIndex.length){
+                    leaveIndex.forEach(l => {
+                        if (l.actorId === rId && overlap(a.start, a.end, l.start, l.end)) {
+                            let lStart = Math.max(new Date(l.start).getTime(), dStart, startGantt.getTime());
+                            let lEnd = Math.min(new Date(l.end).getTime(), dEnd, endGantt.getTime());
+                            if(lStart <= lEnd) {
+                                let lLeftPct = (Math.round((lStart - startGantt) / 86400000) / totalDays) * 100;
+                                let lWidthPct = ((Math.round((lEnd - lStart) / 86400000) + 1) / totalDays) * 100;
+                                extraOverlays += `<div class="g-leave-overlay" style="left:${lLeftPct}%; width:${lWidthPct}%;" title="Absence: ${formatDateFR(l.start)} - ${formatDateFR(l.end)}"></div>`;
+                            }
+                        }
+                    });
+                }
+
+                if(a.chantierId) {
+                    const ch = chantierIndex.find(x => String(x.id) === String(a.chantierId));
+                    if(ch && ch.end && dEnd > new Date(ch.end).getTime()) {
+                        let drStart = Math.max(new Date(ch.end).getTime() + 86400000, dStart, startGantt.getTime());
+                        let drEnd = Math.min(dEnd, endGantt.getTime());
+                        if(drStart <= drEnd) {
+                            let drLeftPct = (Math.round((drStart - startGantt) / 86400000) / totalDays) * 100;
+                            let drWidthPct = ((Math.round((drEnd - drStart) / 86400000) + 1) / totalDays) * 100;
+                            extraOverlays += `<div class="g-drift-overlay" style="left:${drLeftPct}%; width:${drWidthPct}%;" title="Retard"></div>`;
+                        }
+                    }
+                }
+                
+                html += `<div class="g-connector" style="width:${leftPct}%;"></div>`;
+                html += `<div class="${classes}" style="left:${leftPct}%; width:${widthPct}%; background-color:${(autoStat==='DONE'||autoStat==='obsolete')?'#94A3B8':chantierColors.bar};" title="${formatDateFR(a.start)} - ${formatDateFR(a.end)}"><span style="position:relative; z-index:5;">${rName}</span></div>`;
+                html += extraOverlays;
+            }
+        }
+        html += `</div></div>`;
+    });
+    wrapper.innerHTML = html;
+}
+
+document.getElementById('btnToggleView').addEventListener("click", ()=>{
+    isGanttView = !isGanttView;
+    document.getElementById("view-table").style.display = isGanttView ? "none" : "flex";
+    document.getElementById("view-gantt").style.display = isGanttView ? "flex" : "none";
+    document.getElementById('btnToggleView').innerHTML = isGanttView ? "📋 Vue Grille de Saisie" : "📊 Vue Gantt Global";
+    // Affichage dynamique du sélecteur de zoom
+    document.getElementById('ganttZoomSelect').style.display = isGanttView ? "inline-block" : "none";
+});
+
+function attachCellEditors(){
+  ["phase", "chantier", "label", "start", "end", "R", "comment"].forEach(f => {
+    document.querySelectorAll(`.cell-${f}`).forEach(el => el.addEventListener("change", (e)=>{
+        const id = e.target.getAttribute("data-action-id"); const action = planningData.actions.find(a=>String(a.actionId)===String(id)); if(!action) return;
+        if(f==="R") action.raci.R = [e.target.value]; else if(f.includes("start") || f.includes("end")) action[f] = e.target.value;
+        else action[f+"Id"] ? action[f+"Id"] = e.target.value : action[f] = e.target.value;
+        saveToLocalStorage(); renderView();
+    }));
+  });
+  document.querySelectorAll(".aci-cb").forEach(el => el.addEventListener("change", (e) => {
+      const id = e.target.getAttribute("data-action-id"); const role = e.target.getAttribute("data-role");
+      const action = planningData.actions.find(a=>String(a.actionId)===String(id)); if(!action) return;
+      if(!action.raci[role]) action.raci[role] = [];
+      if(e.target.checked) { if(!action.raci[role].includes(e.target.value)) action.raci[role].push(e.target.value); } else action.raci[role] = action.raci[role].filter(v => v !== e.target.value);
+      saveToLocalStorage(); renderView(); 
+  }));
+  document.querySelectorAll(".row-add").forEach(btn=>btn.addEventListener("click", (e)=>{ 
+      const idx = planningData.actions.findIndex(a=>String(a.actionId) === String(btn.getAttribute("data-action-id")));
+      planningData.actions.splice(idx+1, 0, { actionId: "A"+Date.now(), label: "Nouvelle action", raci: {R:[],A:[],C:[],I:[]}, status:"TODO" });
+      saveToLocalStorage(); renderView();
+  }));
+  document.querySelectorAll(".row-dup").forEach(btn=>btn.addEventListener("click", (e)=>{ 
+      const base = planningData.actions.find(a=>String(a.actionId) === String(btn.getAttribute("data-action-id")));
+      if(base) { const clone = JSON.parse(JSON.stringify(base)); clone.actionId = "A" + Date.now(); clone.label += " (Copie)";
+          planningData.actions.splice(planningData.actions.findIndex(a=>String(a.actionId) === base.actionId)+1, 0, clone);
+          saveToLocalStorage(); renderView(); }
+  }));
+  document.querySelectorAll(".row-del").forEach(btn=>btn.addEventListener("click", (e)=>{ 
+      if(confirm("Supprimer l’action ?")){ planningData.actions = planningData.actions.filter(a=>String(a.actionId)!==btn.getAttribute("data-action-id")); saveToLocalStorage(); renderView(); }
+  }));
+}
+
+document.getElementById('btnRefreshSort').addEventListener("click", () => refreshSortState(false));
+document.getElementById('btnReset').addEventListener("click", () => { if(confirm("⚠️ Tout effacer ?")) { planningData.actions = []; saveToLocalStorage(); renderView(); }});
+// Ajout de l'écouteur stObsolete
+["filterPhase", "filterActor", "stActive", "stTodo", "stDone", "stObsolete"].forEach(id => document.getElementById(id)?.addEventListener("change", renderView));
+
+document.getElementById('btnImportExcel').addEventListener("click", () => {
+    if(!planningData) return alert("⚠️ Action impossible : Vous devez d'abord initialiser un projet en cliquant sur 'Importer JSON'.");
+    document.getElementById('fileInputExcel').click();
+});
+
+function openMappingModal() {
+    if(!planningData) return alert("Veuillez d'abord initialiser un projet.");
+    let listHtml = ""; const peris = [...new Set(planningData.actions.map(a => a.phaseId).filter(p => p && p !== "Sans Thème"))];
+    if(peris.length === 0) listHtml = "<p style='color:#777; font-style:italic;'>Aucun périmètre détecté.</p>";
+    else {
+        let cOpts = "<option value=''>-- Aucun chantier --</option>"; chantierIndex.forEach(ch => cOpts += `<option value='${esc(ch.id)}'>${esc(ch.label)}</option>`);
+        peris.forEach(p => {
+            let phaseName = planningData.phases.find(phase => phase.phaseId === p)?.label || p;
+            let currentMapping = (planningData.mappings && planningData.mappings[p]) ? planningData.mappings[p] : "";
+            listHtml += `<div class="mapping-row"><div style="flex:1; font-weight:bold;">${esc(phaseName)}</div><div style="flex:2"><select class="mapping-select" onchange="updateMapping('${esc(p).replace(/'/g, "\\'")}', this.value)">${cOpts.replace(`value='${currentMapping}'`, `value='${currentMapping}' selected`)}</select></div></div>`;
+        });
+    }
+    document.getElementById('mappingListDyn').innerHTML = listHtml; document.getElementById('mappingModalDyn').style.display = 'block';
+}
+function updateMapping(peri, val) { if(!planningData.mappings) planningData.mappings = {}; planningData.mappings[peri] = val; saveToLocalStorage(); }
+function closeMappingModal() { document.getElementById('mappingModalDyn').style.display = 'none'; if(planningData && planningData.mappings) { planningData.actions.forEach(a => { if(planningData.mappings[a.phaseId]) a.chantierId = planningData.mappings[a.phaseId]; }); saveToLocalStorage(); renderView(); } }
+
+function formatExcelDate(val) {
+    if (!val) return ""; let y, m, d;
+    if (val instanceof Date) {
+        if (isNaN(val.getTime())) return ""; const safeDate = new Date(val.getTime() + (12 * 60 * 60 * 1000));
+        y = safeDate.getFullYear(); m = String(safeDate.getMonth() + 1).padStart(2, '0'); d = String(safeDate.getDate()).padStart(2, '0');
+    } else if (typeof val === "number") {
+        const safeDate = new Date(Math.round((val - 25569) * 86400 * 1000) + (12 * 60 * 60 * 1000));
+        y = safeDate.getUTCFullYear(); m = String(safeDate.getUTCMonth() + 1).padStart(2, '0'); d = String(safeDate.getUTCDate()).padStart(2, '0');
+    } else {
+        const str = String(val).trim(); if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+        const parts = str.split('/'); if (parts.length === 3) { d = parts[0].padStart(2, '0'); m = parts[1].padStart(2, '0'); y = parts[2]; if (y.length === 2) y = "20" + y; return `${y}-${m}-${d}`; }
+        return str;
+    }
+    return `${y}-${m}-${d}`;
+}
+
+// === IMPORT INTELLIGENT V2 (Correction du bug LILLE) ===
+document.getElementById('fileInputExcel').addEventListener("change", (evt) => {
+  const file = evt.target.files[0]; if(!file) return; const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array', cellDates: true});
+        
+        let sheetName = workbook.SheetNames.find(n => n.toUpperCase().includes("ACTION") && !n.toUpperCase().includes("SYNTH"));
+        if(!sheetName) sheetName = workbook.SheetNames.find(n => n.toUpperCase().includes("ACTION"));
+        if(!sheetName) sheetName = workbook.SheetNames[0];
+
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: ""});
+        processStrictExcelRows(rows);
+    } catch (err) { 
+        console.error("Erreur Import:", err);
+        alert("Erreur lors de la lecture de l'Excel : " + err.message); 
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  evt.target.value = ""; 
+});
+
+function processStrictExcelRows(rows) {
+  if (!rows || rows.length === 0) return;
+  function normalizeName(str) { return String(str).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "").trim(); }
+  function findActorWithTolerance(excelName) {
+    if (!excelName || !planningData.actors) return null;
+    const normExcel = normalizeName(excelName);
+    for(let actor of planningData.actors) { if (normalizeName(actor.name).includes(normExcel) || normalizeName(actor.shortName).includes(normExcel) || normExcel.includes(normalizeName(actor.shortName))) return actor.actorId; }
+    return null;
+  }
+
+  let headerRowIndex = -1; let headers = [];
+  for (let i = 0; i < Math.min(30, rows.length); i++) {
+     const rowStr = (rows[i] || []).join("|").toUpperCase();
+     if (rowStr.includes("IDENTIFIANT") || rowStr.includes("DESCRIPTION") || rowStr.includes("TITRE")) { 
+         headerRowIndex = i; headers = rows[i].map(h => String(h||"").toUpperCase().trim()); break; 
+     }
+  }
+
+  if (headerRowIndex === -1) { alert("Erreur : Impossible de trouver la ligne d'en-tête (Identifiant, Description...)."); return; }
+  const findCol = (keywords) => headers.findIndex(h => keywords.some(k => h === k || h.includes(k)));
+
+  let idxPorteur = findCol(["PORTEUR"]);
+  if(idxPorteur === -1) idxPorteur = findCol(["RESPONSABLE", "AFFECT", "ASSIGNEE"]);
+
+  let tmpId = findCol(["IDENTIFIANT"]); if(tmpId===-1) tmpId = findCol(["ACTION", "ID", "REF"]);
+  const idxName = findCol(["DESCRIPTION", "NOM", "TITRE", "LIVRABLE", "TACHE", "TÂCHE"]);
+  const idxStart = findCol(["DÉBUT", "DEBUT", "START"]);
+  const idxEnd = findCol(["ÉCHÉANCE", "ECHEANCE", "FIN", "END"]);
+  const idxPhase = findCol(["PÉRIMÈTRE", "PERIMETRE", "THÈME", "THEME", "COMPARTIMENT", "PHASE"]);
+  const idxComment = findCol(["COMMENTAIRE", "NOTE"]);
+  
+  const idxStatut = findCol(["STATUT", "ETAT", "ÉTAT"]);
+  const idxObsolete = findCol(["OBSOLÈTE", "OBSOLETE"]);
+
+  if (idxName === -1) { alert("Erreur : Colonne 'Description' ou 'Titre' introuvable."); return; }
+
+  let actionsUpdated = 0; let actionsAdded = 0; let newPhases = [];
+  planningData.actions = planningData.actions.filter(a => a.label && !a.label.includes("attente d'import"));
+
+  for (let i = headerRowIndex + 1; i < rows.length; i++) {
+     const row = rows[i]; if(!row || row.length === 0) continue;
+     const actionId = tmpId !== -1 ? String(row[tmpId]||"").trim() : ("ACT" + i);
+     if (!actionId || actionId === "Identifiant" || actionId.includes("This row marks")) continue;
+
+     const taskName = String(row[idxName]||"").trim(); if (!taskName) continue;
+     const porteurExcel = idxPorteur !== -1 ? String(row[idxPorteur]||"").trim() : "";
+     let phaseExcel = idxPhase !== -1 ? String(row[idxPhase]||"").trim() : "Sans Thème";
+     const commentExcel = idxComment !== -1 ? String(row[idxComment]||"").trim() : ""; 
+     
+     const statutExcel = idxStatut !== -1 ? String(row[idxStatut]||"").trim().toUpperCase() : "";
+     const obsoleteExcel = idxObsolete !== -1 ? String(row[idxObsolete]||"").trim().toUpperCase() : "FALSE";
+
+     let systemStatus = "TODO";
+     if (obsoleteExcel === "TRUE" || obsoleteExcel === "VRAI") systemStatus = "obsolete";
+     else if (statutExcel.includes("TERMIN") || statutExcel === "FAIT" || statutExcel === "DONE") systemStatus = "DONE";
+     else if (statutExcel.includes("EN COURS") || statutExcel === "ACTIVE") systemStatus = "ACTIVE";
+
+     let existingPhase = planningData.phases.find(p => p.label === phaseExcel || p.phaseId === phaseExcel);
+     let phaseIdToAssign = existingPhase ? existingPhase.phaseId : null;
+     if (!existingPhase) {
+         let tempPhase = newPhases.find(p => p.label === phaseExcel);
+         if (tempPhase) phaseIdToAssign = tempPhase.phaseId;
+         else {
+             const newPhaseId = "P" + (planningData.phases.length + newPhases.length + 1);
+             newPhases.push({ phaseId: newPhaseId, label: phaseExcel, order: planningData.phases.length + newPhases.length });
+             phaseIdToAssign = newPhaseId;
+         }
+     }
+
+     const formattedStart = idxStart !== -1 ? formatExcelDate(row[idxStart]) : "";
+     const formattedEnd = idxEnd !== -1 ? formatExcelDate(row[idxEnd]) : "";
+     const finalActorId = findActorWithTolerance(porteurExcel);
+     let autoChantier = (planningData.mappings && planningData.mappings[phaseIdToAssign]) ? planningData.mappings[phaseIdToAssign] : "";
+
+     let existingAction = planningData.actions.find(a => String(a.actionId).trim() === actionId);
+     if(existingAction && tmpId !== -1) {
+         if(taskName) existingAction.label = taskName;
+         if(formattedStart) existingAction.start = formattedStart;
+         if(formattedEnd) existingAction.end = formattedEnd;
+         if(commentExcel) existingAction.comment = commentExcel;
+         existingAction.phaseId = phaseIdToAssign;
+         if(autoChantier !== "") existingAction.chantierId = autoChantier; 
+         if(finalActorId) { if(!existingAction.raci) existingAction.raci = {R:[],A:[],C:[],I:[]}; existingAction.raci.R = [finalActorId]; }
+         existingAction.status = systemStatus;
+         actionsUpdated++;
+     } else {
+         planningData.actions.push({
+             actionId: actionId, phaseId: phaseIdToAssign, chantierId: autoChantier, label: taskName, start: formattedStart || "", end: formattedEnd || "",
+             comment: commentExcel, raci: {R: finalActorId ? [finalActorId] : [], A: [], C:[], I:[]}, order: planningData.actions.length + 1, alerts:[], status: systemStatus
+         });
+         actionsAdded++;
+     }
+  }
+
+  if(newPhases.length > 0) planningData.phases = planningData.phases.concat(newPhases);
+  saveToLocalStorage(); refreshSortState(true); updateHeader(); updateFilters(); renderLegend(); renderView();
+  alert(`Synchro Excel réussie ! ✅\n\n- ${actionsAdded} nouvelle(s) action(s)\n- ${actionsUpdated} action(s) actualisée(s)`);
+}
+
+document.getElementById('fileInput').addEventListener("change", (evt)=>{ const f = evt.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{ loadPlanning(normalizePlanningImport(JSON.parse(reader.result))); }; reader.readAsText(f); });
+document.getElementById('btnExport').addEventListener("click", ()=>{ const dataToExport = pivotProject ? pivotProject : planningData; if(pivotProject) pivotProject.planningDetailed = JSON.parse(JSON.stringify(planningData)); const blob = new Blob([JSON.stringify(dataToExport,null,2)],{type:"application/json"}); const a = document.createElement("a"); a.download = "planning_"+Date.now()+".json"; a.href = URL.createObjectURL(blob); a.click(); URL.revokeObjectURL(a.href); });
+(function init(){ try{ const raw = localStorage.getItem("currentProjectJson"); if(raw) loadPlanning(normalizePlanningImport(JSON.parse(raw))); }catch(e){ console.error(e); } })();
+// --- 🛡️ ESPION SENTINELLE : Signale l'ouverture ---
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        const raw = localStorage.getItem('currentProjectJson');
+        if(raw) {
+            const p = JSON.parse(raw);
+            if(p.config && p.config.sentinelleActive) {
+                new BroadcastChannel('gold-project-sync').postMessage({ 
+                    type: "DEBUG_LOG", 
+                    action: "📂 Ouverture du support", 
+                    support: document.title 
+                });
+            }
+        }
+    } catch(e) {}
+});
+</script>
+</body>
+</html>

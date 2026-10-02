@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Congés acteurs projet</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --vdl-red:#C00021; --vdl-red2:#E43C52;
+    --text:#2C2C2C; --panel:#ffffff; --bg:#F2F2F2;
+    --hdrH:104px; --tbH:56px;
+    --gantt-label-width:140px; 
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; background:var(--bg); color:var(--text); font-family:Inter,Segoe UI,Arial,sans-serif; height:100%; display: flex; flex-direction: column;}
+  
+  header{ flex-shrink: 0; height:var(--hdrH); color:#fff; padding:12px 16px 14px; background:linear-gradient(135deg, var(--vdl-red) 0%, var(--vdl-red2) 100%); box-shadow:0 8px 22px rgba(192,0,33,0.18); }
+  .hdr-wrap{height:100%;display:grid;grid-template-rows:auto 1fr;position:relative;}
+  .hdr-top{ position:absolute;right:8px;top:8px;font-size:12px;opacity:.9; background:rgba(255,255,255,.10);padding:4px 8px;border-radius:8px; border:1px solid rgba(255,255,255,.25); }
+  .hdr-center{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;}
+  .hdr-title .project{ font-size:28px;font-weight:900;text-shadow:0 1px 0 rgba(0,0,0,.15);letter-spacing:.2px; }
+
+  .toolbar{ flex-shrink: 0; height:var(--tbH); background:#fff; padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; border-bottom:1px solid #e9e9ee; box-shadow:0 6px 10px rgba(0,0,0,0.04); }
+  .btn{ position:relative; background:linear-gradient(180deg,var(--vdl-red2),var(--vdl-red)); border:none;color:#fff;padding:6px 12px;border-radius:10px;cursor:pointer; box-shadow:0 4px 12px rgba(192,0,33,0.28);font-weight:700;font-size:12px;white-space:nowrap; transition:all 0.2s;}
+  .btn:hover{ transform:translateY(-1px); opacity:0.9; }
+  .btn.secondary{ background:#fff;color:var(--vdl-red);border:1px solid var(--vdl-red);box-shadow:none; }
+  .btn.help{ background:#FFF4F6;color:var(--vdl-red);border:1px solid var(--vdl-red2); box-shadow:none;font-weight:600; }
+  .btn.action{ background:#e8f0fe; color:#1a73e8; border:1px solid #d2e3fc; box-shadow:none; font-size:13px; padding:8px 14px;}
+  .toolbar .spacer{flex:1;min-width:4px;}
+  .toolbar .project-info{font-size:12px;color:#555;}
+
+  .has-tooltip:hover::after{
+    content:attr(data-tooltip); position:absolute; left:50%;top:100%; transform:translate(-50%,6px);
+    background:rgba(0,0,0,0.82); color:#fff; padding:4px 8px; font-size:11px;
+    border-radius:6px; white-space:normal; max-width:260px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.35);
+  }
+
+  .content{ flex: 1; display: flex; flex-direction: column; padding: 12px; overflow: hidden;}
+  .tabs-main{ display:flex; gap:6px; margin-bottom:8px; flex-shrink: 0; }
+  .tab-main{ padding:4px 12px;font-size:12px;cursor:pointer;border-radius:999px; border:1px solid #ccc;background:#e7e7f0;color:#444; }
+  .tab-main.active{ background:#fff;border-color:var(--vdl-red);color:var(--vdl-red); font-weight:bold;box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+  
+  .page{ display:none; height: 100%; }
+  .page.active{ display:flex; flex-direction: column; overflow: hidden; }
+
+  .panel{ background:var(--panel); border-radius:12px; border:1px solid #e1e3ef; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,0.04); display:flex; flex-direction:column; flex: 1; overflow: hidden; }
+  h2{font-size:16px;margin:4px 0 6px;}
+  h3{font-size:14px;margin:8px 0 4px;}
+
+  .sticky-controls {
+    background: #ffffff;
+    padding: 14px 16px;
+    border: 1px solid #d0d4f0;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    margin-bottom: 12px;
+    flex-shrink: 0;
+    width: 100%;
+  }
+
+  .table-container {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #d2d4e0;
+    border-radius: 8px;
+  }
+
+  table{border-collapse:collapse;width:100%;}
+  th,td{border:1px solid #d2d4e0;padding:6px 4px;font-size:12px;vertical-align:top;}
+  
+  th {
+    background:#f4f5fb;
+    font-weight:600; 
+    position:-webkit-sticky; 
+    position:sticky; 
+    top: 0; 
+    z-index:35; 
+    box-shadow:0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  input[type="text"],input[type="date"],select{ font-size:12px;width:100%;padding:4px 6px;border-radius:6px; border:1px solid #c6cbe0;background:#fbfcff; }
+  
+  .hint{ font-size:11px;color:#555;margin-top:4px; background:#FFF4F6;border-left:3px solid var(--vdl-red2); padding:6px 8px;border-radius:6px; }
+
+  .icon-btn{ width:24px;height:24px;border-radius:999px;border:none; display:inline-flex;align-items:center;justify-content:center; cursor:pointer;padding:0; }
+  .icon-btn.icon-delete{ background:linear-gradient(180deg,#FF8A80,#E53935); box-shadow:0 3px 6px rgba(229,57,53,0.45); }
+  .icon-btn.icon-delete span{ font-size:14px;color:#fff;line-height:1; }
+  .icon-btn.icon-copy{ background:linear-gradient(180deg,#bbdefb,#1976d2); box-shadow:0 3px 6px rgba(25,118,210,0.3); margin-right:4px; }
+
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
+  .filters .field{font-size:11px;}
+  .filters label{display:block;margin-bottom:2px;}
+  .filters select{min-width:160px;}
+
+  .summary-bar{ font-size:11px;color:#444;margin-bottom:6px; background:#F9FAFF;border-radius:8px;padding:4px 6px;border:1px dashed #d0d4f0; }
+  .actor-block{ border:1px solid #ddd;border-radius:10px;padding:6px 8px;margin-bottom:6px; background:#fafbff;box-shadow:0 3px 8px rgba(0,0,0,0.03); }
+  .actor-block-header{font-weight:600;font-size:12px;margin-bottom:2px;}
+  .actor-block-sub{font-size:11px;color:#666;margin-bottom:4px;}
+  ul.compact{margin:2px 0 0 14px;padding:0;font-size:11px;}
+
+  /* Gantt */
+  #ganttContainer{ padding-top:6px; flex: 1; overflow-y: auto;}
+  .gantt-title{ font-size:12px; font-weight:600; margin-bottom:8px; color:#444; border-bottom:1px solid #ddd; padding-bottom:4px;}
+  .gantt-grid{ display:grid; grid-template-columns:var(--gantt-label-width) 1fr; column-gap:6px; row-gap:4px; align-items:center; }
+  .gantt-left-header{ font-size:11px; color:#666; padding-bottom:4px; font-weight:bold;}
+  .gantt-month-header{ position:relative; height:24px; margin:4px 0 6px; border-radius:10px; overflow:hidden; border:1px solid #d0d4f0; background:#fff; }
+  .gantt-month-label{ position:absolute; top:0; bottom:0; border-right:1px solid #d0d4f0; font-size:11px; display:flex; align-items:center; justify-content:center; color:#444; font-weight:600; }
+  .gantt-label{ width:var(--gantt-label-width); min-width:var(--gantt-label-width); font-weight:600; color:#444; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gantt-track-wrapper{ position:relative; flex:1; border-radius:10px; border:1px solid #d0d4f0; overflow:hidden; }
+  .gantt-track{ position:relative; height:18px; background:#f3f4fb; }
+  .gantt-month-strip{ position:absolute; top:0; bottom:0; border-right:1px solid rgba(208,212,240,0.7); z-index:0; }
+  .gantt-bar{ position:absolute; top:2px; bottom:2px; border-radius:8px; font-size:9px; color:#fff; padding-left:3px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; z-index:1; }
+
+  #actorsView { flex: 1; overflow-y: auto; }
+
+  /* Overlay & Modals */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:90; align-items:center; justify-content:center; }
+  .modal-content { background:#fff; padding:20px; border-radius:12px; width:480px; box-shadow:0 10px 30px rgba(0,0,0,0.3); display:flex; flex-direction:column; max-height:90vh; }
+  .modal-row { margin-bottom:12px; }
+  .modal-row label { display:block; font-size:12px; font-weight:600; margin-bottom:4px; }
+  .checkbox-group { max-height:120px; overflow-y:auto; border:1px solid #ccc; border-radius:6px; padding:6px; background:#fbfcff; }
+  .checkbox-group label { display:flex; align-items:center; font-weight:normal; font-size:12px; margin-bottom:4px; cursor:pointer;}
+  .checkbox-group input[type="checkbox"] { width:auto; margin-right:6px; }
+
+  .startup-card{ background:#fff;border-radius:14px;padding:0 18px 14px; width:520px;max-width:95vw;box-shadow:0 10px 30px rgba(0,0,0,0.25); border-top:6px solid var(--vdl-red2); }
+  .startup-title{ font-size:16px;font-weight:700;margin:10px 0 4px;color:var(--vdl-red); }
+  .startup-sub{font-size:12px;color:#666;margin-bottom:10px;}
+  .startup-options{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+  .startup-option{ border-radius:10px;border:1px solid #ddd;padding:8px;cursor:pointer; background:#fafafa;display:flex;flex-direction:column;gap:2px; }
+  .startup-option:hover{ border-color:var(--vdl-red2);box-shadow:0 4px 10px rgba(0,0,0,0.08);background:#fff; }
+  
+  .mp-row { display:flex; gap:6px; margin-bottom:6px; align-items:center; transition: all 0.2s ease; padding:4px; border-radius:6px; flex-wrap: wrap;}
+  .mp-row.highlight { background-color: #fff3cd; border-left: 3px solid #ffb300; }
+
+  .leg-box {
+    display: inline-block !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 3px !important;
+  }
+
+  .dropdown-check-list { display: inline-block; position: relative; width: 100%; }
+  .dropdown-check-list .anchor { width: 100%; padding: 4px 6px; background: #fbfcff; border: 1px solid #c6cbe0; border-radius: 6px; cursor: pointer; display: block; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 24px; color:#444;}
+  .dropdown-check-list .items { display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid #ccc; box-shadow: 0 8px 16px rgba(0,0,0,0.15); z-index: 100; max-height: 220px; width: 220px; padding: 6px; border-radius: 6px;}
+  .dropdown-check-list.visible .items { display: flex; flex-direction: column; }
+  .dropdown-check-list input[type="text"].search-backup { width: 100%; padding: 4px; margin-bottom: 6px; font-size: 11px; box-sizing: border-box; border:1px solid #ccc; border-radius:4px; background:#fafafa;}
+  .dropdown-check-list .items-list { overflow-y: auto; flex:1; }
+  .dropdown-check-list label { display: flex; align-items:center; font-size: 11px; padding: 3px 4px; cursor: pointer; margin-bottom: 2px; border-radius:4px;}
+  .dropdown-check-list label:hover { background: #e8f0fe; }
+  .dropdown-check-list label input { margin: 0 6px 0 0; width: auto; }
+  
+  /* IMPRESSION ROBUSTE SANS FLEXBOX POUR ÉVITER LES BUGS DE SAUT DE PAGE */
+  @media print {
+    @page { size: A4 landscape; margin: 12mm 10mm; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    
+    body { background-color: #ffffff !important; height: auto !important; display: block !important; }
+    .hdr-top, .toolbar, .tabs-main, .modal-overlay, .sticky-controls { display: none !important; }
+    
+    header { position: static; background: linear-gradient(135deg, #C00021 0%, #E43C52 100%) !important; color: #fff !important; box-shadow: none !important; padding: 10px 16px !important; height: auto; }
+    .hdr-title .project { text-shadow: none !important; color: #fff !important; }
+    
+    /* On désactive les flex pour le print : retour au bloc standard pour une pagination parfaite */
+    .content { display: block !important; overflow: visible !important; height: auto !important; padding: 0 !important; }
+    .page { display: none !important; height: auto !important; overflow: visible !important; }
+    
+    /* Le Gantt force son saut de page à la fin */
+    #page-gantt { display: block !important; page-break-after: always !important; break-after: page !important; margin-bottom: 20mm !important; }
+    
+    #page-leaves { display: block !important; }
+    
+    #page-gantt .panel, #page-leaves .panel { border: none !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; display: block !important; overflow: visible !important; }
+    
+    #ganttContainer .gantt-title { font-size: 16px !important; margin-bottom: 12px !important; border-bottom: 2px solid #C00021 !important; color: #C00021 !important; }
+    .gantt-track-wrapper { border: 1px solid #d0d4f0 !important; }
+    .gantt-month-header, .gantt-month-label { border-color: #d0d4f0 !important; }
+    .gantt-bar { box-shadow: none !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+    
+    /* Gestion des répétitions d'entêtes pour le tableau */
+    .table-container { overflow: visible !important; border: none !important; display: block !important;}
+    table { border-collapse: collapse !important; width: 100% !important; margin-top: 10px !important; page-break-inside: auto !important; display: table !important; }
+    table tr { page-break-inside: avoid !important; page-break-after: auto !important; }
+    
+    /* Répéter l'intitulé des colonnes automatiquement */
+    table thead { display: table-header-group !important; } 
+    table th { background-color: #f3f4f6 !important; border: 1px solid #b0b4c8 !important; border-bottom: 2px solid #C00021 !important; color: #111 !important; position: static !important; font-weight: bold !important; }
+    
+    table td { border: 1px solid #e5e7eb !important; vertical-align: middle !important; padding: 6px 4px !important; }
+    table tbody tr:nth-child(even) td { background-color: #f8f9fa !important; }
+    table tbody tr:nth-child(odd) td { background-color: #ffffff !important; }
+    
+    td input:not([type="checkbox"]), td select { border: none !important; background: transparent !important; padding: 0; color: #000; pointer-events: none; appearance: none !important; -webkit-appearance: none !important; }
+    input[type="date"]::-webkit-calendar-picker-indicator, input[type="date"]::-webkit-inner-spin-button { display: none !important; -webkit-appearance: none !important; }
+    td input[type="checkbox"] { appearance: auto !important; -webkit-appearance: auto !important; border: 1px solid #000 !important; margin: 0 4px 0 0 !important; display: inline-block !important; width: 12px !important; height: 12px !important; }
+    
+    th:last-child, td:last-child { display: none !important; } 
+    .dropdown-check-list .anchor { border: none !important; background: transparent !important; padding: 0 !important; color:#000 !important;}
+    .dropdown-check-list .items { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-wrap">
+    <div class="hdr-top" id="hdrVer">Congés v3.9 — Fix Pagination Absolue</div>
+    <div class="hdr-center">
+      <div class="hdr-title"><div class="project" id="hdrProject">Projet : non défini</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn has-tooltip" id="btnImport" data-tooltip="Importer un projet depuis un JSON.">Import JSON</button>
+  <button class="btn secondary has-tooltip" id="btnExport" data-tooltip="Exporter au format JSON.">Export JSON</button>
+  <input type="file" id="fileInput" accept=".json" style="display:none">
+  
+  <div class="spacer"></div>
+  
+  <button class="btn secondary has-tooltip" onclick="window.print()" data-tooltip="Générer un PDF propre : Page 1 Gantt, Page 2+ Tableau.">🖨️ Imprimer PDF</button>
+  <button class="btn help has-tooltip" id="helpBtn" data-tooltip="Afficher la page d’aide.">? Aide</button>
+  <div class="project-info" id="projectInfo">Projet : (non renseigné)</div>
+</div>
+
+<div class="content">
+  <div class="tabs-main">
+    <div class="tab-main active" data-page="page-leaves">Congés (Tableau)</div>
+    <div class="tab-main" data-page="page-gantt">Planning Gantt</div>
+    <div class="tab-main" data-page="page-views">Vue par acteur</div>
+    <div class="tab-main" data-page="page-help">Aide</div>
+  </div>
+
+  <div id="page-leaves" class="page active">
+    <div class="sticky-controls" id="stickyControlsBlock">
+      <h2 style="margin-top:0;">Gestion des congés des acteurs du projet</h2>
+      
+      <div class="hint" style="border-left-color: var(--vdl-red); background: #fff0f0;">
+        <p style="color: var(--vdl-red); font-weight: bold; margin: 0 0 4px 0;">⚠️ Synchro Temps Réel avec Fiche Projet & RACI</p>
+        Les données saisies ici sont instantanément partagées aux autres fiches ouvertes. Le tableau se trie automatiquement dès le renseignement des dates.
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; margin-top:12px;">
+        
+        <div style="flex:1; min-width:300px;">
+          <div class="summary-bar" id="summaryBar">Aucun congé saisi.</div>
+          <div class="filters" style="margin-bottom:0;">
+            <div class="field"><label>Filtrer par acteur</label><select id="filterActor"><option value="">(Tous)</option></select></div>
+            <div class="field"><label>Filtrer par année</label><select id="filterYear"><option value="">(Toutes)</option></select></div>
+          </div>
+        </div>
+
+        <div class="action-buttons-container" style="display: flex; gap: 10px;">
+          <button class="btn action" onclick="openMultiPeriodModal()">👤 Saisir les absences d'un acteur</button>
+          <button class="btn action" onclick="openBulkModal()" style="background:#fff; color:#1a73e8; border: 1px solid #1a73e8;">👥 Appliquer une absence à plusieurs acteurs</button>
+        </div>
+        
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="table-container">
+        <table id="leavesTable">
+          <thead>
+            <tr>
+              <th style="width:16%;">Acteur</th>
+              <th style="width:10%;">Date début</th><th style="width:6%;">AM/PM</th>
+              <th style="width:10%;">Date fin</th><th style="width:6%;">AM/PM</th>
+              <th style="width:10%;">Type</th><th style="width:14%;">Commentaire</th>
+              <th style="width:10%;">Backup(s)</th><th style="width:10%;">Récurrence</th>
+              <th style="width:8%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-gantt" class="page">
+    <div class="panel">
+      <h2>Planning Graphique</h2>
+      <div id="ganttContainer"></div>
+    </div>
+  </div>
+
+  <div id="page-views" class="page">
+    <div class="panel">
+      <h2>Vue synthétique par acteur</h2>
+      <div id="actorsView"></div>
+    </div>
+  </div>
+
+  <div id="page-help" class="page">
+    <div class="panel" style="overflow-y: auto;">
+      <h2>Aide — Module congés</h2>
+      <h3>1. Duplication & Saisie de masse</h3>
+      <ul>
+        <li><b>Dupliquer (📋)</b> : Copie la ligne en conservant l'acteur, mais vide les dates. La nouvelle ligne se place <b>immédiatement sous la ligne copiée</b> pour faciliter la saisie.</li>
+        <li><b>Saisir les absences d'un acteur (👤)</b> : L'acteur est recherché par autocomplétion. Vous pouvez spécifier des Backups pour la période de congés.</li>
+        <li><b>Appliquer une absence à plusieurs (👥)</b> : Permet de cocher plusieurs acteurs d'un coup.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div id="bulkModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-top:0; color:var(--vdl-red)">👥 Appliquer une absence à plusieurs acteurs</h3>
+    <div class="modal-row">
+      <label>1. Sélectionner les acteurs absents :</label>
+      <input type="text" id="bulkSearchActor" placeholder="Rechercher un acteur..." style="margin-bottom: 6px; box-sizing: border-box; background:#fafafa; border:1px solid #ccc;">
+      <div class="checkbox-group" id="bulkActorsList"></div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <div class="modal-row" style="flex:1"><label>Début :</label><div style="display:flex; gap:4px"><input type="date" id="bulkStart"><select id="bulkStartHalf" style="width:60px"><option value="AM">AM</option><option value="PM">PM</option></select></div></div>
+      <div class="modal-row" style="flex:1"><label>Fin :</label><div style="display:flex; gap:4px"><input type="date" id="bulkEnd"><select id="bulkEndHalf" style="width:60px"><option value="PM">PM</option><option value="AM">AM</option></select></div></div>
+    </div>
+    <div class="modal-row" style="display:flex; gap:10px;">
+        <div style="flex:1"><label>Type d'absence :</label><select id="bulkType"><option value="Congés annuels">Congés annuels</option><option value="RTT">RTT</option><option value="Maladie">Maladie</option><option value="Formation">Formation</option></select></div>
+        <div style="flex:1"><label>Backup(s) :</label><div id="bulkBackupContainer"></div></div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;"><button class="btn secondary" onclick="closeBulkModal()">Annuler</button><button class="btn" onclick="submitBulkLeaves()">Valider</button></div>
+  </div>
+</div>
+
+<div id="multiPeriodModal" class="modal-overlay">
+  <div class="modal-content" style="width:750px;">
+    <h3 style="margin-top:0; color:var(--vdl-red)">👤 Saisir les absences d'un acteur</h3>
+    <div class="modal-row">
+      <label>1. Sélectionner l'acteur principal (Autocomplétion) :</label>
+      <input type="text" id="mpActorInput" list="mpActorList" style="width:100%" placeholder="Saisissez ou choisissez un acteur...">
+      <datalist id="mpActorList"></datalist>
+    </div>
+    <div class="modal-row" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+      <label>2. Ajouter des périodes :</label>
+      <div id="mpPeriods" style="overflow-y:auto; flex:1; max-height:280px; border:1px solid #ccc; padding:8px; border-radius:6px; background:#fbfcff; margin-bottom:10px;"></div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;"><button class="btn secondary" onclick="closeMultiPeriodModal()">Annuler</button><button class="btn" onclick="submitMultiPeriod()">Sauvegarder et Valider</button></div>
+  </div>
+</div>
+
+<div id="startupOverlay" class="modal-overlay">
+  <div class="startup-card">
+    <div class="startup-title">Démarrer la gestion des congés</div>
+    <div class="startup-sub" id="startupProjectLabel">Projet : (non défini)</div>
+    <div class="startup-options">
+      <div class="startup-option" id="startImportLeavesBtn"><div class="startup-option-title">▶ Importer un JSON</div><div class="startup-option-desc">Reprendre un fichier exporté.</div></div>
+      <div class="startup-option" id="startNewLeavesBtn"><div class="startup-option-title">▶ Fichier vierge</div><div class="startup-option-desc">Partir de zéro.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let pivotCurrent = null;
+let leavesData = { version: "1.1", project: { id: "", title: "" }, actors: [], leaves: [] };
+let userHasChangedYearFilter = false;
+let forceDisableSort = false;
+const STORAGE_KEY = "currentProjectJson";
+
+const WEEKDAYS = [{code:"MONDAY", label:"L"}, {code:"TUESDAY", label:"Ma"}, {code:"WEDNESDAY", label:"Me"}, {code:"THURSDAY", label:"J"}, {code:"FRIDAY", label:"V"}, {code:"SATURDAY", label:"S"}, {code:"SUNDAY", label:"D"}];
+const WEEKDAY_INDEX = { SUNDAY:0, MONDAY:1, TUESDAY:2, WEDNESDAY:3, THURSDAY:4, FRIDAY:5, SATURDAY:6 };
+
+function parseDateUTC(str){ if(!str) return null; const p = str.split("-"); if(p.length !== 3) return null; return Date.UTC(Number(p[0]), Number(p[1])-1, Number(p[2])); }
+function ensureLeaveId(){ let m=0; (leavesData.leaves||[]).forEach(l=>{ const x=/^LV(\d+)$/.exec(l.leaveId||""); if(x) m=Math.max(m,parseInt(x[1],10)); }); return "LV"+(m+1); }
+function slugify(s){ return (s||"projet").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").slice(0,60)||"projet"; }
+
+function toFR(iso){
+  if(!iso) return "";
+  const parts = iso.split("-");
+  if(parts.length !== 3) return iso;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+document.querySelectorAll(".tab-main").forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    document.querySelectorAll(".tab-main").forEach(t=>t.classList.remove("active")); tab.classList.add("active");
+    const id=tab.getAttribute("data-page");
+    document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));
+    if(id === "page-views") renderActorsView();
+    setTimeout(updateStickyHeader, 50);
+  });
+});
+document.getElementById("helpBtn").onclick = () => document.querySelector('.tab-main[data-page="page-help"]').click();
+
+function updateProjectUI(){
+  const t = leavesData.project?.title || "(non renseigné)";
+  document.getElementById("hdrProject").textContent = "Projet : " + (t==="(non renseigné)"?"non défini":t);
+  document.getElementById("projectInfo").textContent = `Projet : ${t} — ${(leavesData.actors||[]).length} acteurs / ${(leavesData.leaves||[]).length} périodes`;
+  const sl = document.getElementById("startupProjectLabel"); if(sl) sl.textContent = "Projet : " + t;
+}
+
+function updateStickyHeader() {
+  const sc = document.getElementById("stickyControlsBlock");
+  if(sc) {
+    document.documentElement.style.setProperty('--sc-height', sc.offsetHeight + 'px');
+  }
+}
+window.addEventListener('resize', updateStickyHeader);
+
+function buildBackupDropdown(selectedIdsArray, onChangeCallback) {
+  const container = document.createElement('div');
+  container.className = 'dropdown-check-list';
+  
+  const anchor = document.createElement('div');
+  anchor.className = 'anchor';
+  
+  const updateAnchorText = () => {
+    if(!selectedIdsArray || selectedIdsArray.length === 0) {
+      anchor.textContent = "Aucun...";
+      anchor.style.color = "#888";
+    } else {
+      const names = selectedIdsArray.map(id => {
+        const a = (leavesData.actors||[]).find(x => x.actorId === id);
+        return a ? (a.shortName || a.name || id) : id;
+      });
+      anchor.textContent = names.join(", ");
+      anchor.style.color = "#000";
+    }
+  };
+  updateAnchorText();
+  
+  const itemsDiv = document.createElement('div');
+  itemsDiv.className = 'items';
+  
+  const searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.className = 'search-backup';
+  searchInput.placeholder = 'Rechercher un backup...';
+  itemsDiv.appendChild(searchInput);
+  
+  const listDiv = document.createElement('div');
+  listDiv.className = 'items-list';
+  
+  const renderList = (filterText) => {
+    listDiv.innerHTML = '';
+    const sortedActors = [...(leavesData.actors || [])].sort((a,b) => (a.shortName||a.name||a.actorId).localeCompare(b.shortName||b.name||b.actorId));
+    sortedActors.forEach(a => {
+      const name = a.shortName || a.name || a.actorId;
+      if(filterText && !name.toLowerCase().includes(filterText.toLowerCase())) return;
+      
+      const lbl = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = a.actorId;
+      cb.checked = selectedIdsArray.includes(a.actorId);
+      
+      cb.onchange = () => {
+        if(cb.checked) {
+          if(!selectedIdsArray.includes(a.actorId)) selectedIdsArray.push(a.actorId);
+        } else {
+          const idx = selectedIdsArray.indexOf(a.actorId);
+          if(idx > -1) selectedIdsArray.splice(idx, 1);
+        }
+        updateAnchorText();
+        if(onChangeCallback) onChangeCallback(selectedIdsArray);
+      };
+      
+      lbl.appendChild(cb);
+      lbl.appendChild(document.createTextNode(name));
+      listDiv.appendChild(lbl);
+    });
+  };
+  
+  renderList("");
+  searchInput.oninput = (e) => renderList(e.target.value);
+  itemsDiv.appendChild(listDiv);
+  
+  anchor.onclick = (e) => {
+    const isVisible = container.classList.contains('visible');
+    document.querySelectorAll('.dropdown-check-list').forEach(el => el.classList.remove('visible'));
+    if(!isVisible) {
+      container.classList.add('visible');
+      searchInput.focus();
+    }
+    e.stopPropagation();
+  };
+  
+  itemsDiv.onclick = (e) => e.stopPropagation();
+  
+  return { element: container, getSelected: () => selectedIdsArray };
+}
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.dropdown-check-list').forEach(el => el.classList.remove('visible'));
+});
+
+function openBulkModal() {
+  const c = document.getElementById('bulkActorsList'); 
+  c.innerHTML = "";
+  const searchInput = document.getElementById('bulkSearchActor');
+  if(searchInput) searchInput.value = ""; 
+
+  (leavesData.actors || []).forEach(a => { 
+    const name = a.shortName || a.name || a.actorId;
+    if(!name || name.trim() === "") return; 
+    c.innerHTML += `<label class="bulk-actor-item"><input type="checkbox" value="${a.actorId}" data-name="${name}"> <span class="actor-name-span">${name}</span></label>`; 
+  });
+  
+  const applyFilter = () => {
+    const term = (searchInput ? searchInput.value.toLowerCase() : "");
+    c.querySelectorAll('.bulk-actor-item').forEach(lbl => {
+      const text = lbl.querySelector('.actor-name-span').textContent.toLowerCase();
+      const isChecked = lbl.querySelector('input[type="checkbox"]').checked;
+      lbl.style.display = (text.includes(term) || isChecked) ? "flex" : "none";
+    });
+  };
+
+  if(searchInput) searchInput.oninput = applyFilter;
+  c.querySelectorAll('.bulk-actor-item input[type="checkbox"]').forEach(cb => { cb.addEventListener('change', applyFilter); });
+  
+  currentBulkBackups = [];
+  const backupContainer = document.getElementById('bulkBackupContainer');
+  backupContainer.innerHTML = '';
+  backupContainer.appendChild(buildBackupDropdown(currentBulkBackups, null).element);
+  document.getElementById('bulkModal').style.display = 'flex';
+}
+
+function closeBulkModal() { document.getElementById('bulkModal').style.display = 'none'; }
+
+function submitBulkLeaves() {
+  const sd=document.getElementById('bulkStart').value, ed=document.getElementById('bulkEnd').value, t=document.getElementById('bulkType').value;
+  const cb=document.querySelectorAll('#bulkActorsList input:checked');
+  if(!cb.length || !sd || !ed) return alert("Veuillez sélectionner au moins un acteur et renseigner les dates.");
+  forceDisableSort = false;
+  cb.forEach(c => leavesData.leaves.push({ leaveId: ensureLeaveId(), actorId: c.value, actorName: c.getAttribute('data-name'), startDate: sd, startHalf: document.getElementById('bulkStartHalf').value, endDate: ed, endHalf: document.getElementById('bulkEndHalf').value, leaveType: t, mode: "SIMPLE", backups: [...currentBulkBackups], comment:"", recurrence: null }));
+  closeBulkModal(); renderAll(); saveAndBroadcastLeaves();
+}
+
+function openMultiPeriodModal() {
+  const dl = document.getElementById('mpActorList'); dl.innerHTML = '';
+  (leavesData.actors || []).forEach(a => { dl.innerHTML += `<option value="${a.shortName || a.name || a.actorId}">`; });
+  document.getElementById('mpActorInput').value = '';
+  document.getElementById('mpPeriods').innerHTML = '';
+  addMpRow();
+  document.getElementById('multiPeriodModal').style.display = 'flex';
+}
+function closeMultiPeriodModal() { document.getElementById('multiPeriodModal').style.display = 'none'; }
+
+function addMpRow(prevEndDateStr = "") {
+  const container = document.getElementById('mpPeriods');
+  let defaultStart = "";
+  if (prevEndDateStr) {
+    let d = new Date(prevEndDateStr); d.setDate(d.getDate() + 1);
+    if(d.getDay() === 6) d.setDate(d.getDate() + 2); 
+    if(d.getDay() === 0) d.setDate(d.getDate() + 1); 
+    defaultStart = d.toISOString().slice(0,10);
+  }
+
+  const row = document.createElement('div'); 
+  row.className = "mp-row highlight"; 
+  row._backups = []; 
+  
+  row.innerHTML = `
+    <div style="display:flex; gap:4px; align-items:center; flex:1;">
+      <span>Du:</span><input type="date" class="mp-start" value="${defaultStart}" style="width:110px">
+      <select class="mp-sh" style="width:50px"><option value="AM">AM</option><option value="PM">PM</option></select>
+      <span>Au:</span><input type="date" class="mp-end" value="" style="width:110px">
+      <select class="mp-eh" style="width:50px"><option value="PM">PM</option><option value="AM">AM</option></select>
+      <select class="mp-type" style="width:90px"><option value="Congés annuels">Congés</option><option value="RTT">RTT</option><option value="Maladie">Maladie</option><option value="Formation">Formation</option></select>
+      <div class="mp-backup-wrapper" style="width:140px;"></div>
+    </div>
+    <button class="icon-btn icon-delete" onclick="this.parentElement.remove(); checkAutoAddMpRow();" style="flex-shrink:0" title="Supprimer"><span>🗑</span></button>
+  `;
+  container.appendChild(row);
+  row.querySelector('.mp-backup-wrapper').appendChild(buildBackupDropdown(row._backups, null).element);
+  
+  const inpStart = row.querySelector('.mp-start');
+  const inpEnd = row.querySelector('.mp-end');
+  if(defaultStart) inpEnd.min = defaultStart;
+
+  inpStart.addEventListener('change', () => { 
+    inpEnd.min = inpStart.value; 
+    if(inpStart.value && inpEnd.value) { row.classList.remove('highlight'); sortMpRows(); checkAutoAddMpRow(); } 
+    else { row.classList.add('highlight'); }
+  });
+  inpEnd.addEventListener('change', () => { 
+    if(inpStart.value && inpEnd.value) { row.classList.remove('highlight'); sortMpRows(); checkAutoAddMpRow(); } 
+    else { row.classList.add('highlight'); }
+  });
+}
+
+function sortMpRows() {
+  const container = document.getElementById('mpPeriods');
+  const rows = Array.from(container.querySelectorAll('.mp-row'));
+  rows.sort((a, b) => (a.querySelector('.mp-start').value || "9999-99-99").localeCompare(b.querySelector('.mp-start').value || "9999-99-99"));
+  rows.forEach(r => container.appendChild(r));
+}
+
+function checkAutoAddMpRow() {
+  const container = document.getElementById('mpPeriods');
+  const rows = Array.from(container.querySelectorAll('.mp-row'));
+  if(rows.length === 0) { addMpRow(); return; }
+  const hasEmpty = rows.some(r => !r.querySelector('.mp-start').value || !r.querySelector('.mp-end').value);
+  if(!hasEmpty) {
+    let maxEnd = "";
+    rows.forEach(r => { let e = r.querySelector('.mp-end').value; if (e > maxEnd) maxEnd = e; });
+    addMpRow(maxEnd);
+  }
+}
+
+function submitMultiPeriod() {
+  const actVal = document.getElementById('mpActorInput').value;
+  if(!actVal) return alert("Veuillez sélectionner l'acteur souhaité.");
+  const actor = (leavesData.actors||[]).find(a => (a.shortName||a.name||a.actorId) === actVal || a.actorId === actVal);
+  if(!actor) return alert("L'acteur est introuvable. Veuillez vérifier votre saisie.");
+  const actId = actor.actorId;
+  
+  forceDisableSort = false;
+  let added = 0;
+  document.getElementById('mpPeriods').querySelectorAll('.mp-row').forEach(r => {
+    const s = r.querySelector('.mp-start').value, e = r.querySelector('.mp-end').value;
+    if(s && e) { 
+      leavesData.leaves.push({ leaveId: ensureLeaveId(), actorId: actId, actorName: actor.name||actor.actorId, startDate: s, startHalf: r.querySelector('.mp-sh').value, endDate: e, endHalf: r.querySelector('.mp-eh').value, leaveType: r.querySelector('.mp-type').value, mode: "SIMPLE", backups: [...(r._backups || [])], comment: "", recurrence: null });
+      added++;
+    }
+  });
+  if(added === 0) return alert("Veuillez renseigner au moins une période complète.");
+  closeMultiPeriodModal(); renderAll(); saveAndBroadcastLeaves();
+}
+
+function renderAll(){ 
+  renderFilters(); 
+  renderLeavesTable(); 
+  renderGantt(); 
+  if(document.getElementById('page-views').classList.contains('active')) renderActorsView(); 
+  updateProjectUI(); 
+  setTimeout(updateStickyHeader, 50);
+}
+
+function syncRecurrenceDates(l){
+  if(l.mode==="RECURRENT"){
+    l.recurrence = l.recurrence || {type:"WEEKLY", weekdays:["FRIDAY"]};
+    l.recurrence.startDate = l.startDate || "";
+    l.recurrence.endDate = l.endDate || "";
+  }
+}
+
+function checkAndFixRange(l, iS, iE, sE){
+  if(!l.startDate || !l.endDate) return;
+  if(new Date(l.endDate) < new Date(l.startDate) || (l.startDate===l.endDate && l.startHalf==="PM" && l.endHalf==="AM")){
+    alert("Les dates saisies comportent une incohérence."); l.endDate = l.startDate; l.endHalf = l.startHalf; if(iE) iE.value=l.endDate; if(sE) sE.value=l.endHalf;
+  }
+  syncRecurrenceDates(l);
+}
+
+function renderFilters(){
+  const fa = document.getElementById("filterActor"), fy = document.getElementById("filterYear");
+  const cA = fa.value, cY = fy.value; fa.innerHTML='<option value="">(Tous)</option>'; fy.innerHTML='<option value="">(Toutes)</option>';
+  const aSet = new Set(); (leavesData.leaves||[]).forEach(l=> l.actorId && aSet.add(l.actorId)); (leavesData.actors||[]).forEach(a=> a.actorId && aSet.add(a.actorId));
+  Array.from(aSet).forEach(id=>{ const a = leavesData.actors.find(x=>x.actorId===id); fa.appendChild(new Option(a?(a.shortName||a.name||id):id, id)); }); fa.value = cA||"";
+  const ySet = new Set(); (leavesData.leaves||[]).forEach(l=>{ if(l.startDate) ySet.add(l.startDate.slice(0,4)); if(l.endDate) ySet.add(l.endDate.slice(0,4)); });
+  const yrs = Array.from(ySet).sort(); yrs.forEach(y=> fy.appendChild(new Option(y,y)));
+  fy.value = (!userHasChangedYearFilter && yrs.includes(new Date().getFullYear().toString())) ? new Date().getFullYear().toString() : (cY||"");
+}
+
+function renderLeavesTable(){
+  const tbody = document.querySelector("#leavesTable tbody"); tbody.innerHTML="";
+  const fA = document.getElementById("filterActor").value, fY = document.getElementById("filterYear").value; let cVis=0;
+  
+  if(leavesData.leaves && !forceDisableSort) {
+    leavesData.leaves.sort((a,b) => (a.startDate || "9999-99-99").localeCompare(b.startDate || "9999-99-99"));
+  }
+
+  (leavesData.leaves||[]).forEach((l, idx)=>{
+    if(!l.actorId && !l.startDate && !l.endDate) return;
+    if(fA && l.actorId !== fA) return;
+    if(fY && ((l.startDate && !l.startDate.startsWith(fY)) && (l.endDate && !l.endDate.startsWith(fY)))) return;
+    cVis++;
+    const tr = document.createElement("tr");
+
+    const tdA=document.createElement("td"), selA=document.createElement("select"); selA.appendChild(new Option("(Choisir)", ""));
+    (leavesData.actors||[]).forEach(a=>{ const opt=new Option(a.shortName||a.name||a.actorId, a.actorId); if(l.actorId===a.actorId) opt.selected=true; selA.appendChild(opt); });
+    selA.onchange=()=>{ l.actorId=selA.value; l.actorName=(leavesData.actors.find(x=>x.actorId===l.actorId)||{}).name||""; forceDisableSort=false; renderAll(); saveAndBroadcastLeaves(); }; tdA.appendChild(selA); tr.appendChild(tdA);
+
+    const tdSD=document.createElement("td"), inSD=document.createElement("input"); inSD.type="date"; inSD.value=l.startDate||"";
+    const tdED=document.createElement("td"), inED=document.createElement("input"); inED.type="date"; inED.value=l.endDate||"";
+    const tdSH=document.createElement("td"), selSH=document.createElement("select"), tdEH=document.createElement("td"), selEH=document.createElement("select");
+    ["AM","PM"].forEach(v=>{ selSH.appendChild(new Option(v,v)); selEH.appendChild(new Option(v,v)); }); selSH.value=l.startHalf||"AM"; selEH.value=l.endHalf||"PM";
+    
+    inSD.oninput=()=>{ forceDisableSort=false; l.startDate=inSD.value; checkAndFixRange(l, inSD, inED, selEH); renderAll(); saveAndBroadcastLeaves(); };
+    inED.oninput=()=>{ forceDisableSort=false; l.endDate=inED.value; checkAndFixRange(l, inSD, inED, selEH); renderAll(); saveAndBroadcastLeaves(); };
+    selSH.onchange=()=>{ l.startHalf=selSH.value; forceDisableSort=false; renderAll(); saveAndBroadcastLeaves(); }; selEH.onchange=()=>{ l.endHalf=selEH.value; forceDisableSort=false; renderAll(); saveAndBroadcastLeaves(); };
+    tdSD.appendChild(inSD); tdSH.appendChild(selSH); tdED.appendChild(inED); tdEH.appendChild(selEH); tr.append(tdSD, tdSH, tdED, tdEH);
+
+    const tdT=document.createElement("td"), selT=document.createElement("select"); ["Congés annuels","RTT","Formation","Maladie","Autre"].forEach(t=> {const o=new Option(t,t); if(l.leaveType===t)o.selected=true; selT.appendChild(o);}); selT.onchange=()=>{l.leaveType=selT.value;renderGantt();saveAndBroadcastLeaves();}; tdT.appendChild(selT);
+    const tdC=document.createElement("td"), inC=document.createElement("input"); inC.type="text"; inC.value=l.comment||""; inC.oninput=()=>{l.comment=inC.value; saveAndBroadcastLeaves();}; tdC.appendChild(inC);
+    
+    const tdB = document.createElement("td");
+    l.backups = Array.isArray(l.backups) ? l.backups : [];
+    const backupWidget = buildBackupDropdown(l.backups, (newIds) => { l.backups = newIds; saveAndBroadcastLeaves(); });
+    tdB.appendChild(backupWidget.element);
+    tr.append(tdT, tdC, tdB);
+
+    const tdR=document.createElement("td");
+    const modeSel=document.createElement("select");
+    let recLabel = "Hebdo";
+    if (l.mode === "RECURRENT" && l.recurrence && Array.isArray(l.recurrence.weekdays) && l.recurrence.weekdays.length > 0) {
+       const shortDays = l.recurrence.weekdays.map(d=> WEEKDAYS.find(w=>w.code===d)?.label).join(", ");
+       recLabel = `Hebdo (${shortDays})`;
+    }
+    modeSel.innerHTML=`<option value="SIMPLE" ${l.mode!=="RECURRENT"?'selected':''}>Aucune</option><option value="RECURRENT" ${l.mode==="RECURRENT"?'selected':''}>${recLabel}</option>`;
+    tdR.appendChild(modeSel);
+    
+    const daysDiv=document.createElement("div"); daysDiv.style.marginTop="2px"; daysDiv.style.display = l.mode==="RECURRENT" ? "flex" : "none"; daysDiv.style.flexWrap="wrap";
+    if(l.mode==="RECURRENT") syncRecurrenceDates(l);
+
+    WEEKDAYS.forEach(d=>{
+      const lab=document.createElement("label"); lab.style.fontSize="10px"; lab.style.marginRight="6px"; lab.style.display="inline-flex"; lab.style.alignItems="center";
+      const cb=document.createElement("input"); cb.type="checkbox"; cb.style.margin="0 2px 0 0"; cb.style.width="auto";
+      cb.checked = (l.mode==="RECURRENT" && l.recurrence && Array.isArray(l.recurrence.weekdays) && l.recurrence.weekdays.includes(d.code));
+      cb.onchange=()=>{
+        forceDisableSort=false;
+        l.recurrence = l.recurrence || {type:"WEEKLY",weekdays:[]};
+        if(cb.checked){ if(!l.recurrence.weekdays.includes(d.code)) l.recurrence.weekdays.push(d.code); }
+        else{ l.recurrence.weekdays = l.recurrence.weekdays.filter(x=>x!==d.code); }
+        renderAll(); saveAndBroadcastLeaves(); 
+      };
+      lab.appendChild(cb); lab.appendChild(document.createTextNode(d.label)); daysDiv.appendChild(lab);
+    });
+    tdR.appendChild(daysDiv);
+
+    modeSel.onchange=()=>{
+      forceDisableSort=false;
+      l.mode=modeSel.value;
+      if(l.mode==="RECURRENT"){ syncRecurrenceDates(l); daysDiv.style.display="flex"; }
+      else{ l.recurrence=null; daysDiv.style.display="none"; }
+      renderAll(); saveAndBroadcastLeaves(); 
+    };
+    tr.appendChild(tdR);
+
+    const tdAct=document.createElement("td"); tdAct.style.whiteSpace="nowrap";
+    const btnC=document.createElement("button"); btnC.className="icon-btn icon-copy"; btnC.innerHTML="<span>📋</span>"; btnC.title="Dupliquer";
+    
+    btnC.onclick=()=>{ 
+      forceDisableSort = true; 
+      const c=JSON.parse(JSON.stringify(l)); 
+      c.leaveId=ensureLeaveId(); 
+      c.startDate=""; 
+      c.endDate=""; 
+      leavesData.leaves.splice(idx+1, 0, c); 
+      renderAll(); 
+      saveAndBroadcastLeaves(); 
+    };
+    
+    const btnD=document.createElement("button"); btnD.className="icon-btn icon-delete"; btnD.innerHTML="<span>🗑</span>";
+    btnD.onclick=()=>{ forceDisableSort=false; leavesData.leaves.splice(idx,1); renderAll(); saveAndBroadcastLeaves(); };
+    tdAct.append(btnC, btnD); tr.appendChild(tdAct); tbody.appendChild(tr);
+  });
+  document.getElementById("summaryBar").textContent = `${cVis} période(s) affichée(s) sur ${(leavesData.leaves||[]).length}.`;
+}
+
+function renderActorsView(){
+  const v = document.getElementById("actorsView"); v.innerHTML=""; const map={};
+  (leavesData.actors||[]).forEach(a=> map[a.actorId]={n:a.shortName||a.name||a.actorId, r:[]});
+  (leavesData.leaves||[]).forEach(l=> { if(l.actorId && map[l.actorId]) map[l.actorId].r.push(l); });
+  Object.keys(map).forEach(k => {
+    let h = `<div class="actor-block"><div class="actor-block-header">${map[k].n}</div>`;
+    if(!map[k].r.length) return; 
+    h += `<ul class="compact">`; 
+    map[k].r.forEach(r=> {
+      let bkStr = "";
+      if(Array.isArray(r.backups) && r.backups.length > 0) {
+        const bn = r.backups.map(id => {
+          const a = (leavesData.actors||[]).find(x => x.actorId === id);
+          return a ? (a.shortName || a.name || id) : id;
+        });
+        bkStr = ` [Backup(s): ${bn.join(", ")}]`;
+      }
+      if(r.mode === "RECURRENT") {
+         const wd = (r.recurrence?.weekdays || []).map(code => WEEKDAYS.find(w=>w.code===code)?.label).join(", ");
+         h+=`<li>${toFR(r.startDate)} -> ${toFR(r.endDate)} : Réc. Hebdo (${wd}) - ${r.leaveType}${bkStr}</li>`;
+      } else {
+         h+=`<li>${toFR(r.startDate)} (${r.startHalf}) -> ${toFR(r.endDate)} (${r.endHalf}) : ${r.leaveType}${bkStr}</li>`;
+      }
+    }); 
+    h += `</ul></div>`; 
+    v.innerHTML += h;
+  });
+  if(v.innerHTML === "") v.innerHTML = "<div class='hint'>Aucun congé n'est enregistré pour le moment.</div>";
+}
+
+function renderGantt(){
+  const gc = document.getElementById("ganttContainer"); if(!gc) return;
+  const fActor = document.getElementById("filterActor").value;
+  const fYear = document.getElementById("filterYear").value;
+
+  const leaves = (leavesData.leaves||[]).filter(l=> {
+    if(!l.startDate || !l.endDate) return false;
+    if(fActor && l.actorId !== fActor) return false;
+    if(fYear) {
+      const sy = l.startDate.slice(0,4), ey = l.endDate.slice(0,4);
+      if(sy !== fYear && ey !== fYear && !(sy < fYear && ey > fYear)) return false; 
+    }
+    return true;
+  });
+
+  if(!leaves.length) return gc.innerHTML = "<div class='hint'>Aucune période valide à afficher.</div>";
+  let mTs=null, MxTs=null;
+  const yStart = fYear ? Date.UTC(parseInt(fYear), 0, 1) : null;
+  const yEnd = fYear ? Date.UTC(parseInt(fYear), 11, 31) : null;
+
+  leaves.forEach(l=>{ 
+    let s = parseDateUTC(l.startDate), e = parseDateUTC(l.endDate); 
+    if(s && e) {
+      if(fYear) { s = Math.max(s, yStart); e = Math.min(e, yEnd); }
+      if(s <= e) {
+         if(mTs === null || s < mTs) mTs = s;
+         if(MxTs === null || e > MxTs) MxTs = e;
+      }
+    }
+  });
+  if(!mTs || !MxTs) return gc.innerHTML = "<div class='hint'>Aucune période valide à afficher.</div>";
+  const dMs=86400000; 
+  const mD=new Date(mTs), MxD=new Date(MxTs);
+  mTs=Date.UTC(mD.getUTCFullYear(), mD.getUTCMonth(), 1); 
+  MxTs=Date.UTC(MxD.getUTCFullYear(), MxD.getUTCMonth()+1, 0);
+  const tD = Math.max(1, (MxTs-mTs)/dMs + 1);
+
+  let h=`<div class='gantt-title'>Planning Graphique ${fYear?"(Restreint à "+fYear+")":""}</div><div class='gantt-grid'><div class='gantt-left-header'>Acteurs</div><div class='gantt-month-header'>`;
+  let cTs=mTs, mo=[];
+  while(cTs <= MxTs) {
+    const d=new Date(cTs), cY=d.getUTCFullYear(), cM=d.getUTCMonth(), nY=cM===11?cY+1:cY, nM=cM===11?0:cM+1;
+    const e=Date.UTC(nY,nM,1)-dMs; 
+    mo.push({l:((cTs-mTs)/dMs)/tD*100, w:((e-cTs)/dMs+1)/tD*100, n:["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."][cM]+" "+String(cY).slice(2)});
+    cTs=Date.UTC(nY,nM,1);
+  }
+  mo.forEach((m,i)=> h+=`<div class='gantt-month-label' style='left:${m.l}%;width:${m.w}%;background:${i%2===0?"#fff":"#EEF1FA"};'>${m.n}</div>`);
+  h+="</div>";
+
+  const aM={}; 
+  leaves.forEach(l=>{ if(!aM[l.actorId]) aM[l.actorId]={n:l.actorName||l.actorId, r:[]}; aM[l.actorId].r.push(l); });
+  Object.keys(aM).forEach(k=>{
+    const a=(leavesData.actors||[]).find(x=>x.actorId===k); 
+    h+=`<div class='gantt-label'>${a?a.shortName||a.name:aM[k].n}</div><div class='gantt-track-wrapper'><div class='gantt-track'>`;
+    mo.forEach((m,i)=> h+=`<div class='gantt-month-strip' style='left:${m.l}%;width:${m.w}%;background:${i%2===0?"rgba(255,255,255,0.9)":"rgba(230,233,245,0.9)"};'></div>`);
+    
+    aM[k].r.forEach(l=>{
+      let s=parseDateUTC(l.startDate), e=parseDateUTC(l.endDate); 
+      if(!s||!e) return;
+      if(fYear) { s = Math.max(s, yStart); e = Math.min(e, yEnd); }
+      if(s > e) return;
+      const c=(l.leaveType||"").toLowerCase().includes("rtt")?"#FFB74D":(l.leaveType||"").toLowerCase().includes("maladie")?"#BA68C8":(l.leaveType||"").toLowerCase().includes("formation")?"#64B5F6":"#E43C52";
+      const sStr = toFR(l.startDate); const eStr = toFR(l.endDate);
+
+      if(l.mode==="RECURRENT" && l.recurrence && Array.isArray(l.recurrence.weekdays)){
+        const wSet = new Set(l.recurrence.weekdays);
+        const wd = (l.recurrence.weekdays||[]).map(code => WEEKDAYS.find(w=>w.code===code)?.label).join(", ");
+        const title = `Réc. Hebdo [${wd}] : ${l.leaveType} (du ${sStr} au ${eStr})`;
+        for(let ts=s; ts<=e; ts+=dMs){
+          const code = Object.keys(WEEKDAY_INDEX).find(x=>WEEKDAY_INDEX[x]===new Date(ts).getUTCDay());
+          if(!code || !wSet.has(code)) continue;
+          h+=`<div class='gantt-bar' style='left:${((Math.max(ts,mTs)-mTs)/dMs)/tD*100}%;width:${(1)/tD*100}%;background:${c};' title="${title}"></div>`;
+        }
+      } else {
+        const title = `${l.leaveType} (du ${sStr} au ${eStr})`;
+        h+=`<div class='gantt-bar' style='left:${((Math.max(s,mTs)-mTs)/dMs)/tD*100}%;width:${(Math.max(0.2,(Math.min(e,MxTs)-Math.max(s,mTs))/dMs+1))/tD*100}%;background:${c};' title="${title}">${l.leaveType}</div>`;
+      }
+    });
+    h+="</div></div>";
+  });
+  
+  let legendHtml = `
+    <div class="legend" style="margin-top:12px; display:flex; justify-content:center; gap:16px; font-size:11px; color:#444; flex-shrink: 0;">
+      <span style="display:flex; align-items:center; gap:4px;"><span class="leg-box" style="background:#E43C52 !important;"></span> Congés / Autre</span>
+      <span style="display:flex; align-items:center; gap:4px;"><span class="leg-box" style="background:#FFB74D !important;"></span> RTT</span>
+      <span style="display:flex; align-items:center; gap:4px;"><span class="leg-box" style="background:#BA68C8 !important;"></span> Maladie</span>
+      <span style="display:flex; align-items:center; gap:4px;"><span class="leg-box" style="background:#64B5F6 !important;"></span> Formation</span>
+    </div>`;
+  gc.innerHTML = h + "</div>" + legendHtml;
+}
+
+function applyPivotToUI(p){
+  pivotCurrent = p;
+  leavesData.project.title = p.project?.title || "";
+  leavesData.actors = Array.isArray(p.actors) ? p.actors.map(a=>({actorId:a.id||a.actorId, name:a.name||a.actorName, shortName:a.shortName})) : [];
+  leavesData.leaves = Array.isArray(p.leaves) ? p.leaves.map(l=>({ leaveId: l.id||l.leaveId||ensureLeaveId(), actorId: l.actorId, actorName: l.actorName||"", startDate: l.start||l.startDate, endDate: l.end||l.endDate, startHalf: l.startHalf||"AM", endHalf: l.endHalf||"PM", leaveType: l.type||l.leaveType||"Congés annuels", mode: l.mode||"SIMPLE", comment: l.comment||"", backups: Array.isArray(l.backups) ? l.backups : [], recurrence: l.recurrence||null })) : [];
+  forceDisableSort = false;
+  renderAll(); document.getElementById("startupOverlay").style.display="none";
+}
+
+function saveToPivotAndLocalStorage(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const p = raw ? JSON.parse(raw) : {version:"1.1", project:{}, actors:[], leaves:[]};
+  p.leaves = leavesData.leaves.map(l=>({ id: l.leaveId, actorId: l.actorId, actorName: l.actorName, start: l.startDate, end: l.endDate, startHalf: l.startHalf, endHalf: l.endHalf, type: l.leaveType, mode: l.mode, comment: l.comment, backups: l.backups, recurrence: l.recurrence }));
+  pivotCurrent = p;
+}
+
+const congesSyncChannel = new BroadcastChannel('gold-project-sync');
+
+function saveAndBroadcastLeaves() {
+  saveToPivotAndLocalStorage();
+  try {
+    localStorage.setItem("currentProjectJson", JSON.stringify(pivotCurrent));
+    congesSyncChannel.postMessage({ type: "PROJECT_UPDATED", source: "conges", payload: pivotCurrent });
+  } catch(e) { console.warn("Erreur de synchronisation", e); }
+}
+
+function handleIncomingUpdate(parsedData, source) {
+  if(source === "conges") return; 
+  if(parsedData && typeof applyPivotToUI === "function") {
+    try { applyPivotToUI(parsedData); } catch(e) {}
+  }
+}
+
+congesSyncChannel.onmessage = (ev) => {
+  if (ev.data?.type === "PROJECT_UPDATED") handleIncomingUpdate(ev.data.payload, ev.data.source);
+};
+
+window.addEventListener("storage", (ev) => {
+  if (ev.key === "currentProjectJson") {
+    try { handleIncomingUpdate(JSON.parse(ev.newValue), "storage"); } catch(e){}
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const raw = localStorage.getItem(STORAGE_KEY); 
+  if(raw && JSON.parse(raw).version) applyPivotToUI(JSON.parse(raw));
+  else document.getElementById("startupOverlay").style.display="flex";
+});
+
+document.getElementById("btnExport").onclick = () => {
+  saveToPivotAndLocalStorage();
+  const b = new Blob([JSON.stringify(pivotCurrent, null, 2)], {type:"application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = slugify(leavesData.project.title) + "_pivot.json"; a.click();
+};
+
+document.getElementById("btnImport").onclick = () => document.getElementById("fileInput").click();
+document.getElementById("startImportLeavesBtn").onclick = () => document.getElementById("fileInput").click();
+document.getElementById("startNewLeavesBtn").onclick = () => { leavesData = { version:"1.1", project:{id:"",title:prompt("Veuillez saisir le titre du projet :", "")}, actors:[], leaves:[] }; forceDisableSort=false; saveAndBroadcastLeaves(); renderAll(); document.getElementById("startupOverlay").style.display="none"; };
+document.getElementById("filterActor").onchange = () => { forceDisableSort=false; renderAll(); }; 
+document.getElementById("filterYear").onchange = () => { userHasChangedYearFilter=true; forceDisableSort=false; renderAll(); };
+
+document.getElementById("fileInput").onchange = (evt) => {
+  const f = evt.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { const j = JSON.parse(r.result); applyPivotToUI(j); saveAndBroadcastLeaves(); alert("L'importation des données a été effectuée avec succès."); } 
+    catch(e) { alert("Une erreur est survenue lors de la lecture du fichier JSON."); }
+  };
+  r.readAsText(f); evt.target.value = "";
+};
+
+/* --- GESTION ROBUSTE DE L'ORDRE D'IMPRESSION --- */
+window.addEventListener('beforeprint', () => {
+  const content = document.querySelector('.content');
+  const gantt = document.getElementById('page-gantt');
+  if(content && gantt) {
+    // Force la position du Gantt en tout premier élément du DOM juste avant l'impression
+    content.insertBefore(gantt, content.firstChild);
+  }
+});
+
+window.addEventListener('afterprint', () => {
+  const leaves = document.getElementById('page-leaves');
+  const gantt = document.getElementById('page-gantt');
+  if(leaves && gantt) {
+    // Restaure l'ordre naturel du DOM après l'impression
+    leaves.insertAdjacentElement('afterend', gantt);
+  }
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        const raw = localStorage.getItem('currentProjectJson');
+        if(raw) {
+            const p = JSON.parse(raw);
+            if(p.config && p.config.sentinelleActive) {
+                new BroadcastChannel('gold-project-sync').postMessage({ 
+                    type: "DEBUG_LOG", 
+                    action: "📂 Ouverture du support", 
+                    support: document.title 
+                });
+            }
+        }
+    } catch(e) {}
+});
+</script>
+</body>
+</html>
