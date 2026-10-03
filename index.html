@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>Portail GOLD Suite</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#C00021">
@@ -15,23 +15,25 @@
     --nav-bg: #ffffff;
   }
   * { box-sizing: border-box; }
+  
   html, body {
     margin: 0; padding: 0;
     height: 100vh;
+    height: 100dvh; /* S'adapte dynamiquement à l'UI des navigateurs mobiles */
     font-family: Inter, Segoe UI, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: hidden; /* Empêche le rebond élastique de la page globale */
   }
 
-  /* Header Global */
+  /* Header Global (Bureau par défaut) */
   header {
     flex-shrink: 0;
     background: linear-gradient(135deg, var(--vdl-red) 0%, var(--vdl-red2) 100%);
     color: #fff;
-    padding: 12px 16px;
+    padding: 12px 20px;
     box-shadow: 0 4px 12px rgba(192,0,33,0.2);
     display: flex;
     justify-content: space-between;
@@ -39,17 +41,17 @@
     z-index: 100;
   }
   .header-left { display: flex; flex-direction: column; }
-  .app-title { font-size: 20px; font-weight: 900; letter-spacing: 0.5px; margin: 0; }
-  .project-title { font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60vw; }
+  .app-title { font-size: 22px; font-weight: 900; letter-spacing: 0.5px; margin: 0; line-height: 1; }
+  .project-title { font-size: 13px; opacity: 0.9; margin-top: 4px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50vw; }
   
   .header-actions { display: flex; gap: 8px; }
   .btn-import {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.15);
     border: 1px solid rgba(255,255,255,0.4);
     color: #fff;
-    padding: 6px 12px;
+    padding: 8px 14px;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: bold;
     cursor: pointer;
     display: flex;
@@ -59,24 +61,25 @@
   }
   .btn-import:hover { background: rgba(255,255,255,0.3); }
 
-  /* Navigation */
+  /* Navigation (Bureau par défaut) */
   nav {
     flex-shrink: 0;
     background: var(--nav-bg);
-    padding: 8px;
+    padding: 10px 16px;
     display: flex;
     gap: 8px;
     overflow-x: auto;
     border-bottom: 1px solid #e1e3ef;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
+    z-index: 90;
   }
-  nav::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+  nav::-webkit-scrollbar { display: none; }
   
   .nav-item {
     background: #f0f2f5;
     border: 1px solid #e1e3ef;
     color: #444;
-    padding: 8px 14px;
+    padding: 8px 16px;
     border-radius: 999px;
     font-size: 13px;
     font-weight: 600;
@@ -98,6 +101,7 @@
     width: 100%;
     height: 100%;
     background: #fff;
+    overflow: hidden;
   }
   iframe {
     width: 100%;
@@ -143,6 +147,42 @@
     width: 100%;
   }
 
+  /* =========================================
+     ADAPTATIONS POUR SMARTPHONES (Z FOLD FERMÉ INCLUS) 
+     ========================================= */
+  @media (max-width: 768px) {
+    /* Compacter l'en-tête */
+    header {
+      padding: 8px 12px;
+      padding-top: env(safe-area-inset-top, 8px); /* Prise en compte des encoches */
+    }
+    .app-title { font-size: 18px; }
+    .project-title { font-size: 11px; max-width: 60vw; }
+    
+    .btn-import { padding: 6px 10px; font-size: 16px; }
+    .btn-import .import-text { display: none; } /* Masque le texte, garde l'icône */
+
+    /* Passer la navigation en bas de l'écran (Bottom App Bar) */
+    body {
+      flex-direction: column;
+    }
+    main {
+      order: 2; /* Le contenu remonte */
+    }
+    nav {
+      order: 3; /* La navigation passe tout en bas */
+      border-bottom: none;
+      border-top: 1px solid #e1e3ef;
+      padding: 8px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); /* Barre de navigation gestuelle */
+      background: #fff;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+    }
+    .nav-item {
+      font-size: 11px;
+      padding: 6px 12px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -153,8 +193,8 @@
     <div class="project-title" id="globalProjectTitle">Aucun projet chargé</div>
   </div>
   <div class="header-actions">
-    <button class="btn-import" onclick="document.getElementById('fileInput').click()">
-      📥 Importer JSON
+    <button class="btn-import" onclick="document.getElementById('fileInput').click()" title="Importer JSON">
+      📥 <span class="import-text">Importer JSON</span>
     </button>
     <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
   </div>
@@ -229,7 +269,7 @@
     contentFrame.src = targetUrl + "?from=portal";
   }
 
-  // Gestion de la navigation
+  // Gestion de la navigation avec recentrage automatique de l'onglet actif (pratique sur mobile)
   navItems.forEach(item => {
     item.addEventListener("click", () => {
       if (emptyStateEl.style.display !== 'none') {
@@ -238,6 +278,10 @@
       }
       navItems.forEach(nav => nav.classList.remove("active"));
       item.classList.add("active");
+      
+      // Centre visuellement l'onglet sur lequel on clique (très ergonomique sur smartphone)
+      item.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      
       loadModule(item.getAttribute("data-target"));
     });
   });
@@ -254,14 +298,11 @@
         updateProjectTitle(parsed);
         emptyStateEl.style.display = 'none';
         
-        // Alerte visuelle pour l'utilisateur
-        alert("Projet chargé et sauvegardé localement avec succès !");
-        
         // Recharger le module actif pour qu'il lise les nouvelles données
         const activeTarget = document.querySelector(".nav-item.active").getAttribute("data-target");
         loadModule(activeTarget);
         
-        // Diffuser la mise à jour via BroadcastChannel si nécessaire pour d'autres onglets
+        // Diffuser la mise à jour via BroadcastChannel
         try {
           new BroadcastChannel('gold-project-sync').postMessage({ 
               type: "PROJECT_UPDATED", 
@@ -281,7 +322,7 @@
   // Lancement
   initPortal();
 
-  // Écoute des mises à jour provenant des iframes (si une modif est sauvegardée dans un module)
+  // Écoute des mises à jour provenant des iframes
   try {
     const syncChannel = new BroadcastChannel('gold-project-sync');
     syncChannel.onmessage = (ev) => {
