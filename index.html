@@ -2,185 +2,281 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Portail GOLD Suite</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#C00021">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Portail Projet & Gestion des Sprints</title>
 <style>
   :root {
-    --vdl-red: #C00021; 
-    --vdl-red2: #E43C52;
-    --text: #2C2C2C; 
-    --bg: #F2F2F2;
-    --nav-bg: #ffffff;
-  }
-  * { box-sizing: border-box; }
-  
-  html, body {
-    margin: 0; padding: 0;
-    height: 100vh;
-    height: 100dvh; /* S'adapte dynamiquement à l'UI des navigateurs mobiles */
-    font-family: Inter, Segoe UI, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Empêche le rebond élastique de la page globale */
+    --brand: #C00000;
+    --brand-light: #E43C52;
+    --text: #222;
+    --muted: #666;
+    --ok: #1BAE70;
+    --warn: #F39C12;
+    --bad: #E74C3C;
+    --border: #e8e8e8;
+    --bg: #f4f6f9;
+    --panel: #ffffff;
   }
 
-  /* Header Global (Bureau par défaut) */
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+    color: var(--text);
+    background-color: var(--bg);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* --- HEADER --- */
   header {
-    flex-shrink: 0;
-    background: linear-gradient(135deg, var(--vdl-red) 0%, var(--vdl-red2) 100%);
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
     color: #fff;
-    padding: 12px 20px;
-    box-shadow: 0 4px 12px rgba(192,0,33,0.2);
+    padding: 16px 24px;
+    box-shadow: 0 4px 12px rgba(192, 0, 0, 0.2);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    z-index: 100;
   }
-  .header-left { display: flex; flex-direction: column; }
-  .app-title { font-size: 22px; font-weight: 900; letter-spacing: 0.5px; margin: 0; line-height: 1; }
-  .project-title { font-size: 13px; opacity: 0.9; margin-top: 4px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50vw; }
-  
-  .header-actions { display: flex; gap: 8px; }
-  .btn-import {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.4);
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
+  header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+  }
+  .header-actions {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s;
+    gap: 12px;
   }
-  .btn-import:hover { background: rgba(255,255,255,0.3); }
 
-  /* Navigation (Bureau par défaut) */
-  nav {
-    flex-shrink: 0;
-    background: var(--nav-bg);
-    padding: 10px 16px;
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    border-bottom: 1px solid #e1e3ef;
-    scrollbar-width: none;
-    z-index: 90;
-  }
-  nav::-webkit-scrollbar { display: none; }
-  
-  .nav-item {
-    background: #f0f2f5;
-    border: 1px solid #e1e3ef;
-    color: #444;
+  /* --- BUTTONS --- */
+  .btn {
+    background: #ffffff;
+    color: var(--brand);
+    border: 1px solid transparent;
     padding: 8px 16px;
-    border-radius: 999px;
+    border-radius: 8px;
+    font-weight: 700;
     font-size: 13px;
-    font-weight: 600;
     cursor: pointer;
-    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     transition: all 0.2s;
   }
-  .nav-item.active {
-    background: var(--vdl-red);
+  .btn:hover {
+    background: #f9f9f9;
+    transform: translateY(-1px);
+  }
+  .btn.primary {
+    background: var(--brand);
     color: #fff;
-    border-color: var(--vdl-red);
-    box-shadow: 0 2px 6px rgba(192,0,33,0.3);
+    border-color: var(--brand-light);
+  }
+  .btn.primary:hover {
+    background: var(--brand-light);
+  }
+  .btn.small {
+    padding: 4px 8px;
+    font-size: 11px;
   }
 
-  /* Zone d'affichage Iframe */
-  main {
+  /* --- LAYOUT --- */
+  .container {
     flex: 1;
-    position: relative;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
     width: 100%;
-    height: 100%;
-    background: #fff;
     overflow: hidden;
   }
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-  }
 
-  /* Overlay Importation Vierge */
-  #empty-state {
-    position: absolute;
-    inset: 0;
-    background: var(--bg);
+  .panel {
+    background: var(--panel);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 50;
-    padding: 20px;
-    text-align: center;
   }
-  .empty-card {
+  .panel h2 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    text-transform: uppercase;
+    color: #444;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 8px;
+  }
+
+  /* --- LEFT COLUMN : SUPPORTS & PROJECT INFO --- */
+  .left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+  }
+
+  .project-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stat-item {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e1e4e8;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .stat-value {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--brand);
+    margin-top: 4px;
+  }
+
+  .support-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .support-btn {
     background: #fff;
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    max-width: 400px;
-    width: 100%;
-    border-top: 6px solid var(--vdl-red);
-  }
-  .empty-card h2 { margin-top: 0; color: var(--vdl-red); font-size: 18px; }
-  .empty-card p { color: #555; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
-  .btn-big-import {
-    background: linear-gradient(180deg, var(--vdl-red2), var(--vdl-red));
-    color: #fff;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: left;
+    font-weight: 600;
     font-size: 14px;
-    font-weight: bold;
+    color: #374151;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(192,0,33,0.3);
-    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+  }
+  .support-btn:hover {
+    border-color: var(--brand);
+    background: #fff0f0;
+    color: var(--brand);
+  }
+  .support-btn .icon {
+    font-size: 18px;
   }
 
-  /* =========================================
-     ADAPTATIONS POUR SMARTPHONES (Z FOLD FERMÉ INCLUS) 
-     ========================================= */
-  @media (max-width: 768px) {
-    /* Compacter l'en-tête */
-    header {
-      padding: 8px 12px;
-      padding-top: env(safe-area-inset-top, 8px); /* Prise en compte des encoches */
-    }
-    .app-title { font-size: 18px; }
-    .project-title { font-size: 11px; max-width: 60vw; }
-    
-    .btn-import { padding: 6px 10px; font-size: 16px; }
-    .btn-import .import-text { display: none; } /* Masque le texte, garde l'icône */
+  /* --- RIGHT COLUMN : SPRINTS MANAGEMENT --- */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 
-    /* Passer la navigation en bas de l'écran (Bottom App Bar) */
-    body {
+  .sprint-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: #fdfdfd;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .sprint-form input, .sprint-form select, .sprint-form textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .sprint-form textarea {
+    grid-column: 1 / -1;
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  .kanban-board {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .kanban-col {
+    flex: 1;
+    background: #f4f5f7;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #e1e4e8;
+  }
+  .kanban-col-header {
+    font-size: 13px;
+    font-weight: 800;
+    color: #4b5563;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #d1d5db;
+    display: flex;
+    justify-content: space-between;
+  }
+  .sprint-card {
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    position: relative;
+  }
+  .sprint-card-target {
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    background: #6b7280;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+  .sprint-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .sprint-card-desc {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 12px;
+  }
+  .sprint-card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 8px;
+  }
+
+  @media (max-width: 980px) {
+    .container {
+      grid-template-columns: 1fr;
+      overflow-y: auto;
+    }
+    .kanban-board {
       flex-direction: column;
     }
-    main {
-      order: 2; /* Le contenu remonte */
-    }
-    nav {
-      order: 3; /* La navigation passe tout en bas */
-      border-bottom: none;
-      border-top: 1px solid #e1e3ef;
-      padding: 8px;
-      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); /* Barre de navigation gestuelle */
-      background: #fff;
-      box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
-    }
-    .nav-item {
-      font-size: 11px;
-      padding: 6px 12px;
+    .sprint-form {
+      grid-template-columns: 1fr;
     }
   }
 </style>
@@ -188,149 +284,340 @@
 <body>
 
 <header>
-  <div class="header-left">
-    <h1 class="app-title">GOLD Suite</h1>
-    <div class="project-title" id="globalProjectTitle">Aucun projet chargé</div>
-  </div>
+  <h1>Portail de Gestion & Sprints</h1>
   <div class="header-actions">
-    <button class="btn-import" onclick="document.getElementById('fileInput').click()" title="Importer JSON">
-      📥 <span class="import-text">Importer JSON</span>
-    </button>
-    <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+    <button class="btn" onclick="triggerImportPivot()">📥 Forcer Import Pivot JSON</button>
+    <input id="importPivotInput" type="file" accept=".json,application/json" style="display:none" onchange="doImportPivot(this)">
   </div>
 </header>
 
-<nav id="mainNav">
-  <div class="nav-item active" data-target="GOLD_FicheProjet.html">Fiche Projet</div>
-  <div class="nav-item" data-target="GOLD_FeuilleDeRoute.html">Feuille de Route</div>
-  <div class="nav-item" data-target="GOLD_FicheMeteo.html">Météo</div>
-  <div class="nav-item" data-target="GOLD_Planning.html">Planning</div>
-  <div class="nav-item" data-target="GOLD_RACI.html">RACI</div>
-  <div class="nav-item" data-target="GOLD_Conges.html">Congés</div>
-</nav>
-
-<main>
-  <div id="empty-state">
-    <div class="empty-card">
-      <h2>Bienvenue sur le portail GOLD</h2>
-      <p>Pour commencer, veuillez importer votre fichier pivot contenant les données de votre projet. Les données seront sauvegardées localement sur votre appareil.</p>
-      <button class="btn-big-import" onclick="document.getElementById('fileInput').click()">
-        Charger le fichier Pivot (.json)
-      </button>
+<div class="container">
+  
+  <!-- COLONNE GAUCHE : INFOS PROJET & SUPPORTS -->
+  <div class="left-col">
+    
+    <div class="panel">
+      <h2>Le Projet</h2>
+      <div class="project-stats">
+        <div class="stat-item">
+          <div class="stat-label">Nom du projet</div>
+          <div class="stat-value" id="dashboard_projectName">Non défini</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Phase Courante</div>
+          <div class="stat-value" id="dashboard_projectPhase">—</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Chef de Projet</div>
+          <div class="stat-value" id="dashboard_projectManager">—</div>
+        </div>
+        <div class="stat-item" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div class="stat-label">Avancement</div>
+            <div class="stat-value" id="dashboard_projectProgress">0%</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="stat-label">Tendance</div>
+            <div class="stat-value" id="dashboard_projectTrend">⛅</div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <div class="panel">
+      <h2>Accès aux supports</h2>
+      <div class="support-grid">
+        <button class="support-btn" onclick="openSupport('FicheProjet.html')">
+          <span class="icon">📄</span> Fiche Projet
+        </button>
+        <button class="support-btn" onclick="openSupport('FeuilleDeRoute.html')">
+          <span class="icon">📅</span> Feuille de Route
+        </button>
+        <button class="support-btn" onclick="openSupport('FicheMeteo.html')">
+          <span class="icon">🌤️</span> Fiche Météo
+        </button>
+        <button class="support-btn" onclick="openSupport('Planning.html')">
+          <span class="icon">📋</span> Planning Détaillé
+        </button>
+        <button class="support-btn" onclick="openSupport('RACI.html')">
+          <span class="icon">🧩</span> Matrice RACI
+        </button>
+        <button class="support-btn" onclick="openSupport('Conges.html')">
+          <span class="icon">🏖️</span> Congés Acteurs
+        </button>
+      </div>
+    </div>
+
   </div>
-  <iframe id="contentFrame" src="about:blank"></iframe>
-</main>
+
+  <!-- COLONNE DROITE : GESTION DES SPRINTS -->
+  <div class="right-col panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--border); margin-bottom: 16px; padding-bottom: 8px;">
+      <h2 style="border:none; padding:0; margin:0;">Backlog d'évolutions (Sprints)</h2>
+      <button class="btn small" style="border:1px solid #d1d5db; color:#4b5563;" onclick="clearAllSprints()">🗑️ Vider le backlog</button>
+    </div>
+
+    <!-- Formulaire d'ajout -->
+    <form class="sprint-form" id="sprintForm" onsubmit="addSprint(event)">
+      <input type="text" id="sprintTitle" placeholder="Titre de l'évolution (ex: Ajout filtre multi-critères)" required>
+      <select id="sprintTarget" required>
+        <option value="" disabled selected>Support concerné...</option>
+        <option value="Global (Pivot)">Global (Pivot)</option>
+        <option value="Fiche Projet">Fiche Projet</option>
+        <option value="Feuille de Route">Feuille de Route</option>
+        <option value="Fiche Météo">Fiche Météo</option>
+        <option value="Planning Détaillé">Planning Détaillé</option>
+        <option value="RACI">RACI</option>
+        <option value="Congés">Congés</option>
+      </select>
+      <button type="submit" class="btn primary">Ajouter au Backlog</button>
+      <textarea id="sprintDesc" placeholder="Description technique ou fonctionnelle pour l'IA..." required></textarea>
+    </form>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board">
+      <div class="kanban-col" id="col-todo">
+        <div class="kanban-col-header"><span>À FAIRE</span> <span id="count-todo">0</span></div>
+        <div class="kanban-cards" id="cards-todo"></div>
+      </div>
+      <div class="kanban-col" id="col-progress">
+        <div class="kanban-col-header"><span>EN COURS (SPRINT)</span> <span id="count-progress">0</span></div>
+        <div class="kanban-cards" id="cards-progress"></div>
+      </div>
+      <div class="kanban-col" id="col-done">
+        <div class="kanban-col-header"><span>TERMINÉ</span> <span id="count-done">0</span></div>
+        <div class="kanban-cards" id="cards-done"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
 
 <script>
-  const STORAGE_KEY = "currentProjectJson";
-  const projectTitleEl = document.getElementById("globalProjectTitle");
-  const emptyStateEl = document.getElementById("empty-state");
-  const contentFrame = document.getElementById("contentFrame");
-  const navItems = document.querySelectorAll(".nav-item");
-  const fileInput = document.getElementById("fileInput");
+  /* =========================================================================
+     1. GESTION DU PROJET (LECTURE DU PIVOT DEPUIS LOCALSTORAGE)
+     ========================================================================= */
+  
+  const STORAGE_KEY_PROJECT = "currentProjectJson";
+  let currentProject = null;
 
-  // Enregistrement du Service Worker pour la PWA (mode hors-ligne)
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('Service Worker enregistré avec succès.', reg))
-        .catch(err => console.error('Erreur lors de l\'enregistrement du Service Worker.', err));
-    });
-  }
-
-  // Initialisation au lancement
-  function initPortal() {
-    const rawData = localStorage.getItem(STORAGE_KEY);
-    if (rawData) {
-      try {
-        const parsed = JSON.parse(rawData);
-        updateProjectTitle(parsed);
-        emptyStateEl.style.display = 'none';
-        loadModule(document.querySelector(".nav-item.active").getAttribute("data-target"));
-      } catch (e) {
-        console.error("Erreur de lecture du localStorage", e);
+  function loadProjectFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_PROJECT);
+      if (raw) {
+        currentProject = JSON.parse(raw);
+        updateProjectDashboard();
       }
+    } catch(e) {
+      console.error("Erreur de lecture du Pivot depuis le localStorage", e);
     }
   }
 
-  function updateProjectTitle(data) {
-    if (data && data.project && data.project.title) {
-      projectTitleEl.textContent = data.project.title;
-    } else if (data && data.title) {
-      projectTitleEl.textContent = data.title;
-    } else {
-      projectTitleEl.textContent = "Projet en cours";
+  function updateProjectDashboard() {
+    if (!currentProject) return;
+
+    // Nom du projet
+    let name = "Non défini";
+    if (currentProject.project) {
+      name = currentProject.project.title || currentProject.project.name || currentProject.project.id || "Non défini";
+    } else if (currentProject.Nom_du_projet) {
+      name = currentProject.Nom_du_projet; // Compatibilité ancien format
     }
+    document.getElementById("dashboard_projectName").textContent = name;
+
+    // Phase
+    let phase = "—";
+    if (currentProject.project && currentProject.project.phaseCourante) phase = currentProject.project.phaseCourante;
+    else if (currentProject.Phase_projet) phase = currentProject.Phase_projet;
+    document.getElementById("dashboard_projectPhase").textContent = phase;
+
+    // Chef de projet
+    let manager = "—";
+    if (currentProject.project && currentProject.project.actors && currentProject.project.actors.directeurProjet) manager = currentProject.project.actors.directeurProjet;
+    else if (currentProject.project && currentProject.project.owner) manager = currentProject.project.owner;
+    else if (currentProject.Acteur_CP) manager = currentProject.Acteur_CP;
+    document.getElementById("dashboard_projectManager").textContent = manager;
+
+    // Avancement
+    let progress = "0%";
+    if (currentProject.progress && currentProject.progress.percent != null) progress = currentProject.progress.percent + "%";
+    document.getElementById("dashboard_projectProgress").textContent = progress;
+
+    // Tendance
+    let trend = "⛅";
+    if (currentProject.meteo && currentProject.meteo.situation) {
+      if (currentProject.meteo.situation === "soleil") trend = "☀️";
+      if (currentProject.meteo.situation === "soleil_nuages_pluie") trend = "🌦️";
+    } else if (currentProject.Tendance) {
+      if (currentProject.Tendance === "soleil") trend = "☀️";
+      if (currentProject.Tendance === "soleil_nuages_pluie") trend = "🌦️";
+    }
+    document.getElementById("dashboard_projectTrend").textContent = trend;
   }
 
-  function loadModule(targetUrl) {
-    // Ajout du paramètre from=portal pour indiquer aux modules qu'ils sont dans le portail
-    contentFrame.src = targetUrl + "?from=portal";
+  function triggerImportPivot() {
+    document.getElementById("importPivotInput").click();
   }
 
-  // Gestion de la navigation avec recentrage automatique de l'onglet actif (pratique sur mobile)
-  navItems.forEach(item => {
-    item.addEventListener("click", () => {
-      if (emptyStateEl.style.display !== 'none') {
-        alert("Veuillez d'abord charger un fichier de projet.");
-        return;
-      }
-      navItems.forEach(nav => nav.classList.remove("active"));
-      item.classList.add("active");
-      
-      // Centre visuellement l'onglet sur lequel on clique (très ergonomique sur smartphone)
-      item.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-      
-      loadModule(item.getAttribute("data-target"));
-    });
-  });
-
-  // Gestion de l'importation JSON globale
-  fileInput.addEventListener("change", (evt) => {
-    const f = evt.target.files[0];
-    if (!f) return;
+  function doImportPivot(inp) {
+    const file = inp.files && inp.files[0];
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const parsed = JSON.parse(e.target.result);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-        updateProjectTitle(parsed);
-        emptyStateEl.style.display = 'none';
-        
-        // Recharger le module actif pour qu'il lise les nouvelles données
-        const activeTarget = document.querySelector(".nav-item.active").getAttribute("data-target");
-        loadModule(activeTarget);
-        
-        // Diffuser la mise à jour via BroadcastChannel
-        try {
-          new BroadcastChannel('gold-project-sync').postMessage({ 
-              type: "PROJECT_UPDATED", 
-              source: "portal", 
-              payload: parsed 
-          });
-        } catch(err) {}
-
+        const json = JSON.parse(e.target.result);
+        localStorage.setItem(STORAGE_KEY_PROJECT, JSON.stringify(json));
+        currentProject = json;
+        updateProjectDashboard();
+        alert("Pivot JSON importé et synchronisé avec succès ✅");
       } catch (err) {
-        alert("Erreur : Le fichier JSON est invalide.");
+        alert("Fichier JSON invalide.");
       }
+      inp.value = "";
     };
-    reader.readAsText(f);
-    evt.target.value = ""; // Reset de l'input
+    reader.readAsText(file, "utf-8");
+  }
+
+  function openSupport(filename) {
+    // On peut passer des paramètres d'URL si besoin, comme ?from=portal
+    window.open(filename + "?from=portal", "_blank");
+  }
+
+  /* =========================================================================
+     2. GESTION DES SPRINTS / BACKLOG D'ÉVOLUTIONS
+     ========================================================================= */
+
+  const STORAGE_KEY_SPRINTS = "sprints_backlog";
+  let sprints = [];
+
+  function loadSprints() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_SPRINTS);
+      if (raw) {
+        sprints = JSON.parse(raw);
+      } else {
+        // Mock data d'initialisation
+        sprints = [
+          { id: 1, title: "Création du portail", target: "Global (Pivot)", desc: "Mise en place de la page d'accueil pour lier tous les supports.", status: "done", date: new Date().toISOString() }
+        ];
+      }
+    } catch(e) {
+      sprints = [];
+    }
+    renderKanban();
+  }
+
+  function saveSprints() {
+    localStorage.setItem(STORAGE_KEY_SPRINTS, JSON.stringify(sprints));
+    renderKanban();
+  }
+
+  function addSprint(event) {
+    event.preventDefault();
+    const title = document.getElementById("sprintTitle").value;
+    const target = document.getElementById("sprintTarget").value;
+    const desc = document.getElementById("sprintDesc").value;
+
+    const newSprint = {
+      id: Date.now(),
+      title: title,
+      target: target,
+      desc: desc,
+      status: "todo",
+      date: new Date().toISOString()
+    };
+
+    sprints.push(newSprint);
+    saveSprints();
+    document.getElementById("sprintForm").reset();
+  }
+
+  function deleteSprint(id) {
+    if (confirm("Supprimer cette demande d'évolution ?")) {
+      sprints = sprints.filter(s => s.id !== id);
+      saveSprints();
+    }
+  }
+
+  function moveSprint(id, newStatus) {
+    const sprint = sprints.find(s => s.id === id);
+    if (sprint) {
+      sprint.status = newStatus;
+      saveSprints();
+    }
+  }
+
+  function clearAllSprints() {
+    if (confirm("Attention : Vous êtes sur le point de purger tout le backlog des évolutions. Continuer ?")) {
+      sprints = [];
+      saveSprints();
+    }
+  }
+
+  function renderKanban() {
+    const cols = {
+      todo: document.getElementById("cards-todo"),
+      progress: document.getElementById("cards-progress"),
+      done: document.getElementById("cards-done")
+    };
+    const counts = { todo: 0, progress: 0, done: 0 };
+
+    // Vider les colonnes
+    Object.values(cols).forEach(col => col.innerHTML = "");
+
+    // Remplir les cartes
+    sprints.forEach(sprint => {
+      if (counts[sprint.status] !== undefined) {
+        counts[sprint.status]++;
+        const card = document.createElement("div");
+        card.className = "sprint-card";
+        
+        let actionsHtml = "";
+        if (sprint.status === "todo") {
+          actionsHtml = `<button class="btn small primary" onclick="moveSprint(${sprint.id}, 'progress')">Lancer 🚀</button>`;
+        } else if (sprint.status === "progress") {
+          actionsHtml = `
+            <button class="btn small" style="background:#e5e7eb;" onclick="moveSprint(${sprint.id}, 'todo')">⬅</button>
+            <button class="btn small primary" onclick="moveSprint(${sprint.id}, 'done')">Valider ✅</button>
+          `;
+        } else if (sprint.status === "done") {
+          actionsHtml = `<button class="btn small" style="background:#e5e7eb;" onclick="moveSprint(${sprint.id}, 'progress')">⬅ Rouvrir</button>`;
+        }
+
+        card.innerHTML = `
+          <div class="sprint-card-target">${sprint.target}</div>
+          <button class="btn small" style="position:absolute; top:8px; right:8px; background:transparent; color:#ef4444; border:none; box-shadow:none; padding:0;" onclick="deleteSprint(${sprint.id})">✖</button>
+          <div class="sprint-card-title">${sprint.title}</div>
+          <div class="sprint-card-desc">${sprint.desc.replace(/\n/g, '<br>')}</div>
+          <div class="sprint-card-actions">
+            ${actionsHtml}
+          </div>
+        `;
+        cols[sprint.status].appendChild(card);
+      }
+    });
+
+    // Mettre à jour les compteurs
+    document.getElementById("count-todo").textContent = counts.todo;
+    document.getElementById("count-progress").textContent = counts.progress;
+    document.getElementById("count-done").textContent = counts.done;
+  }
+
+  /* =========================================================================
+     3. INITIALISATION
+     ========================================================================= */
+  document.addEventListener("DOMContentLoaded", () => {
+    loadProjectFromStorage();
+    loadSprints();
+    
+    // Auto-refresh pour capter les modifications faites depuis les autres onglets
+    window.addEventListener("storage", (e) => {
+      if (e.key === STORAGE_KEY_PROJECT) {
+        loadProjectFromStorage();
+      }
+    });
   });
-
-  // Lancement
-  initPortal();
-
-  // Écoute des mises à jour provenant des iframes
-  try {
-    const syncChannel = new BroadcastChannel('gold-project-sync');
-    syncChannel.onmessage = (ev) => {
-      if (ev.data && ev.data.type === "PROJECT_UPDATED") {
-        updateProjectTitle(ev.data.payload);
-      }
-    };
-  } catch(e) {}
 
 </script>
 </body>
