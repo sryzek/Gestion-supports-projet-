@@ -3,986 +3,426 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Fiche météo — V4.7.7 (Sync Temps Réel)</title>
+<title>Portail de Projet & Sprints</title>
 <style>
-/* --- STYLES GENERAUX --- */
-:root{ --brand:#C00000; --text:#222; --muted:#666; --ok:#1BAE70; --warn:#F39C12; --bad:#E74C3C; --border:#e8e8e8; --ghost:#9aa3af; }
-*{box-sizing:border-box}
-html,body{ margin:0; padding:0; background:#fff; color:var(--text); font-family:Calibri,Arial,sans-serif; }
-.wrap{ max-width:1200px; margin:0 auto; padding:0 16px 16px; }
+  :root {
+    --brand: #C00000;
+    --brand-light: #E43C52;
+    --text: #222;
+    --muted: #666;
+    --border: #e8e8e8;
+    --bg: #f4f6f9;
+    --panel: #ffffff;
+  }
 
-/* Bandeau */
-.bar{ background:#C00000; color:#fff; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.18); }
-.bar-inner{ position:relative; min-height:54px; display:flex; align-items:center; justify-content:center; padding:4px 16px; }
-.title{text-align:center}
-.title .date{ font-weight:700; font-size:15px; letter-spacing:.2px; margin-bottom:2px; }
-.title .name{ font-weight:900; font-size:30px; line-height:1.1; margin:0 auto; max-width:100%; }
-.title .meta-line{ margin-top:2px; font-size:14px; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.ver{ position:absolute; right:10px; bottom:6px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); padding:1px 6px; border-radius:999px; font-weight:700; font-size:11px; }
-.page-ver{ position:fixed; right:10px; bottom:8px; color:#999; font-size:11px; }
-@media print{ .page-ver,.ver{display:none!important} }
+  * { box-sizing: border-box; }
 
-/* Cartouche Situation / Tendance */
-.synth-wrapper{ max-width:520px; margin:8px auto 0; padding:4px 10px 2px; border-radius:18px; background:linear-gradient(180deg,#ffffff,#f9fafc); box-shadow:0 8px 18px rgba(0,0,0,.08); border:1px solid #f0f0f0; }
-.synth-row{ display:flex; gap:24px; align-items:flex-start; justify-content:space-between; }
-.synth-card{ display:flex; flex-direction:column; align-items:center; }
-.synth-card-title{ font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:#555; margin-bottom:4px; }
-.trend-badge{ width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; background:radial-gradient(circle at 30% 30%,#fff 0,#ffecec 40%,#ffd6d6 100%); box-shadow:0 10px 20px rgba(0,0,0,.12); }
-.trend-card-main{ display:flex; align-items:center; gap:10px; }
-.trend-arrow-3d{ width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:0 8px 16px rgba(0,0,0,.15); color:#1565c0; }
-.trend-arrow-dir-up::before{content:"▲";} .trend-arrow-dir-flat::before{content:"➜";} .trend-arrow-dir-down::before{content:"▼";}
-.trend-arrow-col-green{ background:#c8f3d3; color:#1b5e20; } .trend-arrow-col-blue{ background:#d7e4ff; color:#1565c0; } .trend-arrow-col-red{ background:#ffdad6; color:#b71c1c; }
-.trend-state{ font-weight:700; font-size:14px; } .trend-detail{ font-size:12px; color:var(--muted); }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+    color: var(--text);
+    background-color: var(--bg);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-body.trend-soleil{ background:#fffdf5; } body.trend-nuages{ background:#f7f9ff; } body.trend-pluie{ background:#f5f7fb; }
+  /* --- HEADER --- */
+  header {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
+    color: #fff;
+    padding: 16px 24px;
+    box-shadow: 0 4px 12px rgba(192, 0, 0, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 0.5px; }
+  .header-actions { display: flex; gap: 12px; }
 
-/* Toolbar */
-.toolbar{ margin:10px auto 6px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-.btn{ border:none; border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer; background:#C00000; color:#fff; box-shadow:0 3px 8px rgba(0,0,0,.18); display:inline-flex; align-items:center; gap:6px; }
-.btn:hover{filter:brightness(1.05)} .btn:active{transform:translateY(1px);}
-.help{ text-align:center; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  /* --- BUTTONS --- */
+  .btn {
+    background: #ffffff; color: var(--brand); border: 1px solid transparent;
+    padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px;
+    cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: all 0.2s;
+  }
+  .btn:hover { background: #f9f9f9; transform: translateY(-1px); }
+  .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand-light); }
+  .btn.primary:hover { background: var(--brand-light); }
+  .btn.small { padding: 4px 8px; font-size: 11px; }
 
-/* Sections */
-.section{ margin-top:10px; }
-.grid-2{ display:grid; grid-template-columns:1.3fr 1fr; gap:10px; }
-.box{ border:1px solid var(--border); border-radius:12px; padding:8px 10px; background:#fff; }
-.sect{ font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:#555; margin-bottom:4px; }
-.hline{ height:2px; width:100%; background:linear-gradient(90deg,#C00000,#f39c12); border-radius:999px; margin-bottom:4px; }
+  /* --- LAYOUT --- */
+  .container {
+    flex: 1; max-width: 1300px; margin: 0 auto; padding: 24px;
+    display: grid; grid-template-columns: 320px 1fr; gap: 24px; width: 100%;
+    overflow: hidden;
+  }
 
-/* Key/Value bloc */
-.kv{ display:grid; grid-template-columns:auto 1fr; gap:2px 8px; font-size:13px; }
-.kv .k{ color:#555; white-space:nowrap; }
+  .panel {
+    background: var(--panel); border-radius: 12px; border: 1px solid var(--border);
+    padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+  }
+  .panel h2 {
+    margin: 0 0 16px 0; font-size: 16px; text-transform: uppercase; color: #444;
+    border-bottom: 2px solid var(--border); padding-bottom: 8px;
+  }
 
-/* Statuts */
-.status-line{ display:grid; grid-template-columns:1fr auto; gap:4px; font-size:13px; }
-.dot{ width:14px; height:14px; border-radius:50%; border:2px solid transparent; }
-.dot.ok{ background:#e4f6ee; border-color:#1BAE70; } .dot.warn{ background:#fff5e0; border-color:#F39C12; } .dot.bad{ background:#fde7e7; border-color:#E74C3C; }
+  /* --- LEFT COLUMN : PROJET & NAVIGATION --- */
+  .left-col { display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
 
-/* Listes */
-ul{ margin:4px 0 0; padding-left:18px; font-size:13px; }
-li{margin:2px 0;}
-.ghost{ color:var(--ghost); }
+  .project-stats { display: flex; flex-direction: column; gap: 10px; }
+  .stat-item { background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e1e4e8; }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+  .stat-value { font-size: 16px; font-weight: 900; color: var(--brand); margin-top: 4px; line-height: 1.2; }
 
-/* Timeline card & Gantt */
-.timeline-card{ border-radius:12px; border:1px solid var(--border); padding:6px; background:#fff; }
-.gantt-wrap{ overflow:auto; border-radius:16px; border:1px solid #dde2f1; background:#f8f9fc; padding:10px; position:relative; margin-top:4px; }
-canvas#projectGantt{ display:block; background:transparent; max-width:100%; }
-.legend{ margin-top:8px; font-size:11px; color:#4b5563; display:flex; flex-wrap:wrap; gap:10px; }
-.legend-item{ display:inline-flex; align-items:center; gap:4px; }
-.legend-color{ width:14px; height:8px; border-radius:999px; }
-.legend-dot{ width:8px; height:8px; border-radius:50%; background:#B30000; }
+  .support-grid { display: flex; flex-direction: column; gap: 8px; }
+  .support-btn {
+    background: #fff; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px;
+    text-align: left; font-weight: 600; font-size: 14px; color: #374151;
+    cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s;
+  }
+  .support-btn:hover { border-color: var(--brand); background: #fff0f0; color: var(--brand); }
+  .support-btn .icon { font-size: 18px; }
 
-/* Fallback Gantt pour CSV */
-.csv-gantt{ font-size:12px; }
-.csv-gantt-header{ display:grid; grid-template-columns:150px 1fr; font-weight:600; margin-bottom:4px; }
-.csv-gantt-row{ display:grid; grid-template-columns:150px 1fr; align-items:center; margin:2px 0; }
-.csv-gantt-label{ padding-right:4px; text-overflow:ellipsis; white-space:nowrap; overflow:hidden; }
-.csv-gantt-months{ display:flex; }
-.csv-gantt-month{ flex:1; border-left:1px solid #e1e1e1; border-right:1px solid #f3f3f3; background:linear-gradient(180deg,#fafafa,#f0f0f0); text-align:center; font-size:10px; padding:1px 0; }
-.csv-gantt-bar{ position:relative; margin-top:2px; height:12px; background:#C00000; border-radius:999px; }
+  /* --- RIGHT COLUMN : SPRINTS KANBAN --- */
+  .right-col { display: flex; flex-direction: column; overflow: hidden; }
 
-/* Editor */
-.editor-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.25); display:none; align-items:center; justify-content:center; z-index:9999; }
-.editor{ background:#fff; width:min(980px,95vw); max-height:90vh; overflow:auto; border-radius:14px; border:1px solid #e8e8e8; padding:16px; }
-.editor h3{ margin:6px 0 8px; color:#C00000; }
-.editor .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.editor label{ font-size:13px; color:#444; margin-top:6px; display:block; position:relative; }
-.editor input, .editor textarea, .editor select{ width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font:inherit; }
-.editor textarea{min-height:80px}
-.editor .full{grid-column:1 / -1}
-.editor .actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
-.editor .hint{ font-size:12px; color:#666; }
-.tooltip{ position:absolute; z-index:10; left:0; right:0; top:100%; margin-top:6px; background:#f5f7ff; border:1px solid #dfe6ff; border-radius:10px; color:#1f3a8a; font-size:12.5px; padding:8px 10px; display:none; }
-label:focus-within .tooltip, label:hover .tooltip{display:block}
+  .sprint-form {
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; margin-bottom: 20px;
+    background: #fdfdfd; padding: 16px; border-radius: 8px; border: 1px solid var(--border);
+  }
+  .sprint-form input, .sprint-form select, .sprint-form textarea {
+    width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;
+    font-family: inherit; font-size: 13px;
+  }
+  .sprint-form textarea { grid-column: 1 / -1; resize: vertical; min-height: 50px; }
 
-/* Impression */
-@media print{
-  @page{ size:A4 landscape; margin:10mm }
-  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  .toolbar,.help,.ver,.editor-backdrop{display:none!important}
-  .wrap{width:277mm}
-}
+  .kanban-board { display: flex; gap: 16px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
+  .kanban-col {
+    flex: 1; background: #f4f5f7; border-radius: 8px; padding: 12px;
+    display: flex; flex-direction: column; gap: 10px; border: 1px solid #e1e4e8;
+  }
+  .kanban-col-header {
+    font-size: 13px; font-weight: 800; color: #4b5563; text-transform: uppercase;
+    padding-bottom: 8px; border-bottom: 2px solid #d1d5db; display: flex; justify-content: space-between;
+  }
+  .sprint-card {
+    background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; padding: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04); position: relative;
+  }
+  .sprint-card-target {
+    font-size: 10px; font-weight: 800; color: #fff; background: #6b7280;
+    padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 6px;
+  }
+  .sprint-card-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .sprint-card-desc { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+  .sprint-card-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid #f3f4f6; padding-top: 8px;
+  }
+
+  @media (max-width: 980px) {
+    .container { grid-template-columns: 1fr; overflow-y: auto; }
+    .kanban-board { flex-direction: column; }
+    .sprint-form { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
-<body class="trend-nuages">
-<div class="wrap">
-  <div class="bar">
-    <div class="bar-inner">
-      <div class="title">
-        <div class="date">FICHE MÉTÉO — <span data-text="Date_meteo"></span></div>
-        <div class="name">
-          <span data-text="Nom_du_projet"
-                data-ph="&lt;Nom du projet&gt;"
-                class="ghost"></span>
-        </div>
-        <div class="meta-line">
-          <span data-text="Direction_porteur" data-ph="&lt;Direction porteuse&gt;" class="ghost"></span>
-          ·
-          <span data-text="Acteur_CP" data-ph="&lt;Chef de projet&gt;" class="ghost"></span>
-          ·
-          <span data-text="Phase_projet" data-ph="&lt;Phase du projet&gt;" class="ghost"></span>
-        </div>
-      </div>
-      <div class="ver">V4.7.7 Sync</div>
-    </div>
+<body>
+
+<header>
+  <h1>Gestion de Projet SIGF</h1>
+  <div class="header-actions">
+    <button class="btn" onclick="triggerImportPivot()">📥 Importer Pivot JSON</button>
+    <input id="importPivotInput" type="file" accept=".json,application/json" style="display:none" onchange="doImportPivot(this)">
   </div>
+</header>
 
-  <div class="page-ver">V4.7.7 Sync</div>
-
-  <div class="synth-wrapper">
-    <div class="synth-row">
-      <div class="synth-card synth-situation">
-        <div class="synth-card-title">Situation</div>
-        <div class="trend-badge" id="trendBadge" aria-label="Situation">⛅</div>
-      </div>
-      <div class="synth-card synth-trend">
-        <div class="synth-card-title">Tendance</div>
-        <div class="trend-card-main">
-          <div id="trendArrow" class="trend-arrow-3d trend-arrow-dir-flat trend-arrow-col-blue"></div>
+<div class="container">
+  
+  <!-- COLONNE GAUCHE : INFOS & NAVIGATION -->
+  <div class="left-col">
+    
+    <div class="panel">
+      <h2>Le Projet</h2>
+      <div class="project-stats">
+        <div class="stat-item">
+          <div class="stat-label">Nom du projet</div>
+          <div class="stat-value" id="dashboard_projectName">Aucun projet chargé</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Phase Courante</div>
+          <div class="stat-value" id="dashboard_projectPhase">—</div>
+        </div>
+        <div class="stat-item" style="display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <div id="trendState" class="trend-state">Stable</div>
-            <div id="trendDetail" class="trend-detail"></div>
+            <div class="stat-label">Chef de Projet</div>
+            <div class="stat-value" id="dashboard_projectManager" style="font-size: 14px;">—</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="stat-label">Tendance</div>
+            <div class="stat-value" id="dashboard_projectTrend" style="font-size: 20px; margin-top:0;">—</div>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="panel">
+      <h2>Accès aux Livrables</h2>
+      <div class="support-grid">
+        <button class="support-btn" onclick="openSupport('GOLD_FicheProjet.html')">
+          <span class="icon">📄</span> Fiche Projet
+        </button>
+        <button class="support-btn" onclick="openSupport('GOLD_FeuilleDeRoute.html')">
+          <span class="icon">📅</span> Feuille de Route
+        </button>
+        <button class="support-btn" onclick="openSupport('GOLD_FicheMeteo.html')">
+          <span class="icon">🌤️</span> Fiche Météo
+        </button>
+        <button class="support-btn" onclick="openSupport('GOLD_Planning.html')">
+          <span class="icon">📋</span> Planning Détaillé
+        </button>
+        <button class="support-btn" onclick="openSupport('GOLD_RACI.html')">
+          <span class="icon">🧩</span> Matrice RACI
+        </button>
+        <button class="support-btn" onclick="openSupport('GOLD_Conges.html')">
+          <span class="icon">🏖️</span> Congés Acteurs
+        </button>
+      </div>
+    </div>
+
   </div>
 
-  <div class="toolbar">
-    <button class="btn" style="background:#e5e7eb; color:#111827" onclick="window.print()">🖨️ PDF</button>
-    <button class="btn" onclick="openEditor()">✏️ Éditer</button>
-    <button class="btn" style="background:#e5e7eb; color:#111827" onclick="saveJson()">💾 Sauvegarder JSON</button>
-    <button class="btn" style="background:#e5e7eb; color:#111827" onclick="triggerImport()">📥 Importer JSON</button>
-    <input id="importInput" type="file" accept=".json,application/json" style="display:none" onchange="doImport(this)">
-  </div>
+  <!-- COLONNE DROITE : SPRINT BACKLOG -->
+  <div class="right-col panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--border); margin-bottom: 16px; padding-bottom: 8px;">
+      <h2 style="border:none; padding:0; margin:0;">Sprints & Évolutions</h2>
+      <button class="btn small" style="border:1px solid #d1d5db; color:#4b5563;" onclick="clearAllSprints()">🗑️ Purger</button>
+    </div>
 
-  <div class="help">
-    <b>Mode Temps Réel actif :</b> La synchronisation avec la Fiche Projet se fait automatiquement à chaque application des modifications.
-  </div>
+    <form class="sprint-form" id="sprintForm" onsubmit="addSprint(event)">
+      <input type="text" id="sprintTitle" placeholder="Titre de l'évolution (ex: Ajout filtre RACI)" required>
+      <select id="sprintTarget" required>
+        <option value="" disabled selected>Support concerné...</option>
+        <option value="Global (Pivot JSON)">Global (Pivot JSON)</option>
+        <option value="Fiche Projet">Fiche Projet</option>
+        <option value="Feuille de Route">Feuille de Route</option>
+        <option value="Fiche Météo">Fiche Météo</option>
+        <option value="Planning Détaillé">Planning Détaillé</option>
+        <option value="Matrice RACI">Matrice RACI</option>
+        <option value="Congés Acteurs">Congés Acteurs</option>
+      </select>
+      <button type="submit" class="btn primary">Créer le Sprint</button>
+      <textarea id="sprintDesc" placeholder="Description du besoin à transmettre à l'IA..." required></textarea>
+    </form>
 
-  <div class="section">
-    <div class="box">
-      <div class="sect">Projet</div>
-      <div data-text="Description"
-           data-ph="&lt;Contexte et objectifs (4–6 phrases)&gt;"
-           class="ghost"></div>
-      <div style="margin-top:6px;color:var(--muted)">
-        Identifiant du marché :
-        <span data-text="Id_marche" data-ph="Non concerné" class="ghost"></span>
+    <div class="kanban-board">
+      <div class="kanban-col" id="col-todo">
+        <div class="kanban-col-header"><span>À FAIRE (BACKLOG)</span> <span id="count-todo">0</span></div>
+        <div class="kanban-cards" id="cards-todo"></div>
+      </div>
+      <div class="kanban-col" id="col-progress">
+        <div class="kanban-col-header"><span>EN COURS D'ITÉRATION</span> <span id="count-progress">0</span></div>
+        <div class="kanban-cards" id="cards-progress"></div>
+      </div>
+      <div class="kanban-col" id="col-done">
+        <div class="kanban-col-header"><span>LIVRÉ & TESTÉ</span> <span id="count-done">0</span></div>
+        <div class="kanban-cards" id="cards-done"></div>
       </div>
     </div>
   </div>
 
-  <div class="section grid-2">
-    <div class="box">
-      <div class="sect" style="text-align:center">ACTEURS</div>
-      <div class="kv">
-        <div class="k">Directeur·rice du projet</div>
-        <div>: <span data-text="Acteur_CP" data-ph="Nom Prénom" class="ghost"></span></div>
-        <div class="k">Expert·e métier</div>
-        <div>: <span data-text="Acteur_Metier" data-ph="Nom Prénom" class="ghost"></span></div>
-        <div class="k">MOE</div>
-        <div>: <span data-text="Acteur_MOE" data-ph="Nom / Équipe" class="ghost"></span></div>
-        <div class="k">Prestataire</div>
-        <div>: <span data-text="Acteur_Presta" data-ph="Société" class="ghost"></span></div>
-      </div>
-    </div>
-    <div class="box">
-      <div class="sect" style="text-align:center">STATUT</div>
-      <div class="status-line">
-        <div>Planning :</div><div class="dot" data-dot="Statut_planning"></div>
-      </div>
-      <div class="status-line">
-        <div>Périmètre fonctionnel :</div><div class="dot" data-dot="Statut_perimetre"></div>
-      </div>
-      <div class="status-line">
-        <div>Ressources :</div><div class="dot" data-dot="Statut_ressources"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="hline"></div>
-    <div class="sect">ACTIONS RÉALISÉES</div>
-    <ul data-list="Actions_realisees"
-        data-ph-list="Ex. Atelier de cadrage tenu|Ex. Maquettes V1 présentées"></ul>
-  </div>
-
-  <div class="section">
-    <div class="hline"></div>
-    <div class="sect">ACTIONS EN COURS</div>
-    <ul data-list="Actions_en_cours"
-        data-ph-list="Ex. Rédaction CCTP|Ex. Préparation démonstration"></ul>
-  </div>
-
-  <div class="section">
-    <div class="hline"></div>
-    <div class="sect">POINTS D’ATTENTION</div>
-    <ul data-list="Points_attention"></ul>
-    <div id="noAttention" style="margin-left:18px;display:none">Aucun point signalé.</div>
-  </div>
-
-  <div class="section">
-    <div class="hline"></div>
-    <div class="sect">PLANNING</div>
-    <div class="timeline-card">
-      <div id="ganttContainer"></div>
-    </div>
-  </div>
-</div>
-
-<div class="editor-backdrop" id="editor" role="dialog" aria-modal="true" aria-label="Éditeur de la fiche météo">
-  <div class="editor" role="document">
-    <h3>Éditer la fiche météo</h3>
-    <div class="grid">
-      <label>Nom du projet *
-        <input id="e_Nom_du_projet" placeholder="Nom officiel">
-      </label>
-
-      <label>Date météo (JJ/MM/AAAA) *
-        <input id="e_Date_meteo" placeholder="31/10/2025">
-      </label>
-
-      <label class="full">Description & objectifs *
-        <textarea id="e_Description" placeholder="4–6 phrases"></textarea>
-      </label>
-
-      <label>Identifiant du marché (facultatif)
-        <input id="e_Id_marche" placeholder="Réf. marché">
-      </label>
-
-      <label>Direction porteuse
-        <input id="e_Direction_porteur" placeholder="DNSI / DAF">
-      </label>
-
-      <label>Phase du projet
-        <input id="e_Phase_projet" placeholder="Cadrage, Réalisation...">
-      </label>
-
-      <label>Directeur·rice du projet
-        <input id="e_Acteur_CP" placeholder="Nom Prénom">
-      </label>
-
-      <label>Expert·e métier
-        <input id="e_Acteur_Metier" placeholder="Nom Prénom">
-      </label>
-
-      <label>MOE
-        <input id="e_Acteur_MOE" placeholder="Nom / Équipe interne">
-      </label>
-
-      <label>Prestataire
-        <input id="e_Acteur_Presta" placeholder="Société">
-      </label>
-
-      <label>Statut planning *
-        <select id="e_Statut_planning">
-          <option>Vert</option><option>Orange</option><option>Rouge</option>
-        </select>
-      </label>
-
-      <label>Statut périmètre *
-        <select id="e_Statut_perimetre">
-          <option>Vert</option><option>Orange</option><option>Rouge</option>
-        </select>
-      </label>
-
-      <label>Statut ressources *
-        <select id="e_Statut_ressources">
-          <option>Vert</option><option>Orange</option><option>Rouge</option>
-        </select>
-      </label>
-
-      <label>Situation (icône) *
-        <select id="e_Tendance">
-          <option value="soleil">Soleil</option>
-          <option value="soleil_nuages">Soleil + nuages</option>
-          <option value="soleil_nuages_pluie">Soleil + nuages + pluie</option>
-        </select>
-      </label>
-
-      <label>Tendance (évolution) *
-        <select id="e_Tendance_code">
-          <option value="stable">Stable</option>
-          <option value="amelioration">En amélioration</option>
-          <option value="degradation">En dégradation</option>
-        </select>
-      </label>
-
-      <label class="full">Commentaire de tendance
-        <input id="e_Tendance_detail" placeholder="En amélioration / Stable / En dégradation.">
-      </label>
-
-      <label class="full">Actions réalisées *
-        <textarea id="e_Actions_realisees" placeholder="Une action par ligne"></textarea>
-      </label>
-
-      <label class="full">Actions en cours *
-        <textarea id="e_Actions_en_cours" placeholder="Une action par ligne"></textarea>
-      </label>
-
-      <label class="full">Points d’attention (facultatif)
-        <textarea id="e_Points_attention" placeholder="Une ligne par point"></textarea>
-      </label>
-
-      <label class="full">Planning (CSV : intitulé;AAAA-MM;AAAA-MM) — utilisé uniquement si aucun pivot n’est importé
-        <textarea id="e_Planning"></textarea>
-      </label>
-    </div>
-    
-    <div class="actions">
-      <button class="btn" style="background:#e5e7eb; color:#111827" onclick="closeEditor(false)">❌ Annuler</button>
-      <button class="btn" onclick="closeEditor(true)">✅ Appliquer</button>
-    </div>
-  </div>
 </div>
 
 <script>
-// 🟢 SPRINT 1 : Fichier validé et aligné sur le JSON strict
-let data = {
-  Date_meteo: new Date().toISOString().slice(0,10),
-  Nom_du_projet: "Système d’Information de Gestion Financière — Ville de Lille",
-  Description: "", Id_marche: "", Direction_porteur: "", Phase_projet: "",
-  Acteur_CP: "", Acteur_Metier: "", Acteur_MOE: "", Acteur_Presta: "",
-  Statut_planning: "Vert", Statut_perimetre: "Vert", Statut_ressources: "Vert",
-  Tendance: "soleil_nuages", Tendance_code: "stable", Tendance_detail: "",
-  Actions_realisees: [], Actions_en_cours: [], Points_attention: [], Planning: []
-};
+  /* =========================================================================
+     1. GESTION DU PIVOT JSON (SYNCHRONISATION INTER-SUPPORTS)
+     ========================================================================= */
+  const STORAGE_KEY_PROJECT = "currentProjectJson";
+  let currentProject = null;
 
-let pivotModel = null;
-let backupData = null; // Sauvegarde de l'état avant édition
-
-function $(s,c){return (c||document).querySelector(s);}
-function $$(s,c){return Array.from((c||document).querySelectorAll(s));}
-
-function toFR(iso){
-  const m = String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || "");
-}
-function toISO(fr){
-  const m = String(fr||"").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : (fr || "");
-}
-function dotClass(v){
-  v = (v||"").toLowerCase();
-  if(v.includes("vert"))   return "ok";
-  if(v.includes("orange")) return "warn";
-  if(v.includes("rouge"))  return "bad";
-  return "ok";
-}
-
-function renderTextOrGhost(node,key){
-  let v = data[key], ph = node.getAttribute("data-ph") || "";
-  if(key === "Date_meteo") v = toFR(v);
-  if(key === "Id_marche" && (!v || !String(v).trim())){
-    node.textContent = "Non concerné"; node.classList.add("ghost"); return;
-  }
-  if(v && String(v).trim() !== ""){
-    node.textContent = v; node.classList.remove("ghost");
-  }else{
-    node.textContent = ph; node.classList.add("ghost");
-  }
-}
-function renderTexts(){ $$("[data-text]").forEach(n => renderTextOrGhost(n, n.getAttribute("data-text"))); }
-
-function renderLists(){
-  $$("[data-list]").forEach(ul => {
-    const k = ul.getAttribute("data-list");
-    const arr = Array.isArray(data[k]) ? data[k] : [];
-    ul.innerHTML = "";
-    if(k === "Points_attention"){ $("#noAttention").style.display = arr.length ? "none" : "block"; }
-    const ph = (ul.getAttribute("data-ph-list") || "").split("|").filter(Boolean);
-    (arr.length ? arr : ph).forEach(x => {
-      const li = document.createElement("li"); li.textContent = x;
-      if(!arr.length) li.classList.add("ghost");
-      ul.appendChild(li);
-    });
-  });
-}
-
-function renderStatus(){
-  $$("[data-dot]").forEach(e => {
-    e.classList.remove("ok","warn","bad");
-    e.classList.add(dotClass(data[e.getAttribute("data-dot")]));
-  });
-}
-
-function applyTrendTheme(){
-  const map = {
-    "soleil": { cls:"trend-soleil", emoji:"☀️" },
-    "soleil_nuages": { cls:"trend-nuages", emoji:"⛅" },
-    "soleil_nuages_pluie": { cls:"trend-pluie", emoji:"🌦️" }
-  };
-  const v = (data.Tendance || "soleil_nuages").toLowerCase();
-  const def = map[v] || map["soleil_nuages"];
-  document.body.classList.remove("trend-soleil","trend-nuages","trend-pluie");
-  document.body.classList.add(def.cls);
-  const badge = $("#trendBadge"); if(badge) badge.textContent = def.emoji;
-}
-
-function renderWeather(){
-  applyTrendTheme();
-  const rawCode = (data.Tendance_code || "stable");
-  const code = rawCode.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
-  const detail = data.Tendance_detail || "";
-  const stateNode = $("#trendState");
-  const detailNode = $("#trendDetail");
-  const arrow = $("#trendArrow");
-
-  let label = "Stable", dir = "flat", col = "blue";
-  if(code.includes("amelior")){ label = "En amélioration"; dir = "up"; col = "green"; }
-  else if(code.includes("degrad")){ label = "En dégradation"; dir = "down"; col = "red"; }
-
-  if(stateNode) stateNode.textContent = label;
-  if(detailNode) detailNode.textContent = detail;
-  if(arrow) arrow.className = `trend-arrow-3d trend-arrow-dir-${dir} trend-arrow-col-${col}`;
-}
-
-const PHASES_META = [
-  {name:"Pré-cadrage", color:"#FFCDD2", accent:"#E57373"},
-  {name:"Cadrage",     color:"#FFE0B2", accent:"#FFB74D"},
-  {name:"Conception",  color:"#FFF9C4", accent:"#FFF176"},
-  {name:"Réalisation", color:"#C8E6C9", accent:"#81C784"},
-  {name:"Recette",     color:"#BBDEFB", accent:"#64B5F6"},
-  {name:"Déploiement", color:"#E1BEE7", accent:"#BA68C8"}
-];
-
-let zoomFactor = 0; 
-function textEllipsis(ctx, text, maxWidth){
-  if(!text) return '';
-  if(ctx.measureText(text).width <= maxWidth) return text;
-  const ell='…'; let lo=0, hi=text.length;
-  while(lo < hi){
-    const mid = Math.floor((lo+hi)/2);
-    const t = text.slice(0,mid).trim()+ell;
-    if(ctx.measureText(t).width <= maxWidth) lo=mid+1; else hi=mid;
-  }
-  return text.slice(0, lo-1).trim()+ell;
-}
-
-function drawOutsideLabel(ctx, xEdge, y, h, label, side, canvasW, opts={}){
-  const { bold=false, color='#111' } = opts;
-  ctx.textBaseline = 'middle'; ctx.font = `${bold? '700':'400'} 12px Calibri, Arial`; ctx.fillStyle = color;
-  const padding = 20;
-  if(side==='right'){
-    const lineTo = xEdge + 12;
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(xEdge, y + h/2); ctx.lineTo(lineTo, y + h/2); ctx.stroke();
-    const avail = Math.max(40, canvasW - (lineTo + 8) - padding);
-    const txt = textEllipsis(ctx, label, avail);
-    ctx.textAlign = 'left'; ctx.fillText(txt, lineTo + 8, y + h/2 + 1);
-  }else{
-    const lineTo = xEdge - 12;
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(xEdge, y + h/2); ctx.lineTo(lineTo, y + h/2); ctx.stroke();
-    const avail = Math.max(40, lineTo - padding);
-    const txt = textEllipsis(ctx, label, avail);
-    ctx.textAlign = 'right'; ctx.fillText(txt, lineTo - 8, y + h/2 + 1);
-  }
-}
-
-function drawTwoLineLabel(ctx, monthTxt, yearTxt, centerX, headerH, maxWidth){
-  let size=13, ok=false;
-  while(size>=8){
-    ctx.font=`700 ${size}px Calibri, Arial`;
-    if(Math.max(ctx.measureText(monthTxt).width,ctx.measureText(yearTxt).width) <= maxWidth-4){ ok=true; break; }
-    size -= 1;
-  }
-  if(!ok) return false;
-  ctx.fillStyle='#111'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  const lineGap=Math.max(2,Math.round(size*.25)); const midY=headerH/2;
-  ctx.fillText(monthTxt, centerX, midY-(size/2)-(lineGap/2));
-  ctx.fillText(yearTxt,  centerX, midY+(size/2)+(lineGap/2));
-  return true;
-}
-
-function drawMonthsHeader(ctx, months, headerH){
-  const tryDraw=(step)=>{
-    for(let i=0;i<months.length;i++){
-      if(i%step) continue;
-      const m=months[i];
-      const lab=m.start.toLocaleDateString('fr-FR',{month:'short'});
-      const yy=String(m.start.getFullYear()).slice(-2);
-      if(!drawTwoLineLabel(ctx, lab, yy, m.x+m.w/2, headerH, m.w)) return false;
-    }
-    return true;
-  };
-  if(tryDraw(1)) return; if(tryDraw(2)) return; if(tryDraw(3)) return; if(tryDraw(4)) return;
-  for(let i=0;i<months.length;i+=3){
-    const m0=months[i]; if(!m0) break;
-    const q=Math.floor(m0.start.getMonth()/3)+1;
-    const yy=String(m0.start.getFullYear()).slice(-2);
-    const m1=months[i+1]||m0, m2=months[i+2]||m0;
-    const xMid = (m0.x+m0.w/2 + m2.x+m2.w/2)/2;
-    drawTwoLineLabel(ctx, `T${q}`, yy, xMid, headerH, (m0.w+m1.w+m2.w));
-  }
-}
-
-function buildGanttDataFromPivot(pivot){
-  const phasesSrc = pivot.phases || [];
-  const phases = phasesSrc.map((ph,idx)=>{
-    const meta = PHASES_META[idx] || PHASES_META[PHASES_META.length-1];
-    const tasks = (ph.tasks || []).filter(t=>t.start && t.end).map(t=>({
-      title:(t.title || t.label || "").trim(), start:t.start, end:t.end || t.start, isKey:!!t.isKey, meta
-    }));
-    return { meta, tasks };
-  });
-  return { phases };
-}
-
-function renderGanttFromPivot(pivot){
-  const container = document.getElementById("ganttContainer");
-  if(!container) return;
-  container.innerHTML = "";
-  if(!pivot){
-    container.innerHTML = `<div class="empty-state"><p>Aucune frise à afficher.</p></div>`; return;
-  }
-  const dataG = buildGanttDataFromPivot(pivot);
-  const all  = dataG.phases.flatMap(p=>p.tasks);
-  if(all.length===0){
-    container.innerHTML = `<div class="empty-state"><p>Aucun chantier saisi pour l’instant.</p></div>`; return;
-  }
-
-  const wrap = document.createElement("div"); wrap.className="gantt-wrap";
-  const canvas = document.createElement("canvas"); canvas.id="projectGantt";
-  wrap.appendChild(canvas); container.appendChild(wrap);
-
-  const ctx = canvas.getContext("2d");
-  const minDate = new Date(Math.min(...all.map(t=>new Date(t.start))));
-  const maxDate = new Date(Math.max(...all.map(t=>new Date(t.end))));
-  const totalDays = Math.max(1, Math.round((maxDate-minDate)/86400000)+1);
-
-  const rightPane = canvas.parentElement;
-  const containerW = Math.max(900, rightPane.clientWidth || 900);
-  const leftPad  = (zoomFactor<=0)? 110 : 180;
-  const rightPad = 180;
-  const usableW  = containerW - leftPad - rightPad;
-  const baseRatio = usableW/totalDays;
-  const ratio = (zoomFactor<=0)? baseRatio : baseRatio*(1+zoomFactor*2);
-  const widthNeeded = leftPad + totalDays*ratio + rightPad;
-  canvas.width = (zoomFactor<=0)? containerW : Math.ceil(widthNeeded);
-
-  const headerH=48, rowH=26, margin=16;
-  const totalRows = dataG.phases.reduce((acc,p)=>acc + (p.tasks.length||0),0);
-  const height = headerH + (totalRows*rowH) + 40;
-  canvas.height = height;
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  let cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-  const months=[];
-  while(cursor <= maxDate){
-    const mStart=new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-    const next=new Date(cursor.getFullYear(), cursor.getMonth()+1, 1);
-    const dayIdx=Math.floor((mStart-minDate)/86400000);
-    const x = leftPad + dayIdx*ratio;
-    const days=Math.max(1, Math.floor((next-mStart)/86400000));
-    const w=days*ratio;
-    months.push({start:mStart, next, x, w});
-    cursor=next;
-  }
-  months.forEach(m=>{
-    ctx.fillStyle = (m.start.getMonth()%2===0)? '#e1e4ec' : '#d5dae6';
-    ctx.fillRect(m.x, 0, m.w, canvas.height);
-    ctx.strokeStyle='#c2c8d3';
-    ctx.beginPath(); ctx.moveTo(m.x, 0); ctx.lineTo(m.x, canvas.height); ctx.stroke();
-  });
-  const endX = leftPad + totalDays*ratio;
-  ctx.beginPath(); ctx.moveTo(endX,0); ctx.lineTo(endX,canvas.height); ctx.stroke();
-
-  ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillRect(0,0,canvas.width,headerH);
-  drawMonthsHeader(ctx, months, headerH);
-
-  let lastTaskEnd = -Infinity, lastTaskRef = null;
-  dataG.phases.forEach(p=>{
-    p.tasks.forEach(t=>{ const e=new Date(t.end).getTime(); if(e>lastTaskEnd){ lastTaskEnd=e; lastTaskRef=t; } });
-  });
-
-  let y = headerH + 18;
-  dataG.phases.forEach(p=>{
-    const tasks = p.tasks || []; if(!tasks.length) return;
-    tasks.forEach(t=>{
-      const s=new Date(t.start), e=new Date(t.end);
-      const d1=Math.max(0, Math.floor((s-minDate)/86400000));
-      const d2=Math.max(0, Math.floor((e-minDate)/86400000));
-      const x1=leftPad + d1*ratio, x2=leftPad + d2*ratio, h=14;
-
-      const labelFull = (t.start===t.end) ? `${t.title} (le ${toFR(t.start)})` : `${t.title} (du ${toFR(t.start)} au ${toFR(t.end)})`;
-      ctx.font="12px Calibri, Arial"; const labelNeed = ctx.measureText(labelFull).width + margin;
-
-      if(t.start===t.end){
-        const cx=x1, cy=y+h/2, r=7;
-        ctx.save(); ctx.shadowColor='rgba(34,40,55,0.18)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3; ctx.fillStyle='#B30000';
-        ctx.beginPath(); ctx.moveTo(cx,cy-r); ctx.lineTo(cx+r,cy); ctx.lineTo(cx,cy+r); ctx.lineTo(cx-r,cy); ctx.closePath();
-        ctx.fill(); ctx.restore();
-
-        const preferRight = (cx + labelNeed <= canvas.width - margin);
-        const side = (t===lastTaskRef)? 'left' : (preferRight?'right':'left');
-        drawOutsideLabel(ctx, cx + (side==='right'?6:0), y, h, labelFull, side, canvas.width, {bold:true, color:'#B30000'});
-      }else{
-        const w=Math.max(12,(x2-x1)), r=7;
-        ctx.save(); ctx.shadowColor='rgba(34,40,55,0.16)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
-        const grad=ctx.createLinearGradient(x1,y,x1+w,y+h);
-        grad.addColorStop(0, t.meta.color); grad.addColorStop(1, t.meta.accent);
-        ctx.fillStyle=grad; ctx.strokeStyle='rgba(0,0,0,0.08)'; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(x1+r,y); ctx.lineTo(x1+w-r,y); ctx.quadraticCurveTo(x1+w,y,x1+w,y+r); ctx.lineTo(x1+w,y+h-r);
-        ctx.quadraticCurveTo(x1+w,y+h,x1+w-r,y+h); ctx.lineTo(x1+r,y+h); ctx.quadraticCurveTo(x1,y+h,x1,y+h-r); ctx.lineTo(x1,y+r); ctx.quadraticCurveTo(x1,y,x1+r,y); ctx.closePath();
-        ctx.fill(); ctx.stroke(); ctx.restore();
-
-        const preferRight = (x1 + w + labelNeed <= canvas.width - margin);
-        const side = (t===lastTaskRef)? 'left' : (preferRight?'right':'left');
-        const xEdge = (side==='right')? (x1+w) : x1;
-        drawOutsideLabel(ctx, xEdge, y, h, labelFull, side, canvas.width);
-      }
-      y+=26;
-    });
-    y+=6;
-  });
-
-  const legend = document.createElement("div"); legend.className="legend";
-  legend.innerHTML = `
-    <span class="legend-item"><span class="legend-color" style="background:#E57373"></span> Pré-cadrage</span>
-    <span class="legend-item"><span class="legend-color" style="background:#FFB74D"></span> Cadrage</span>
-    <span class="legend-item"><span class="legend-color" style="background:#FFF176"></span> Conception</span>
-    <span class="legend-item"><span class="legend-color" style="background:#81C784"></span> Réalisation</span>
-    <span class="legend-item"><span class="legend-color" style="background:#64B5F6"></span> Recette</span>
-    <span class="legend-item"><span class="legend-color" style="background:#BA68C8"></span> Déploiement</span>
-    <span class="legend-item"><span class="legend-dot"></span> Jalons</span>
-  `;
-  container.appendChild(legend);
-}
-
-function renderCsvGantt(actions){
-  const container = document.getElementById("ganttContainer"); if(!container) return; container.innerHTML = "";
-  if(!actions.length){ container.innerHTML = `<div class="csv-gantt">Aucun planning saisi.</div>`; return; }
-
-  const parse = ym => { const m = String(ym||"").match(/^(\d{4})-(\d{2})$/); return m ? {y:+m[1],m:+m[2]} : null; };
-  const allYMs = [];
-  actions.forEach(a=>{ const s=parse(a.start), e=parse(a.end); if(s) allYMs.push(s); if(e) allYMs.push(e); });
-  if(!allYMs.length){ container.innerHTML = `<div class="csv-gantt">Format AAAA-MM non reconnu.</div>`; return; }
-  let minY=allYMs[0].y, minM=allYMs[0].m, maxY=minY, maxM=minM;
-  allYMs.forEach(d=>{ if(d.y<minY || (d.y===minY && d.m<minM)){minY=d.y;minM=d.m;} if(d.y>maxY || (d.y===maxY && d.m>maxM)){maxY=d.y;maxM=d.m;} });
-  const months=[]; let cy=minY, cm=minM;
-  while(cy<maxY || (cy===maxY && cm<=maxM)){ months.push({y:cy,m:cm}); cm++; if(cm>12){cm=1;cy++;} }
-
-  const root = document.createElement("div"); root.className = "csv-gantt";
-  const header = document.createElement("div"); header.className = "csv-gantt-header";
-  header.innerHTML = `<div>Chantier</div><div class="csv-gantt-months">${months.map(d=>`${String(d.m).padStart(2,"0")}/${String(d.y).slice(-2)}`).join("")}</div>`;
-  root.appendChild(header);
-
-  actions.forEach(a=>{
-    const row = document.createElement("div"); row.className = "csv-gantt-row";
-    const label = document.createElement("div"); label.className = "csv-gantt-label"; label.textContent = a.label || ""; row.appendChild(label);
-    const monthsLine = document.createElement("div"); monthsLine.className = "csv-gantt-months";
-    months.forEach(()=>monthsLine.appendChild(document.createElement("div"))); row.appendChild(monthsLine);
-    const s=parse(a.start), e=parse(a.end);
-    if(s && e){
-      const startIndex = months.findIndex(d=>d.y===s.y && d.m===s.m);
-      const endIndex   = months.findIndex(d=>d.y===e.y && d.m===e.m);
-      if(startIndex>=0 && endIndex>=startIndex){
-        const bar = document.createElement("div"); bar.className="csv-gantt-bar";
-        const widthPct = ((endIndex-startIndex+1)/months.length)*100; const leftPct = (startIndex/months.length)*100;
-        bar.style.width = widthPct+"%"; bar.style.left = leftPct+"%"; monthsLine.style.position="relative"; monthsLine.appendChild(bar);
-      }
-    }
-    root.appendChild(row);
-  });
-  container.appendChild(root);
-}
-
-function renderTimelineWrap(){
-  const actions = (data.Planning || []).map((t,idx)=>({
-    id: t.id || `T${idx+1}`, label: t.intitule || "", start: t.debut || "", end: t.fin || t.debut || "", type: t.type || (t.debut === t.fin ? "milestone" : "period"), isKey: !!t.isKey
-  }));
-  if(pivotModel && Array.isArray(pivotModel.phases) && pivotModel.phases.length){
-    renderGanttFromPivot(pivotModel);
-  }else{
-    renderCsvGantt(actions);
-  }
-}
-
-function renderAll(){
-  renderTexts(); renderLists(); renderStatus(); renderWeather(); renderTimelineWrap();
-}
-
-function openEditor(){
-  backupData = JSON.parse(JSON.stringify(data)); 
-  $("#editor").style.display = "flex";
-  $("#e_Nom_du_projet").value = data.Nom_du_projet||"";
-  $("#e_Date_meteo").value = toFR(data.Date_meteo||"");
-  $("#e_Description").value = data.Description||"";
-  $("#e_Id_marche").value = data.Id_marche||"";
-  $("#e_Direction_porteur").value = data.Direction_porteur||"";
-  $("#e_Phase_projet").value = data.Phase_projet||"";
-  $("#e_Acteur_CP").value = data.Acteur_CP||"";
-  $("#e_Acteur_Metier").value = data.Acteur_Metier||"";
-  $("#e_Acteur_MOE").value = data.Acteur_MOE||"";
-  $("#e_Acteur_Presta").value = data.Acteur_Presta||"";
-  $("#e_Statut_planning").value = data.Statut_planning||"Vert";
-  $("#e_Statut_perimetre").value = data.Statut_perimetre||"Vert";
-  $("#e_Statut_ressources").value = data.Statut_ressources||"Vert";
-  $("#e_Tendance").value = data.Tendance||"soleil_nuages";
-  $("#e_Tendance_code").value = data.Tendance_code||"stable";
-  $("#e_Tendance_detail").value = data.Tendance_detail||"";
-  $("#e_Actions_realisees").value = (data.Actions_realisees||[]).join("\n");
-  $("#e_Actions_en_cours").value = (data.Actions_en_cours||[]).join("\n");
-  $("#e_Points_attention").value = (data.Points_attention||[]).join("\n");
-  if(data.Planning) $("#e_Planning").value = data.Planning.map(l=>`${l.intitule};${l.debut};${l.fin}`).join("\n");
-}
-
-function saveFromEditor(){
-  data.Nom_du_projet = $("#e_Nom_du_projet").value;
-  data.Date_meteo = toISO($("#e_Date_meteo").value);
-  data.Description = $("#e_Description").value;
-  data.Id_marche = $("#e_Id_marche").value;
-  data.Direction_porteur = $("#e_Direction_porteur").value;
-  data.Phase_projet = $("#e_Phase_projet").value;
-  data.Acteur_CP = $("#e_Acteur_CP").value;
-  data.Acteur_Metier = $("#e_Acteur_Metier").value;
-  data.Acteur_MOE = $("#e_Acteur_MOE").value;
-  data.Acteur_Presta = $("#e_Acteur_Presta").value;
-  data.Statut_planning = $("#e_Statut_planning").value;
-  data.Statut_perimetre = $("#e_Statut_perimetre").value;
-  data.Statut_ressources = $("#e_Statut_ressources").value;
-  data.Tendance = $("#e_Tendance").value;
-  data.Tendance_code = $("#e_Tendance_code").value;
-  data.Tendance_detail = $("#e_Tendance_detail").value;
-
-  const split = v => (v||"").split("\n").map(s=>s.trim()).filter(Boolean);
-  data.Actions_realisees = split($("#e_Actions_realisees").value);
-  data.Actions_en_cours = split($("#e_Actions_en_cours").value);
-  data.Points_attention = split($("#e_Points_attention").value);
-  
-  data.Planning = split($("#e_Planning").value).map(r=>{
-    const p = r.split(";"); return {intitule:p[0]||"", debut:p[1]||"", fin:p[2]||""};
-  });
-}
-
-function closeEditor(save){ 
-  if(save){
-    saveFromEditor();
-    renderAll();
-    broadcastUpdate(); // Déclenche la synchronisation temps réel
-  } else if(backupData) {
-    data = backupData;
-    renderAll();
-  }
-  $("#editor").style.display="none"; 
-}
-
-/* =========================================================================
-   INJECTION CHIRURGICALE : LECTURE / ECRITURE JSON & WALKIE-TALKIE 
-   ========================================================================= */
-
-function applyPivotToMeteo(pivot){
-  pivotModel = pivot;
-  const proj = pivot.project || {};
-  const a    = proj.actors || {};
-  const m    = proj.meteo  || {}; // ALIGNEMENT JSON STRICT
-
-  data.Nom_du_projet = proj.title || proj.name || proj.libelle || proj.id || data.Nom_du_projet || "";
-  data.Description       = proj.description || m.resume || data.Description || "";
-  data.Direction_porteur = proj.domain || proj.directionPorteuse || data.Direction_porteur || "";
-  data.Phase_projet      = proj.phaseCourante || data.Phase_projet || "";
-  data.Id_marche         = proj.id || data.Id_marche || "";
-
-  data.Acteur_CP         = proj.owner || a.directeurProjet || data.Acteur_CP || "";
-  data.Acteur_Metier     = a.expertMetier  || data.Acteur_Metier  || "";
-  data.Acteur_MOE        = a.moe           || data.Acteur_MOE     || "";
-  data.Acteur_Presta     = a.prestataire   || data.Acteur_Presta  || "";
-
-  const isoUpd = (proj.updatedAt || "").slice(0,10);
-  data.Date_meteo = isoUpd || data.Date_meteo || new Date().toISOString().slice(0,10);
-
-  const situation = (m.situation || "").toLowerCase();
-  const code = (m.tendance || data.Tendance_code || "stable").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-
-  if(["soleil","soleil_nuages","soleil_nuages_pluie"].includes(situation)){
-    data.Tendance = situation;
-  }else{
-    const color = (m.color || "").toLowerCase();
-    if(color.includes("vert"))        data.Tendance = "soleil";
-    else if(color.includes("rouge"))  data.Tendance = "soleil_nuages_pluie";
-    else                              data.Tendance = "soleil_nuages";
-  }
-
-  data.Tendance_code   = code;
-  data.Tendance_detail = m.tendanceCommentaire || m.tendanceDetail || m.tendance || data.Tendance_detail || "";
-
-  // LECTURE CORRECTE DES STATUTS & LISTES (Format Pivot)
-  data.Statut_planning   = m.statutPlanning   || data.Statut_planning   || "Vert";
-  data.Statut_perimetre  = m.statutPerimetre  || data.Statut_perimetre  || "Vert";
-  data.Statut_ressources = m.statutRessources || data.Statut_ressources || "Vert";
-  data.Actions_realisees = Array.isArray(m.actionsRealisees) ? m.actionsRealisees.slice() : (data.Actions_realisees || []);
-  data.Actions_en_cours  = Array.isArray(m.actionsEnCours) ? m.actionsEnCours.slice() : (data.Actions_en_cours || []);
-  data.Points_attention  = Array.isArray(m.pointsAttention) ? m.pointsAttention.slice() : (data.Points_attention || []);
-
-  let actions = [];
-  if(pivot.feuilleDeRoute && Array.isArray(pivot.feuilleDeRoute.actions)){
-    actions = pivot.feuilleDeRoute.actions;
-  }else if(Array.isArray(pivot.phases)){
-    pivot.phases.forEach(ph=>{
-      (ph.tasks || []).forEach(t=>{ actions.push({ label: t.title, start: t.start, end: t.end, type: t.type, isKey: t.isKey }); });
-    });
-  }
-  data.Planning = actions.map(a=>{
-    const s = (a.start || "").slice(0,7); const e = (a.end   || "").slice(0,7);
-    return { intitule: a.label || a.title || "", debut: s, fin: e || s || "", type: a.type || "period", isKey: !!a.isKey };
-  });
-
-  renderAll();
-}
-
-function triggerImport(){ $("#importInput").value=""; $("#importInput").click(); }
-function doImport(inp){
-  const f = inp && inp.files && inp.files[0];
-  if(!f) return;
-  const r = new FileReader();
-  r.onload = e => {
-    try{
-      const parsed = JSON.parse(String(e.target.result || ""));
-      if(parsed && parsed.project){
-        applyPivotToMeteo(parsed);
-        broadcastUpdate();
-        alert("Modèle importé avec succès ✅");
-      }else{ alert("Format non reconnu. Le fichier doit contenir un objet 'project'."); }
-    }catch(err){ alert("Impossible de lire ce JSON."); }
-  };
-  r.readAsText(f);
-}
-
-function getMergedPivot() {
-  // 🟢 CORRECTION SPRINT 1 : Lire le cerveau central au moment exact de la sauvegarde
-  let out = { project: { meteo: {}, actors: {} } };
-  try {
-    const raw = localStorage.getItem("currentProjectJson");
-    if (raw) {
-      out = JSON.parse(raw);
-    } else if (pivotModel) {
-      out = JSON.parse(JSON.stringify(pivotModel));
-    }
-  } catch(e) {
-    console.error("Erreur de lecture du JSON existant", e);
-  }
-  
-  // Sécurisation de l'arborescence
-  if(!out.project) out.project = {}; 
-  if(!out.project.meteo) out.project.meteo = {}; 
-  if(!out.project.actors) out.project.actors = {};
-
-  // --- INFOS GENERALES ---
-  out.project.title = data.Nom_du_projet;
-  out.project.description = data.Description;
-  out.project.id = data.Id_marche;
-  out.project.domain = data.Direction_porteur;
-  out.project.directionPorteuse = data.Direction_porteur; // Double mapping au cas où
-  out.project.phaseCourante = data.Phase_projet;
-  out.project.updatedAt = data.Date_meteo; // Pour garder la date synchronisée
-
-  // --- ACTEURS ---
-  out.project.owner = data.Acteur_CP;
-  out.project.actors.directeurProjet = data.Acteur_CP;
-  out.project.actors.expertMetier = data.Acteur_Metier;
-  out.project.actors.moe = data.Acteur_MOE;
-  out.project.actors.prestataire = data.Acteur_Presta;
-  
-  // --- METEO (ECRITURE AU BON ENDROIT) ---
-  out.project.meteo.resume = data.Description;
-  out.project.meteo.statutPlanning = data.Statut_planning;
-  out.project.meteo.statutPerimetre = data.Statut_perimetre;
-  out.project.meteo.statutRessources = data.Statut_ressources;
-  out.project.meteo.situation = data.Tendance;
-  out.project.meteo.tendance = data.Tendance_code;
-  out.project.meteo.tendanceDetail = data.Tendance_detail;
-  out.project.meteo.actionsRealisees = data.Actions_realisees;
-  out.project.meteo.actionsEnCours = data.Actions_en_cours;
-  out.project.meteo.pointsAttention = data.Points_attention;
-
-  // --- PLANNING (CSV vers JSON) ---
-  if(data.Planning && data.Planning.length > 0) {
-    if(!out.feuilleDeRoute) out.feuilleDeRoute = {};
-    out.feuilleDeRoute.actions = data.Planning.map(p => ({
-      label: p.intitule,
-      start: p.debut,
-      end: p.fin,
-      type: p.type || "period"
-    }));
-  }
-
-  return out;
-}
-function saveJson(){
-  const out = getMergedPivot();
-  const blob = new Blob([JSON.stringify(out, null, 2)], {type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="Meteo_Update.json"; a.click();
-  broadcastUpdate();
-}
-
-// Fonction de notification temps réel
-function broadcastUpdate() {
-  const out = getMergedPivot();
-  try { localStorage.setItem("currentProjectJson", JSON.stringify(out)); } catch(e){}
-  try { if(window.opener) window.opener.postMessage({ type: "PROJECT_UPDATED", source: "meteo", payload: out }, "*"); } catch(e){}
-  try { new BroadcastChannel('gold-project-sync').postMessage({ type: "PROJECT_UPDATED", source: "meteo", payload: out }); } catch(e){}
-}
-
-// Réception des mises à jour temps réel
-function handleIncomingUpdate(parsedData, source) {
-  if(source === "meteo") return; // Evite la boucle infinie
-  
-  // 🛡️ BOUCLIER ANTI-RAFRAÎCHISSEMENT FANTÔME 🛡️
-  // Si l'éditeur est ouvert, on coupe la réception des messages extérieurs 
-  // pour NE JAMAIS écraser ce que tu es en train de sélectionner/taper.
-  if($("#editor").style.display === "flex") {
-      console.log("Mise à jour silencieuse ignorée : édition en cours.");
-      return; 
-  }
-  
-  // Si l'éditeur est fermé, on met à jour la fiche normalement
-  if(parsedData && parsedData.project) {
-    applyPivotToMeteo(parsedData);
-  }
-}
-window.addEventListener("message", (ev) => {
-  if (ev?.data?.type === "PROJECT_UPDATED") handleIncomingUpdate(ev.data.payload, ev.data.source);
-});
-try {
-  new BroadcastChannel('gold-project-sync').onmessage = (ev) => {
-    if (ev?.data?.type === "PROJECT_UPDATED") handleIncomingUpdate(ev.data.payload, ev.data.source);
-  };
-} catch(e){}
-window.addEventListener("storage", (ev) => {
-  if (ev.key === "currentProjectJson") {
-    try { handleIncomingUpdate(JSON.parse(ev.newValue), "storage"); } catch(e){}
-  }
-});
-
-document.addEventListener("DOMContentLoaded", ()=>{
-  try{
-    const raw = localStorage.getItem("currentProjectJson");
-    if(raw) { applyPivotToMeteo(JSON.parse(raw)); }
-  }catch(e){}
-  renderAll();
-});
-
-// --- 🛡️ ESPION SENTINELLE : Signale l'ouverture ---
-window.addEventListener('DOMContentLoaded', () => {
+  function loadProjectFromStorage() {
     try {
-        const raw = localStorage.getItem('currentProjectJson');
-        if(raw) {
-            const p = JSON.parse(raw);
-            if(p.config && p.config.sentinelleActive) {
-                new BroadcastChannel('gold-project-sync').postMessage({ 
-                    type: "DEBUG_LOG", 
-                    action: "📂 Ouverture du support", 
-                    support: document.title 
-                });
-            }
-        }
-    } catch(e) {}
-});
+      const raw = localStorage.getItem(STORAGE_KEY_PROJECT);
+      if (raw) {
+        currentProject = JSON.parse(raw);
+        updateProjectDashboard();
+      }
+    } catch(e) {
+      console.error("Erreur de lecture du Pivot depuis le localStorage", e);
+    }
+  }
 
+  function updateProjectDashboard() {
+    if (!currentProject) return;
+
+    let name = "Non défini";
+    if (currentProject.project && currentProject.project.title) name = currentProject.project.title;
+    document.getElementById("dashboard_projectName").textContent = name;
+
+    let phase = "—";
+    if (currentProject.project && currentProject.project.phaseCourante) phase = currentProject.project.phaseCourante;
+    document.getElementById("dashboard_projectPhase").textContent = phase;
+
+    let manager = "—";
+    if (currentProject.project && currentProject.project.actors && currentProject.project.actors.directeurProjet) manager = currentProject.project.actors.directeurProjet;
+    document.getElementById("dashboard_projectManager").textContent = manager;
+
+    let trend = "—";
+    if (currentProject.meteo && currentProject.meteo.situation) {
+      if (currentProject.meteo.situation.includes("soleil_nuages_pluie")) trend = "🌦️";
+      else if (currentProject.meteo.situation.includes("soleil_nuages")) trend = "⛅";
+      else if (currentProject.meteo.situation.includes("soleil")) trend = "☀️";
+    }
+    document.getElementById("dashboard_projectTrend").textContent = trend;
+  }
+
+  function triggerImportPivot() { document.getElementById("importPivotInput").click(); }
+
+  function doImportPivot(inp) {
+    const file = inp.files && inp.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target.result);
+        localStorage.setItem(STORAGE_KEY_PROJECT, JSON.stringify(json));
+        currentProject = json;
+        updateProjectDashboard();
+        alert("Pivot JSON importé avec succès. Les supports sont alimentés.");
+      } catch (err) {
+        alert("Fichier JSON invalide.");
+      }
+      inp.value = "";
+    };
+    reader.readAsText(file, "utf-8");
+  }
+
+  function openSupport(filename) {
+    // Si l'utilisateur clique sur le lien, on s'assure qu'il l'ouvre sur le même navigateur (même contexte LocalStorage)
+    window.open(filename + "?from=portal", "_blank");
+  }
+
+  /* =========================================================================
+     2. GESTION DES SPRINTS (KANBAN LOCAL)
+     ========================================================================= */
+  const STORAGE_KEY_SPRINTS = "sprints_backlog";
+  let sprints = [];
+
+  function loadSprints() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_SPRINTS);
+      if (raw) {
+        sprints = JSON.parse(raw);
+      } else {
+        sprints = [];
+      }
+    } catch(e) {
+      sprints = [];
+    }
+    renderKanban();
+  }
+
+  function saveSprints() {
+    localStorage.setItem(STORAGE_KEY_SPRINTS, JSON.stringify(sprints));
+    renderKanban();
+  }
+
+  function addSprint(event) {
+    event.preventDefault();
+    const newSprint = {
+      id: Date.now(),
+      title: document.getElementById("sprintTitle").value,
+      target: document.getElementById("sprintTarget").value,
+      desc: document.getElementById("sprintDesc").value,
+      status: "todo"
+    };
+    sprints.push(newSprint);
+    saveSprints();
+    document.getElementById("sprintForm").reset();
+  }
+
+  function deleteSprint(id) {
+    if (confirm("Supprimer ce Sprint ?")) {
+      sprints = sprints.filter(s => s.id !== id);
+      saveSprints();
+    }
+  }
+
+  function moveSprint(id, newStatus) {
+    const sprint = sprints.find(s => s.id === id);
+    if (sprint) {
+      sprint.status = newStatus;
+      saveSprints();
+    }
+  }
+
+  function clearAllSprints() {
+    if (confirm("Purger l'intégralité de l'historique des sprints ?")) {
+      sprints = [];
+      saveSprints();
+    }
+  }
+
+  function renderKanban() {
+    const cols = {
+      todo: document.getElementById("cards-todo"),
+      progress: document.getElementById("cards-progress"),
+      done: document.getElementById("cards-done")
+    };
+    const counts = { todo: 0, progress: 0, done: 0 };
+
+    Object.values(cols).forEach(col => col.innerHTML = "");
+
+    sprints.forEach(sprint => {
+      if (counts[sprint.status] !== undefined) {
+        counts[sprint.status]++;
+        const card = document.createElement("div");
+        card.className = "sprint-card";
+        
+        let actionsHtml = "";
+        if (sprint.status === "todo") {
+          actionsHtml = `<button class="btn small primary" onclick="moveSprint(${sprint.id}, 'progress')">Itérer 🚀</button>`;
+        } else if (sprint.status === "progress") {
+          actionsHtml = `
+            <button class="btn small" style="background:#e5e7eb;" onclick="moveSprint(${sprint.id}, 'todo')">⬅</button>
+            <button class="btn small primary" onclick="moveSprint(${sprint.id}, 'done')">Terminé ✅</button>
+          `;
+        } else if (sprint.status === "done") {
+          actionsHtml = `<button class="btn small" style="background:#e5e7eb;" onclick="moveSprint(${sprint.id}, 'progress')">⬅ Rouvrir</button>`;
+        }
+
+        card.innerHTML = `
+          <div class="sprint-card-target">${sprint.target}</div>
+          <button class="btn small" style="position:absolute; top:8px; right:8px; background:transparent; color:#ef4444; border:none; box-shadow:none; padding:0;" onclick="deleteSprint(${sprint.id})">✖</button>
+          <div class="sprint-card-title">${sprint.title}</div>
+          <div class="sprint-card-desc">${sprint.desc.replace(/\n/g, '<br>')}</div>
+          <div class="sprint-card-actions">
+            ${actionsHtml}
+          </div>
+        `;
+        cols[sprint.status].appendChild(card);
+      }
+    });
+
+    document.getElementById("count-todo").textContent = counts.todo;
+    document.getElementById("count-progress").textContent = counts.progress;
+    document.getElementById("count-done").textContent = counts.done;
+  }
+
+  // Initialisation au chargement de la page
+  document.addEventListener("DOMContentLoaded", () => {
+    loadProjectFromStorage();
+    loadSprints();
+    
+    // Auto-rafraichissement si le Pivot JSON est mis à jour depuis un autre onglet
+    window.addEventListener("storage", (e) => {
+      if (e.key === STORAGE_KEY_PROJECT) {
+        loadProjectFromStorage();
+      }
+    });
+  });
 </script>
 </body>
 </html>
