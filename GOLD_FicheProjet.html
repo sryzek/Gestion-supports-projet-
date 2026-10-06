@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Fiche projet — V1.10 (Sprint 1)</title>
+<title>Fiche projet — V1.14</title>
 <style>
 :root{
  --brand:#C00000;
@@ -820,37 +820,10 @@ canvas#projectGantt{
  grid-template-columns:1fr 1fr;
  gap:12px;
 }
-
-/* =========================================================================
-   SPRINT 1 : RESPONSIVE DESIGN Z FOLD (Anti Mille-feuille)
-   ========================================================================= */
-@media screen and (max-width: 980px) {
-  /* 1. Masquer la navigation en double (le portail a déjà des onglets) */
-  .support-section { display: none !important; }
-  
-  /* 2. Compacter drastiquement le bandeau rouge de la fiche */
-  .wrap { padding: 4px !important; }
-  .bar { border-radius: 8px !important; padding: 6px !important; margin-bottom: 4px !important; }
-  .bar-inner { min-height: auto !important; padding: 2px !important; flex-direction: column; text-align: center; }
-  .title .name { font-size: 20px !important; line-height: 1.1; margin-bottom: 2px !important; }
-  .title .date, .title .meta-line { font-size: 12px !important; white-space: normal; }
-  .bar .ver, .page-ver { display: none !important; }
-  
-  /* 3. Réorganiser les boutons d'action et cacher les textes inutiles */
-  .toolbar { gap: 4px !important; margin: 2px 0 !important; }
-  .toolbar .btn { padding: 6px 10px !important; font-size: 11px !important; flex: 1 1 30%; justify-content: center; }
-  .help { display: none !important; }
-  
-  /* 4. Optimiser l'espace des boîtes */
-  .section { margin-top: 4px !important; }
-  .box { padding: 6px 8px !important; }
-  .tendance-grid, .bc-grid, .lists-grid, .edit-grid, .edit-row2 { grid-template-columns: 1fr; gap: 6px; }
-  .kv { margin-bottom: 6px; }
-  
-  /* Permet au scroll horizontal du Gantt d'être fluide */
-  .gantt-wrap { -webkit-overflow-scrolling: touch; }
+@media (max-width: 980px){
+ .edit-row2{ grid-template-columns: 1fr; }
+ .edit-grid{ grid-template-columns: 1fr; }
 }
-
 .field label{
  display:block;
  font-weight:700;
@@ -881,6 +854,61 @@ canvas#projectGantt{
  page-break-inside:avoid;
  }
  .wrap{ zoom: 1.00; }
+
+ /* ===== PROFIL PDF_M (A4 lisible) ===== */
+
+ /* base globale */
+ html,body{ font-size:15px !important; }
+
+ /* bandeau */
+ .title .name{ font-size:30px !important; }
+ .title .date{ font-size:15px !important; }
+ .title .meta-line{ font-size:15px !important; }
+
+ /* textes secondaires */
+ .info{ font-size:13px !important; }
+ .progress-meta{ font-size:14px !important; }
+
+ /* charges */
+ .charges-header-row{ font-size:14px !important; }
+ .charges-total{ font-size:14px !important; }
+ .charge-domain-label,
+ .charge-domain-values{ font-size:13px !important; }
+ .charge-domain-unit{ font-size:12px !important; }
+
+ /* légende planning */
+ .legend{ font-size:12px !important; }
+}
+
+/* =========================================================================
+   SPRINT 1 : RESPONSIVE DESIGN Z FOLD (Anti Mille-feuille)
+   ========================================================================= */
+@media screen and (max-width: 980px) {
+  /* 1. Masquer la navigation en double (le portail a déjà des onglets) */
+  .support-section { display: none !important; }
+  
+  /* 2. Compacter drastiquement le bandeau rouge de la fiche */
+  .wrap { padding: 4px !important; }
+  .bar { border-radius: 8px !important; padding: 6px !important; margin-bottom: 4px !important; }
+  .bar-inner { min-height: auto !important; padding: 2px !important; flex-direction: column; text-align: center; }
+  .title .name { font-size: 20px !important; line-height: 1.1; margin-bottom: 2px !important; }
+  .title .date, .title .meta-line { font-size: 12px !important; white-space: normal; }
+  .bar .ver, .page-ver { display: none !important; }
+  
+  /* 3. Réorganiser les boutons d'action et cacher les textes inutiles */
+  .toolbar { gap: 4px !important; margin: 2px 0 !important; }
+  .toolbar .btn { padding: 6px 10px !important; font-size: 11px !important; flex: 1 1 30%; justify-content: center; }
+  .help { display: none !important; }
+  
+  /* 4. Optimiser l'espace des boîtes */
+  .section { margin-top: 4px !important; }
+  .box { padding: 6px 8px !important; }
+  .tendance-grid, .bc-grid, .lists-grid, .edit-grid, .edit-row2 { grid-template-columns: 1fr; gap: 6px; }
+  .kv { margin-bottom: 6px; }
+  
+  /* Permet au scroll horizontal du Gantt d'être fluide */
+  .gantt-wrap { -webkit-overflow-scrolling: touch; }
+}
 
 </style>
 
@@ -960,11 +988,11 @@ canvas#projectGantt{
  <span data-text="Phase_projet" data-ph="&lt;Phase du projet&gt;" class="ghost"></span>
  </div>
  </div>
- <div class="ver">V1.10 (Sprint 1)</div>
+ <div class="ver">V1.14 (Sprint 1)</div>
  </div>
  </div>
 
- <div class="page-ver">V1.10 (Sprint 1)</div>
+ <div class="page-ver">V1.14 (Sprint 1)</div>
 
  <!-- Toolbar -->
  <div class="toolbar">
@@ -999,7 +1027,7 @@ canvas#projectGantt{
  </button>
  <span class="support-arrow">➜</span>
  <button class="support-chip" onclick="openConges()">
- 🏖️️ Congés
+ 🏖️ Congés
  </button>
 <span style="margin-left:10px;"></span>
  <button class="support-chip secondary" onclick="openMeteo()">
@@ -1377,7 +1405,7 @@ Elles pourront être automatisées plus tard par un autre support.
 </div>
 
 <script>
-const APP_VERSION = "V1.10";
+const APP_VERSION = "V1.14";
 
 /* Modèle interne */
 let data = {
