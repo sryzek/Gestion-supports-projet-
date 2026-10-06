@@ -1,7 +1,7 @@
 {
   "name": "GOLD Suite Projets",
   "short_name": "GOLD Suite",
-  "start_url": "./index.html",
+  "start_url": "./GOLD_FicheProjet.html",
   "display": "standalone",
   "background_color": "#F2F2F2",
   "theme_color": "#C00000",
