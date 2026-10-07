@@ -3,50 +3,284 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Fiche projet — V1.16 (Sprint 1)</title>
+<title>Fiche projet — V1.10 (Mobile)</title>
 <style>
 :root{
-  --brand:#C00000;
-  --text:#222;
-  --muted:#666;
-  --ok:#1BAE70;
-  --warn:#F39C12;
-  --bad:#E74C3C;
-  --border:#e8e8e8;
-  --ghost:#9aa3af;
-  
-  /* Variables pour hauteurs dynamiques */
-  --stripH: 34px;
-  --tabsH: 44px;
+ --brand:#C00000;
+ --text:#222;
+ --muted:#666;
+ --ok:#1BAE70;
+ --warn:#F39C12;
+ --bad:#E74C3C;
+ --border:#e8e8e8;
+ --ghost:#9aa3af;
 }
 
 *{box-sizing:border-box;}
 
 html,body{
-  margin:0;
-  padding:0;
-  font-family:Calibri,Arial,sans-serif;
-  color:var(--text);
-  font-size:13px;
+ margin:0;
+ padding:0;
+ font-family:Calibri,Arial,sans-serif;
+ color:var(--text);
+ font-size:13px;
 }
+
+
+/* =========================
+ IMPRESSION PDF (uniquement)
+ - Ecran : inchangé
+ - PDF : 2 pages max
+ Page 1 = synthèse
+ Page 2 = planning (Gantt)
+========================= */
+
+@page{ size:A4 landscape; margin:10mm; }
+
+@media print{
+ *{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+ html, body{ background:#fff !important; }
+
+ /* masquer l'UI interactive */
+ .toolbar, #editor, .help, .page-ver, .no-print{ display:none !important; }
+ .btn{ display:none !important; } /* pas de boutons dans le PDF */
+
+ /* masquer les boutons internes */
+ button, .btn{ display:none !important; }
+
+ /* blocs non utiles dans le PDF */
+ 
+.charges-block{ display:none !important; }
+
+ /* structure générale */
+ .wrap{ max-width:none !important; margin:0 !important; padding:0 !important; box-shadow:none !important; }
+ .bar{ box-shadow:none !important; background:var(--brand) !important; color:#fff !important; }
+ .bar *{ color:#fff !important; }
+
+ /* IMPORTANT : neutralise tout auto-scale (sinon l'agrandissement est compensé) */
+ #printRoot{ transform:none !important; width:auto !important; }
+
+ /* ===== PROFIL PDF_M : tailles (print only) ===== */
+ html, body{ font-size:15px !important; }
+ .title .name{ font-size:30px !important; }
+ .title .date{ font-size:15px !important; }
+ .title .meta-line{ font-size:15px !important; }
+ .sect{ font-size:14px !important; }
+ .kv, ul{ font-size:14px !important; }
+ .info{ display:none !important; }
+ /* notes utiles (si besoin) */
+/* .info{ font-size:13px !important; } */
+ .progress-meta{ font-size:14px !important; }
+ .legend{ font-size:12px !important; }
+ /* compactage layout (print) */
+ .sect{ margin:0 0 6px !important; }
+ .kv{ line-height:1.25 !important; }
+ ul{ margin:4px 0 0 18px !important; }
+ li{ margin:2px 0 !important; }
+ .bc-grid{ gap:10px !important; }
+ .bc-card{ padding:10px !important; }
+ .bc-note{ font-size:12px !important; }
+
+ /* compacter légèrement pour garder 2 pages */
+ .section{ margin-top:4px !important; break-inside:auto; page-break-inside:auto; }
+ .box{ padding:8px 10px !important; }
+
+ /* Page 2 dédiée au planning */
+ .planning-section{ break-before:page; page-break-before:always; }
+ .planning-section .box{ break-inside:avoid; page-break-inside:avoid; }
+
+ /* planning : éviter que l'overflow casse le PDF */
+ .gantt-wrap{ overflow:hidden !important; }
+ #ganttContainer{ max-height:none !important; }
+
+ /* Compactage supplementaire pour tenir Page 1 sur 1 page (PDF 2 pages) */
+ .bar{ padding:6px 10px !important; margin-bottom:4px !important; }
+ .bar-inner{ min-height:44px !important; }
+ .title .name{ font-size:28px !important; } /* -2px pour gagner 1 ligne si besoin */
+
+ .wrap{ padding:0 !important; }
+ .section{ margin-top:3px !important; }
+ .box{ padding:6px 8px !important; }
+
+ /* Tendance generale : reduire la hauteur des cartes */
+ .tendance-grid{ gap:8px !important; margin-top:3px !important; }
+ .tendance-item{ padding:6px 8px !important; }
+ .tendance-item .trend-badge{ width:36px !important; height:36px !important; font-size:20px !important; }
+ .tendance-label{ margin-bottom:3px !important; }
+ .tendance-status{ gap:3px !important; }
+
+ /* Avancement : resserrer */
+ .progress-wrapper{ margin-top:2px !important; }
+ .progress-row{ margin-bottom:4px !important; }
+
+ /* Cartes budget/charges */
+ .bc-card{ padding:8px !important; }
+ .bc-grid{ gap:8px !important; }
+
+
+}
+
 
 /* wrapper */
 .wrap{
-  max-width:1200px;
-  margin:0 auto;
-  padding:8px 10px 24px;
+ max-width:1200px;
+ margin:0 auto;
+ padding:8px 10px 24px;
 }
 
-/* Bloc figé (Sticky Header) */
-.sticky-header-group {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--bg);
-  padding: 8px 10px 10px;
-  margin: -8px -10px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.03);
+/* Bandeau principal */
+.bar{
+ background:var(--brand);
+ color:#fff;
+ border-radius:18px;
+ padding:8px 14px;
+ box-shadow:0 8px 18px rgba(0,0,0,.25);
+ margin-bottom:6px;
+ position:relative;
+}
+.bar::before{
+ content:"";
+ position:absolute;
+ inset:0;
+ border-radius:18px;
+ border:1px solid rgba(255,255,255,.25);
+ pointer-events:none;
+}
+.bar-inner{
+ position:relative;
+ min-height:50px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:2px 10px;
+}
+.title{text-align:center}
+.title .date{
+ font-weight:700;
+ font-size:14px;
+ letter-spacing:.2px;
+ margin-bottom:2px;
+}
+.title .name{
+ font-weight:900;
+ font-size:28px;
+ line-height:1.1;
+ margin:0 auto;
+}
+.title .meta-line{
+ margin-top:2px;
+ font-size:13px;
+ opacity:.9;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.bar .ver{
+ position:absolute;
+ right:10px;
+ top:6px;
+ font-size:10px;
+ opacity:.85;
+ font-weight:700;
+}
+
+/* version coin bas droit */
+.page-ver{
+ position:fixed;
+ right:8px;
+ bottom:4px;
+ font-size:10px;
+ color:#999;
+}
+
+/* Ghost text */
+.ghost{
+ color:var(--ghost);
+ font-style:italic;
+}
+
+/* Toolbar */
+.toolbar{
+ margin:4px 0 2px;
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
+}
+.btn{
+ border:none;
+ border-radius:999px;
+ padding:6px 12px;
+ font-size:12px;
+ cursor:pointer;
+ background:#C00000;
+ color:#fff;
+ box-shadow:0 3px 8px rgba(0,0,0,.18);
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+}
+.btn.secondary{
+ background:#e5e7eb;
+ color:#111827;
+ box-shadow:none;
+}
+.btn.link{
+ background:transparent;
+ color:#C00000;
+ box-shadow:none;
+ padding:0;
+}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:translateY(1px)}
+.help{
+ font-size:11px;
+ margin-bottom:4px;
+ color:var(--muted);
+}
+
+/* Conso ETP : masqué dans la fiche projet (données conservées dans le JSON et dans l’éditeur) */
+.charges-block{display:none;}
+
+/* Bloc supports projet */
+.support-section .box{
+ padding-bottom:6px;
+}
+.support-flow{
+ margin:2px 0 2px;
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ gap:6px;
+}
+.support-chip{
+ border:none;
+ border-radius:999px;
+ padding:4px 10px;
+ font-size:12px;
+ cursor:pointer;
+ background:#f3f4ff;
+ color:#111827;
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ box-shadow:0 1px 3px rgba(15,23,42,.15);
+}
+.support-chip.primary{
+ background:#ffffff;
+ color:#C00000;
+ font-weight:600;
+ box-shadow:0 2px 6px rgba(15,23,42,.2);
+}
+.support-chip.secondary{
+ background:#fff7ed;
+ color:#9a3412;
+ font-weight:600;
+}
+.support-chip:hover{filter:brightness(1.03);}
+.support-chip:active{transform:translateY(1px);}
+.support-arrow{
+ font-size:15px;
+ color:#9ca3af;
 }
 
 /* body weather themes */
@@ -54,210 +288,45 @@ body.trend-soleil{background:#fffdf5;}
 body.trend-nuages{background:#f7f9ff;}
 body.trend-pluie{background:#f5f7fb;}
 
-body.trend-soleil .sticky-header-group { background: #fffdf5; }
-body.trend-nuages .sticky-header-group { background: #f7f9ff; }
-body.trend-pluie .sticky-header-group { background: #f5f7fb; }
-
-
-/* Bandeau principal */
-.bar{
-  background:var(--brand);
-  color:#fff;
-  border-radius:18px;
-  padding:8px 14px;
-  box-shadow:0 8px 18px rgba(0,0,0,.25);
-  margin-bottom:6px;
-  position:relative;
-}
-.bar::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,.25);
-  pointer-events:none;
-}
-.bar-inner{
-  position:relative;
-  min-height:50px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:2px 10px;
-}
-.title{text-align:center}
-.title .date{
-  font-weight:700;
-  font-size:14px;
-  letter-spacing:.2px;
-  margin-bottom:2px;
-}
-.title .name{
-  font-weight:900;
-  font-size:28px;
-  line-height:1.1;
-  margin:0 auto;
-}
-.title .meta-line{
-  margin-top:2px;
-  font-size:13px;
-  opacity:.9;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.bar .ver{
-  position:absolute;
-  right:10px;
-  top:6px;
-  font-size:10px;
-  opacity:.85;
-  font-weight:700;
-}
-
-/* version coin bas droit */
-.page-ver{
-  position:fixed;
-  right:8px;
-  bottom:4px;
-  font-size:10px;
-  color:#999;
-}
-
-/* Ghost text */
-.ghost{
-  color:var(--ghost);
-  font-style:italic;
-}
-
-/* Toolbar */
-.toolbar{
-  margin:4px 0 2px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.btn{
-  border:none;
-  border-radius:999px;
-  padding:6px 12px;
-  font-size:12px;
-  cursor:pointer;
-  background:#C00000;
-  color:#fff;
-  box-shadow:0 3px 8px rgba(0,0,0,.18);
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-}
-.btn.secondary{
-  background:#e5e7eb;
-  color:#111827;
-  box-shadow:none;
-}
-.btn.link{
-  background:transparent;
-  color:#C00000;
-  box-shadow:none;
-  padding:0;
-}
-.btn:hover{filter:brightness(1.05)}
-.btn:active{transform:translateY(1px)}
-.help{
-  font-size:11px;
-  margin-bottom:4px;
-  color:var(--muted);
-}
-
-/* Conso ETP : masqué dans la fiche projet */
-.charges-block{display:none;}
-
-/* Bloc supports projet */
-.support-section {
-  margin-top: 6px;
-}
-.support-section .box{
-  padding-bottom:6px;
-  border-color: #d1d5db;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-}
-.support-flow{
-  margin:2px 0 2px;
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:6px;
-}
-.support-chip{
-  border:none;
-  border-radius:999px;
-  padding:4px 10px;
-  font-size:12px;
-  cursor:pointer;
-  background:#f3f4ff;
-  color:#111827;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  box-shadow:0 1px 3px rgba(15,23,42,.15);
-}
-.support-chip.primary{
-  background:#ffffff;
-  color:#C00000;
-  font-weight:600;
-  box-shadow:0 2px 6px rgba(15,23,42,.2);
-}
-.support-chip.secondary{
-  background:#fff7ed;
-  color:#9a3412;
-  font-weight:600;
-}
-.support-chip:hover{filter:brightness(1.03);}
-.support-chip:active{transform:translateY(1px);}
-.support-arrow{
-  font-size:15px;
-  color:#9ca3af;
-}
-
 /* Info text */
 .info{
-  font-size:11px;
-  margin-top:4px;
-  color:var(--muted);
+ font-size:11px;
+ margin-top:4px;
+ color:var(--muted);
 }
 
 /* Sections */
 .section{margin-top:8px;}
 .box{
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:8px 9px;
-  background:#fff;
+ border:1px solid var(--border);
+ border-radius:12px;
+ padding:8px 9px;
+ background:#fff;
 }
 .sect{
-  font-weight:700;
-  font-size:13px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  margin-bottom:3px;
+ font-weight:700;
+ font-size:13px;
+ text-transform:uppercase;
+ letter-spacing:.5px;
+ margin-bottom:3px;
 }
 
 /* KV grid */
 .kv{
-  display:grid;
-  grid-template-columns:auto 1fr;
-  column-gap:6px;
-  row-gap:2px;
-  font-size:13px;
+ display:grid;
+ grid-template-columns:auto 1fr;
+ column-gap:6px;
+ row-gap:2px;
+ font-size:13px;
 }
 .kv .k{color:var(--muted);}
 
 /* Dots */
 .dot{
-  width:9px;
-  height:9px;
-  border-radius:999px;
-  margin-right:4px;
+ width:9px;
+ height:9px;
+ border-radius:999px;
+ margin-right:4px;
 }
 .dot.ok{background:var(--ok);}
 .dot.warn{background:var(--warn);}
@@ -265,53 +334,82 @@ body.trend-pluie .sticky-header-group { background: #f5f7fb; }
 
 /* Statuts empilés */
 .status-stack{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-  font-size:12px;
+ display:flex;
+ flex-direction:column;
+ gap:2px;
+ font-size:12px;
 }
 .status-item{
-  display:flex;
-  align-items:center;
-  gap:4px;
+ display:flex;
+ align-items:center;
+ gap:4px;
 }
 
 /* Lists */
 ul{
-  margin:3px 0 0;
-  padding-left:18px;
-  font-size:13px;
+ margin:3px 0 0;
+ padding-left:18px;
+ font-size:13px;
 }
 ul li{margin-bottom:1px;}
 
-/* Trend badge */
+/* Cartouche synthèse météo */
+.synth-wrapper{margin-top:2px;}
+.synth-row{
+ display:flex;
+ flex-wrap:wrap;
+ gap:6px;
+ align-items:flex-start;
+}
+.synth-left{
+ display:flex;
+ flex-wrap:wrap;
+ gap:6px;
+}
+.synth-card{
+ flex:0 0 140px;
+ border-radius:12px;
+ padding:6px 8px;
+ background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,1));
+ box-shadow:0 3px 8px rgba(15,23,42,.15);
+ border:1px solid rgba(255,255,255,.8);
+}
+.synth-card-title{
+ font-size:11px;
+ text-transform:uppercase;
+ letter-spacing:.5px;
+ color:var(--muted);
+ margin-bottom:3px;
+}
+
+/* Trend badge (icône météo) */
 .trend-badge{
-  width:30px;
-  height:30px;
-  border-radius:999px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:18px;
-  box-shadow:0 2px 6px rgba(15,23,42,.25);
+ width:30px;
+ height:30px;
+ border-radius:999px;
+ background:#fff;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:18px;
+ box-shadow:0 2px 6px rgba(15,23,42,.25);
 }
 
 /* Trend arrow 3D */
 .trend-card-main{
-  display:flex;
-  gap:6px;
-  align-items:center;
+ display:flex;
+ gap:6px;
+ align-items:center;
 }
 .trend-arrow-3d{
-  width:46px;
-  height:26px;
-  border-radius:9px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:19px;
-  box-shadow:0 6px 12px rgba(0,0,0,.15);
+ width:46px;
+ height:26px;
+ border-radius:9px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:19px;
+ box-shadow:0 6px 12px rgba(0,0,0,.15);
 }
 .trend-arrow-dir-up::before{content:"⬆️";}
 .trend-arrow-dir-flat::before{content:"➡️";}
@@ -320,136 +418,195 @@ ul li{margin-bottom:1px;}
 .trend-arrow-col-blue{background:#e6f0ff;}
 .trend-arrow-col-red{background:#fde7e7;}
 .trend-state{
-  font-weight:700;
-  font-size:13px;
+ font-weight:700;
+ font-size:13px;
 }
 .trend-detail{
-  font-size:11px;
-  color:var(--muted);
+ font-size:11px;
+ color:var(--muted);
 }
 
-/* Tendance générale : 3 colonnes */
+
+/* ===== Tendance générale : mise en page 3 colonnes ===== */
 .tendance-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-  align-items:stretch;
-  margin-top:6px;
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:12px;
+ align-items:stretch;
+ margin-top:6px;
 }
 .tendance-item{
-  border-radius:12px;
-  padding:8px 10px;
-  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,1));
-  box-shadow:0 3px 8px rgba(15,23,42,.12);
-  border:1px solid rgba(255,255,255,.8);
-  text-align:center;
+ border-radius:12px;
+ padding:8px 10px;
+ background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,1));
+ box-shadow:0 3px 8px rgba(15,23,42,.12);
+ border:1px solid rgba(255,255,255,.8);
+ text-align:center;
 }
+/* Agrandir et centrer l'icône Situation */
 .tendance-item .trend-badge{width:44px;height:44px;font-size:22px;margin:0 auto;}
 
 .tendance-label{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  color:var(--muted);
-  margin-bottom:6px;
-  font-weight:700;
+ font-size:11px;
+ text-transform:uppercase;
+ letter-spacing:.5px;
+ color:var(--muted);
+ margin-bottom:6px;
+ font-weight:700;
 }
 .tendance-status{
-  list-style:none;
-  padding:0;
-  margin:0;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  align-items:flex-start;
-  justify-content:center;
+ list-style:none;
+ padding:0;
+ margin:0;
+ display:flex;
+ flex-direction:column;
+ gap:6px;
+ align-items:flex-start;
+ justify-content:center;
 }
 .tendance-status li{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:13px;
+ display:flex;
+ align-items:center;
+ gap:6px;
+ font-size:13px;
 }
+
 
 /* État d’avancement */
 .progress-wrapper{
-  margin-top:4px;
+ margin-top:4px;
 }
 .progress-row{
-  margin-bottom:6px;
+ margin-bottom:6px;
 }
 .progress-meta{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:6px;
-  font-size:12px;
-  color:var(--muted);
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ gap:6px;
+ font-size:12px;
+ color:var(--muted);
 }
 .progress-meta strong{
-  color:var(--text);
+ color:var(--text);
 }
 .progress-bar-bg{
-  width:100%;
-  height:8px;
-  border-radius:999px;
-  background:#e5e7eb;
-  overflow:hidden;
+ width:100%;
+ height:8px;
+ border-radius:999px;
+ background:#e5e7eb;
+ overflow:hidden;
 }
 .progress-bar-fill{
-  height:100%;
-  width:0%;
-  border-radius:999px;
-  background:var(--ok);
-  transition:width .25s ease-out;
+ height:100%;
+ width:0%;
+ border-radius:999px;
+ background:var(--ok);
+ transition:width .25s ease-out;
 }
 
+/* Bloc charges */
+.charges-block{
+ margin-top:8px;
+ border-top:1px dashed var(--border);
+ padding-top:6px;
+}
+.charges-header-row{
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ justify-content:space-between;
+ gap:8px;
+ font-size:12px;
+}
+.charges-header-row span{
+ font-weight:600;
+}
+.charges-total{
+ font-size:12px;
+}
+.charges-domains{
+ margin-top:6px;
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+ gap:4px 12px;
+}
+.charge-domain-row{
+ display:flex;
+ flex-direction:column;
+ padding:4px 6px;
+ border-radius:8px;
+ background:#f3f4ff;
+}
+.charge-domain-label{
+ font-size:11px;
+ font-weight:600;
+ color:#111827;
+ margin-bottom:2px;
+}
+.charge-domain-values{
+ font-size:11px;
+ color:#374151;
+}
+.charge-domain-values span{
+ margin-right:2px;
+}
+.charge-domain-unit{
+ font-size:10px;
+ text-transform:uppercase;
+ letter-spacing:.04em;
+ color:var(--muted);
+}
 /* Grille des listes d’avancement */
 .lists-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:6px;
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+ gap:6px;
 }
 
 /* Planning / Gantt wrapper */
 .timeline-card{
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:5px;
-  background:#fff;
+ border:1px solid var(--border);
+ border-radius:12px;
+ padding:5px;
+ background:#fff;
 }
+
+/* Gantt canvas – style feuille de route compact */
 .gantt-wrap{
-  overflow:auto;
-  border-radius:14px;
-  border:1px solid #dde2f1;
-  background:#f8f9fc;
-  padding:8px;
-  position:relative;
-  margin-top:3px;
+ overflow:auto;
+ border-radius:14px;
+ border:1px solid #dde2f1;
+ background:#f8f9fc;
+ padding:8px;
+ position:relative;
+ margin-top:3px;
 }
 canvas#projectGantt{
-  display:block;
-  background:transparent;
-  max-width:100%;
+ display:block;
+ background:transparent;
+ max-width:100%;
 }
+
+/* Légende Gantt simple */
 .legend{
-  margin-top:6px;
-  font-size:10px;
-  color:#4b5563;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
+ margin-top:6px;
+ font-size:10px;
+ color:#4b5563;
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
 }
 .legend-item{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
+ display:inline-flex;
+ align-items:center;
+ gap:4px;
 }
 .legend-color{
-  width:13px;
-  height:7px;
-  border-radius:4px;
-  background:#9ca3af;
+ width:13px;
+ height:7px;
+ border-radius:4px;
+ background:#9ca3af;
 }
 .legend-color.phase1{background:#FFCDD2;}
 .legend-color.phase2{background:#FFE0B2;}
@@ -458,234 +615,1712 @@ canvas#projectGantt{
 .legend-color.phase5{background:#BBDEFB;}
 .legend-color.phase6{background:#E1BEE7;}
 
+/* Empty state */
 .empty-state{
-  font-size:12px;
-  color:#4b5563;
-  text-align:center;
-  padding:6px 4px;
+ font-size:12px;
+ color:#4b5563;
+ text-align:center;
+ padding:6px 4px;
 }
 .empty-state p{margin:2px 0;}
 
-/* Budget & charges projet */
-.bc-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  gap:8px;
-  align-items:stretch;
-  margin-top:4px;
+/* Editor */
+.editor-backdrop{
+ position:fixed;
+ inset:0;
+ background:rgba(15,23,42,.45);
+ display:none;
+ align-items:center;
+ justify-content:center;
+ z-index:50;
 }
-.bc-card{
-  border-radius:12px;
-  padding:8px 10px;
-  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,1));
-  box-shadow:0 3px 8px rgba(15,23,42,.12);
-  border:1px solid rgba(255,255,255,.85);
+.editor{
+ background:#fff;
+ border-radius:14px;
+ max-width:880px;
+ max-height:90vh;
+ overflow:auto;
+ padding:10px 12px 12px;
+ box-shadow:0 20px 40px rgba(15,23,42,.4);
 }
-.bc-title{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  color:var(--muted);
-  font-weight:800;
-  margin-bottom:6px;
+.editor h3{
+ margin:0 0 4px;
+ font-size:17px;
 }
-.bc-kpi{
-  display:flex;
-  align-items:baseline;
-  gap:8px;
+.editor .grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:6px 10px;
 }
-.bc-kpi .value{
-  font-weight:900;
-  font-size:22px;
-  line-height:1;
+.editor label{
+ font-size:12px;
+ font-weight:600;
 }
-.bc-kpi .unit{
-  font-weight:800;
-  color:#374151;
+.editor input,
+.editor textarea{
+ width:100%;
+ padding:4px 5px;
+ border-radius:6px;
+ border:1px solid #d1d5db;
+ font-family:inherit;
+ font-size:12px;
 }
-.bc-note{
-  margin-top:6px;
-  font-size:11px;
-  color:var(--muted);
+.editor textarea{
+ min-height:40px;
+ resize:vertical;
 }
-.bc-pills{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:6px;
+.editor .hint{
+ font-size:11px;
+ color:#6b7280;
+ margin-top:1px;
 }
-.bc-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 9px;
-  border-radius:999px;
-  background:#f3f4ff;
-  color:#111827;
-  font-size:12px;
-  box-shadow:0 1px 3px rgba(15,23,42,.12);
+.editor .buttons{
+ margin-top:8px;
+ display:flex;
+ justify-content:flex-end;
+ gap:6px;
+}
+.tooltip{
+ font-size:11px;
+ color:#6b7280;
+ margin-top:1px;
 }
 
-/* Éditeur Modal */
+/* ===== Budget & charges projet (jours) ===== */
+.budget-charges{
+ margin-top:8px;
+ border-top:1px dashed var(--border);
+ padding-top:8px;
+}
+.bc-grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+ gap:8px;
+ align-items:stretch;
+}
+.bc-card{
+ border-radius:12px;
+ padding:8px 10px;
+ background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,1));
+ box-shadow:0 3px 8px rgba(15,23,42,.12);
+ border:1px solid rgba(255,255,255,.85);
+}
+.bc-title{
+ font-size:11px;
+ text-transform:uppercase;
+ letter-spacing:.5px;
+ color:var(--muted);
+ font-weight:800;
+ margin-bottom:6px;
+}
+.bc-kpi{
+ display:flex;
+ align-items:baseline;
+ gap:8px;
+}
+.bc-kpi .value{
+ font-weight:900;
+ font-size:22px;
+ line-height:1;
+}
+.bc-kpi .unit{
+ font-weight:800;
+ color:#374151;
+}
+.bc-note{
+ margin-top:6px;
+ font-size:11px;
+ color:var(--muted);
+}
+.bc-pills{
+ display:flex;
+ flex-wrap:wrap;
+ gap:6px;
+ margin-top:6px;
+}
+.bc-pill{
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ padding:4px 9px;
+ border-radius:999px;
+ background:#f3f4ff;
+ color:#111827;
+ font-size:12px;
+ box-shadow:0 1px 3px rgba(15,23,42,.12);
+}
+.bc-pill b{font-weight:800;}
+
+
+/* ===== Éditeur (layout par blocs, comme la fiche) ===== */
 .editor-backdrop{
-  position:fixed; inset:0;
-  background:rgba(0,0,0,.35);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
+ position:fixed; inset:0;
+ background:rgba(0,0,0,.35);
+ display:none;
+ align-items:center;
+ justify-content:center;
+ z-index:9999;
 }
 .editor-modal{
-  width:min(1100px, 92vw);
-  max-height:86vh;
-  overflow:auto;
-  background:#fff;
-  border-radius:18px;
-  border:1px solid #e5e7eb;
-  box-shadow:0 20px 60px rgba(0,0,0,.25);
-  padding:16px;
+ width:min(1100px, 92vw);
+ max-height:86vh;
+ overflow:auto;
+ background:#fff;
+ border-radius:18px;
+ border:1px solid #e5e7eb;
+ box-shadow:0 20px 60px rgba(0,0,0,.25);
+ padding:16px;
 }
 .editor-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:12px;
+ display:flex;
+ align-items:flex-start;
+ justify-content:space-between;
+ gap:12px;
+ margin-bottom:12px;
 }
 .editor-sub{
-  color:#6b7280;
-  font-size:12px;
-  margin-top:4px;
+ color:#6b7280;
+ font-size:12px;
+ margin-top:4px;
 }
 .editor-foot{
-  position:sticky;
-  bottom:0;
-  background:linear-gradient(180deg, rgba(255,255,255,0), #fff 45%);
-  padding-top:12px;
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  margin-top:10px;
+ position:sticky;
+ bottom:0;
+ background:linear-gradient(180deg, rgba(255,255,255,0), #fff 45%);
+ padding-top:12px;
+ display:flex;
+ justify-content:flex-end;
+ gap:10px;
+ margin-top:10px;
 }
 .edit-card{
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:12px 12px 10px;
-  margin-top:12px;
-  background:linear-gradient(180deg,#ffffff,#fafbff);
+ border:1px solid #e5e7eb;
+ border-radius:16px;
+ padding:12px 12px 10px;
+ margin-top:12px;
+ background:linear-gradient(180deg,#ffffff,#fafbff);
 }
 .edit-card-title{
-  font-weight:900;
-  letter-spacing:.4px;
-  text-transform:uppercase;
-  font-size:12px;
-  color:#111827;
-  padding-bottom:8px;
-  border-bottom:1px solid #eef2f7;
-  margin-bottom:10px;
+ font-weight:900;
+ letter-spacing:.4px;
+ text-transform:uppercase;
+ font-size:12px;
+ color:#111827;
+ padding-bottom:8px;
+ border-bottom:1px solid #eef2f7;
+ margin-bottom:10px;
 }
 .edit-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px 12px;
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px 12px;
 }
 .edit-row2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-@media (max-width: 980px){
-  .edit-row2{ grid-template-columns: 1fr; }
-  .edit-grid{ grid-template-columns: 1fr; }
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:12px;
 }
 .field label{
-  display:block;
-  font-weight:700;
-  font-size:12px;
-  margin-bottom:4px;
+ display:block;
+ font-weight:700;
+ font-size:12px;
+ margin-bottom:4px;
 }
 .field input, .field textarea{
-  width:100%;
-  border:1px solid #d1d5db;
-  border-radius:12px;
-  padding:8px 10px;
-  font-size:12px;
-  outline:none;
-  background:#f9fafb;
+ width:100%;
+ border:1px solid #d1d5db;
+ border-radius:12px;
+ padding:8px 10px;
+ font-size:12px;
+ outline:none;
+ background:#f9fafb;
 }
 .field textarea{ min-height:70px; resize:vertical; }
 .edit-card-budget{ border-left:8px solid #c00000; }
 .edit-card-charges{ border-left:8px solid #1f5fbf; }
 
+/* =========================================================================
+   SPRINT 1 : RESPONSIVE DESIGN Z FOLD (Anti Mille-feuille)
+========================================================================= */
+@media screen and (max-width: 980px) {
+  .wrap { padding: 4px !important; }
+  .bar { border-radius: 8px !important; padding: 6px 10px !important; margin-bottom: 4px !important; }
+  .bar-inner { min-height: auto !important; padding: 2px !important; flex-direction: column; text-align: center; }
+  .title .name { font-size: 20px !important; line-height: 1.1; margin-bottom: 2px !important; }
+  .title .date, .title .meta-line { font-size: 12px !important; white-space: normal; }
+  .bar .ver, .page-ver { display: none !important; }
+  
+  .toolbar { gap: 4px !important; margin: 2px 0 !important; padding: 4px !important; }
+  .toolbar .btn { padding: 6px 10px !important; font-size: 11px !important; flex: 1 1 45%; justify-content: center; }
+  .help { display: none !important; }
+
+  .support-section .box { padding: 6px !important; }
+  .support-flow { gap: 4px !important; justify-content: center; }
+  .support-chip { padding: 6px 10px !important; font-size: 11px !important; flex: 1 1 45%; justify-content: center; }
+  .support-arrow { display: none !important; }
+  
+  .section { margin-top: 4px !important; }
+  .box { padding: 6px 8px !important; }
+  .tendance-grid, .bc-grid, .lists-grid, .edit-grid, .edit-row2 { grid-template-columns: 1fr; gap: 6px; }
+  .kv { margin-bottom: 6px; }
+  
+  .gantt-wrap { -webkit-overflow-scrolling: touch; }
+}
+
+</style>
+</head>
+<body class="trend-nuages">
+<div class="wrap" id="printRoot">
+ <!-- Bandeau principal -->
+ <div class="bar">
+ <div class="bar-inner">
+ <div class="title">
+ <div class="date">FICHE PROJET — <span data-text="Date_meteo"></span></div>
+ <div class="name">
+ <span data-text="Nom_du_projet"
+ data-ph="&lt;Nom du projet&gt;"
+ class="ghost"></span>
+ </div>
+ <div class="meta-line">
+ <span data-text="Direction_porteur" data-ph="&lt;Direction porteuse&gt;" class="ghost"></span>
+ ·
+ <span data-text="Acteur_CP" data-ph="&lt;Chef de projet&gt;" class="ghost"></span>
+ ·
+ <span data-text="Phase_projet" data-ph="&lt;Phase du projet&gt;" class="ghost"></span>
+ </div>
+ </div>
+ <div class="ver">V1.10 (Mobile)</div>
+ </div>
+ </div>
+
+ <div class="page-ver">V1.10 (Mobile)</div>
+
+ <!-- Toolbar -->
+ <div class="toolbar">
+<button class="btn" onclick="window.print()">🖨️ Exporter en PDF (A4)</button>
+ <button class="btn" onclick="openEditor()">✏️ Éditer la présentation</button>
+ <button class="btn secondary" onclick="saveJson()">💾 Sauvegarder (.json)</button>
+ <button class="btn secondary" onclick="triggerImport()">📥 Importer projet (.json)</button>
+ <input id="importInput" type="file" accept=".json,application/json"
+ style="display:none" onchange="doImport(this)">
+ <button class="btn secondary" onclick="refreshFromStorage()">🔄 Réactualiser</button>
+
+ </div>
+ <div class="help">
+ Workflow recommandé : <b>1) Présentation du projet (ici)</b> → <b>2) Feuille de route</b> (planning) → <b>3) Fiche météo</b> (tendance & actions).
+ </div>
+
+ <!-- Bloc supports projet -->
+ <div class="section support-section">
+ <div class="box">
+ <div class="sect">SUPPORTS PROJET</div>
+ <div class="support-flow">
+ <button class="support-chip primary" onclick="openFeuilleDeRoute()">
+ 📅 Feuille de route
+ </button>
+ <span class="support-arrow">➜</span>
+ <button class="support-chip" onclick="openRaci()">
+ 🧩 RACI
+ </button>
+ <span class="support-arrow">➜</span>
+ <button class="support-chip" onclick="openPlanningDetaille()">
+ 📋 Planning détaillé
+ </button>
+ <span class="support-arrow">➜</span>
+ <button class="support-chip" onclick="openConges()">
+ 🏖️ Congés
+ </button>
+<span style="margin-left:10px;"></span>
+ <button class="support-chip secondary" onclick="openMeteo()">
+ 🌤️ Fiche météo (tendance finale)
+ </button>
+ </div>
+ <div class="info">
+ La <b>feuille de route</b> alimente le <b>planning</b>. 
+La <b>fiche météo</b> alimente la <b>tendance générale</b> et les <b>actions / points d’attention</b>.
+ </div>
+ </div>
+ </div>
+
+ <!-- 1. Présentation du projet -->
+ <div class="section">
+ <div class="box">
+ <div class="sect">PRÉSENTATION DU PROJET</div>
+ <div data-text="Description"
+ data-ph="&lt;Contexte et objectifs (4–6 phrases)&gt;"
+ class="ghost"></div>
+
+ <div class="kv" style="margin-top:6px;">
+ <div class="k">Direction porteuse</div>
+ <div>: <span data-text="Direction_porteur" data-ph="&lt;Direction&gt;" class="ghost"></span></div>
+
+ <div class="k">Phase du projet</div>
+ <div>: <span data-text="Phase_projet" data-ph="&lt;Phase&gt;" class="ghost"></span></div>
+
+ <div class="k">Identifiant du marché</div>
+ <div>: <span data-text="Id_marche" data-ph="Non concerné" class="ghost"></span></div>
+
+ <div class="k">Directeur·rice de projet / CP</div>
+ <div>: <span data-text="Acteur_CP" data-ph="Nom Prénom" class="ghost"></span></div>
+
+ <div class="k">Expert·e métier</div>
+ <div>: <span data-text="Acteur_Metier" data-ph="Nom Prénom" class="ghost"></span></div>
+
+ <div class="k">MOE</div>
+ <div>: <span data-text="Acteur_MOE" data-ph="Nom / Équipe" class="ghost"></span></div>
+
+ <div class="k">Prestataire</div>
+ <div>: <span data-text="Acteur_Presta" data-ph="Nom / Société" class="ghost"></span></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- 2. Tendance générale -->
+ <div class="section">
+ <div class="box">
+ <div class="sect">TENDANCE GÉNÉRALE</div>
+
+ <div class="tendance-grid">
+
+ <!-- SITUATION -->
+ <div class="tendance-item">
+ <div class="tendance-label">Situation</div>
+ <div class="trend-badge" id="trendBadge" aria-label="Situation">⛅</div>
+ </div>
+
+ <!-- TENDANCE -->
+ <div class="tendance-item">
+ <div class="tendance-label">Tendance</div>
+ <div class="trend-card-main" style="justify-content:center;">
+ <div id="trendArrow" class="trend-arrow-3d trend-arrow-dir-flat trend-arrow-col-blue"></div>
+ <div style="text-align:left;">
+ <div id="trendState" class="trend-state">Stable</div>
+ <div id="trendDetail" class="trend-detail"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- STATUT GLOBAL -->
+ <div class="tendance-item">
+ <div class="tendance-label">Statut global</div>
+ <ul class="tendance-status">
+ <li><span class="dot ok" data-dot="Statut_planning"></span><span>Planning</span></li>
+ <li><span class="dot ok" data-dot="Statut_perimetre"></span><span>Périmètre</span></li>
+ <li><span class="dot ok" data-dot="Statut_ressources"></span><span>Ressources</span></li>
+ </ul>
+ </div>
+
+ </div>
+
+ <div class="info">
+ Vert : conforme · Orange : sous vigilance · Rouge : dégradé. 
+<b>Non modifiable ici :</b> cette tendance est alimentée par la fiche météo.
+ </div>
+ <button class="btn link" onclick="openMeteo()">➡ <span class="no-print">Modifier la tendance dans la fiche météo</span></button>
+ </div>
+ </div>
+
+ 
+<!-- 3. État d’avancement & charges -->
+ <div class="section">
+ <div class="box">
+ <div class="sect">ÉTAT D’AVANCEMENT &amp; CHARGES</div>
+ <div class="progress-wrapper">
+ <div class="progress-row">
+ <div class="progress-meta">
+ <strong>État d’avancement du projet</strong>
+ <span id="progressPercentLabel">0 %</span>
+ <span class="ghost" data-text="progress.label" data-ph="Ex. En cadrage, En réalisation…"></span>
+ </div>
+ <div class="progress-bar-bg">
+ <div class="progress-bar-fill" id="progressFill"></div>
+ </div>
+ </div>
+ </div>
+ <div class="charges-block">
+ <div class="charges-header-row">
+ <div>Budget BP <span id="chargesYear">2026</span></div>
+ <div class="charges-total">
+ ETP TOTAL :
+ <span id="chargesEtpActual">0</span>
+ /
+ <span id="chargesEtpBudget">105</span>
+ </div>
+ </div>
+ <div id="chargesDomains" class="charges-domains"></div>
+ </div>
+
+ <!-- Budget & charges projet (lecture du pivot) -->
+ <div class="budget-charges" id="budgetChargesBlock">
+ <div class="bc-grid">
+ <div class="bc-card">
+ <div class="bc-title">Budget projet</div>
+ <div class="bc-kpi">
+ <div class="value" id="budgetAmountK">—</div>
+ <div class="unit">k€</div>
+ <div class="ghost" style="margin-left:auto" id="budgetYear"></div>
+ </div>
+ <div class="bc-note" id="budgetComment"></div>
+ </div>
+
+ <div class="bc-card">
+ <div class="bc-title">Charges projet DNSI</div>
+ <div class="bc-kpi">
+ <div class="value" id="chargesProjetTotal">—</div>
+ <div class="unit">jours</div>
+ </div>
+ <div class="bc-pills" id="chargesProjetTeams"></div>
+ <div class="bc-note" id="chargesProjetAssumption"></div>
+ </div>
+ </div>
+ <div class="info" style="margin-top:6px;">
+ Ces champs proviennent du <b>pivot JSON</b> (budget marché + estimation charges DNSI en jours). Les autres supports les ignorent s’ils ne les utilisent pas.
+ </div>
+ </div>
+
+ <div class="info">
+ Les charges sont saisies dans la fiche projet à partir de l’abaque DNSI. 
+Elles pourront être automatisées plus tard par un autre support.
+ </div>
+ </div>
+ </div>
+
+<!-- 3. Point d’avancement -->
+ <div class="section">
+ <div class="box">
+ <div id="printPage2Start"></div>
+<div class="sect">POINT D’AVANCEMENT DU PROJET</div>
+ <div class="lists-grid">
+ <div>
+ <strong>Actions réalisées</strong>
+ <ul data-list="Actions_realisees"
+ data-ph-list="Ex. Atelier de cadrage tenu|Ex. Maquettes V1 présentées"></ul>
+ </div>
+ <div>
+ <strong>Actions en cours</strong>
+ <ul data-list="Actions_en_cours"
+ data-ph-list="Ex. Rédaction CCTP|Ex. Préparation démonstration"></ul>
+ </div>
+ <div>
+ <strong>Points d’attention</strong>
+ <ul data-list="Points_attention"></ul>
+ <div id="noAttention" class="info">
+ S’il n’y a aucun élément listé, c’est que rien n’est jugé bloquant ou en vigilance haute.
+ </div>
+ </div>
+ </div>
+ <div class="info">
+ <b>Non modifiable ici :</b> ces listes sont les mêmes que dans la fiche météo.
+ </div>
+ </div>
+ </div>
+
+ <!-- 4. Planning / Gantt -->
+ <div class="section planning-section">
+ <div class="box">
+ <div class="sect">PLANNING</div>
+ <div class="timeline-card">
+ <div id="ganttContainer"></div>
+ </div>
+ <div class="info">
+ <b>Non modifiable ici :</b> ce planning vient de la feuille de route cible. 
+</div>
+ <button class="btn link" onclick="openFeuilleDeRoute()">➡ <span class="no-print">Modifier le planning dans la feuille de route</span></button>
+ </div>
+ </div>
+</div>
+
+<!-- Éditeur : uniquement la présentation -->
+<!-- Éditeur : présentation + charges/budget -->
+<div class="editor-backdrop" id="editor" role="dialog" aria-modal="true" style="display:none">
+ <div class="editor-modal">
+ <div class="editor-head">
+ <div>
+ <h3 style="margin:0">Éditer la fiche projet</h3>
+ <div class="editor-sub">Modifie uniquement les champs de la fiche projet. La tendance et le planning restent alimentés par les autres supports.</div>
+ </div>
+ <button class="btn small secondary" onclick="closeEditor(false)" title="Fermer">✕</button>
+ </div>
+
+ <!-- 1) Présentation -->
+ <div class="edit-card">
+ <div class="edit-card-title">Présentation du projet</div>
+ <div class="edit-grid">
+ <div class="field">
+ <label>Nom du projet *</label>
+ <input id="e_Nom_du_projet" placeholder="Nom officiel du projet" oninput="live('Nom_du_projet', this.value)">
+ <div class="hint">Nom officiel du projet tel qu’il figure dans vos documents.</div>
+ </div>
+
+ <div class="field">
+ <label>Date de mise à jour (JJ/MM/AAAA)</label>
+ <input id="e_Date_meteo" placeholder="JJ/MM/AAAA" oninput="liveDate(this.value)">
+ <div class="hint">Date de mise à jour de la fiche projet.</div>
+ </div>
+
+ <div class="field">
+ <label>Identifiant du marché</label>
+ <input id="e_Id_marche" placeholder="acquisition-nouvel-sigf-..." oninput="live('Id_marche', this.value)">
+ <div class="hint">Numéro ou nom du marché, si applicable.</div>
+ </div>
+
+ <div class="field">
+ <label>Phase du projet</label>
+ <input id="e_Phase_projet" placeholder="Ex. Cadrage" oninput="live('Phase_projet', this.value)">
+ </div>
+
+ <div class="field" style="grid-column:1/-1;">
+ <label>Description du projet *</label>
+ <textarea id="e_Description" placeholder="Contexte, enjeux, objectifs principaux (4–6 phrases)."
+ oninput="live('Description', this.value)"></textarea>
+ </div>
+
+ <div class="field">
+ <label>Direction porteuse</label>
+ <input id="e_Direction_porteur" placeholder="Ex. DAF / DNSI" oninput="live('Direction_porteur', this.value)">
+ </div>
+
+ <div class="field">
+ <label>Directeur·rice du projet / CP</label>
+ <input id="e_Acteur_CP" placeholder="Nom Prénom" oninput="live('Acteur_CP', this.value)">
+ </div>
+
+ <div class="field">
+ <label>Expert·e métier</label>
+ <input id="e_Acteur_Metier" placeholder="Nom Prénom" oninput="live('Acteur_Metier', this.value)">
+ </div>
+
+ <div class="field">
+ <label>MOE</label>
+ <input id="e_Acteur_MOE" placeholder="Nom / Équipe" oninput="live('Acteur_MOE', this.value)">
+ </div>
+
+ <div class="field">
+ <label>Prestataire</label>
+ <input id="e_Acteur_Presta" placeholder="Société" oninput="live('Acteur_Presta', this.value)">
+ </div>
+ </div>
+ </div>
+
+ <!-- 2) Avancement + Conso ETP -->
+ <div class="edit-row2">
+ <div class="edit-card">
+ <div class="edit-card-title">État d’avancement</div>
+ <div class="edit-grid">
+ <div class="field">
+ <label>État d’avancement (%)</label>
+ <input id="e_progress_percent" type="number" min="0" max="100" step="1" oninput="updateProgressPercent(this.value)">
+ <div class="hint">0 à 100. Exemple : 40 pour 40%.</div>
+ </div>
+ <div class="field">
+ <label>Libellé d’avancement</label>
+ <input id="e_progress_label" placeholder="Ex. Cadré" oninput="updateProgressLabel(this.value)">
+ <div class="hint">Texte court : « En cadrage », « En réalisation »…</div>
+ </div>
+ </div>
+ </div>
+
+ <div class="edit-card">
+ <div class="edit-card-title">Conso ETP (DNSI)</div>
+ <div class="edit-grid">
+ <div class="field">
+ <label>ETP total consommé (tous pôles)</label>
+ <input id="e_charges_etp_actual" type="number" step="0.1" min="0" oninput="updateChargesEtpTotalActual(this.value)">
+ </div>
+ <div class="field">
+ <label>Conso ETP Études</label>
+ <input id="e_charges_etudes_actual" type="number" step="0.1" min="0" oninput="updateChargesDomainActual('ETUDES', this.value)">
+ </div>
+ <div class="field">
+ <label>Conso ETP PIIA</label>
+ <input id="e_charges_piia_actual" type="number" step="0.1" min="0" oninput="updateChargesDomainActual('PIIA', this.value)">
+ </div>
+ <div class="field">
+ <label>Conso ETP TIRS</label>
+ <input id="e_charges_tirs_actual" type="number" step="0.1" min="0" oninput="updateChargesDomainActual('TIRS', this.value)">
+ </div>
+ <div class="field">
+ <label>Conso ETP SSI</label>
+ <input id="e_charges_ssi_actual" type="number" step="0.1" min="0" oninput="updateChargesDomainActual('SSI', this.value)">
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- 3) Budget + Charges projet (jours) -->
+ <div class="edit-row2">
+ <div class="edit-card edit-card-budget">
+ <div class="edit-card-title">Budget projet (marché)</div>
+ <div class="edit-grid">
+ <div class="field">
+ <label>Budget (k€)</label>
+ <input id="e_budget_amountK" type="number" step="1" min="0" oninput="updateBudgetAmountK(this.value)">
+ <div class="hint">Saisir en k€ (ex. 600).</div>
+ </div>
+ <div class="field">
+ <label>Année BP</label>
+ <input id="e_budget_year" type="number" step="1" oninput="updateBudgetYear(this.value)">
+ </div>
+ <div class="field" style="grid-column:1/-1;">
+ <label>Commentaire budget</label>
+ <textarea id="e_budget_comment" placeholder="Licences + intégration + maintenance + AMO…"
+ oninput="updateBudgetComment(this.value)"></textarea>
+ </div>
+ </div>
+ </div>
+
+ <div class="edit-card edit-card-charges">
+ <div class="edit-card-title">Charges projet DNSI (jours)</div>
+ <div class="edit-grid">
+ <div class="field">
+ <label>Études / Pilotage (jours)</label>
+ <input id="e_cp_etudes" type="number" step="1" min="0" oninput="updateChargesProjetTeam('ETUDES', this.value)">
+ </div>
+ <div class="field">
+ <label>PIIA / Données / Interfaces (jours)</label>
+ <input id="e_cp_piia" type="number" step="1" min="0" oninput="updateChargesProjetTeam('PIIA', this.value)">
+ </div>
+ <div class="field">
+ <label>TIRS / Infra / Réseau (jours)</label>
+ <input id="e_cp_tirs" type="number" step="1" min="0" oninput="updateChargesProjetTeam('TIRS', this.value)">
+ </div>
+ <div class="field">
+ <label>SSI (jours)</label>
+ <input id="e_cp_ssi" type="number" step="1" min="0" oninput="updateChargesProjetTeam('SSI', this.value)">
+ </div>
+ <div class="field" style="grid-column:1/-1;">
+ <label>Hypothèses / commentaire</label>
+ <textarea id="e_cp_assumption" placeholder="Hypothèses : éditeur fait l’intégration…"
+ oninput="updateChargesProjetAssumption(this.value)"></textarea>
+ <div class="hint">Le total (jours) est recalculé automatiquement.</div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="editor-foot">
+ <button class="btn secondary" onclick="closeEditor(false)">Annuler</button>
+ <button class="btn" onclick="closeEditor(true)">Appliquer</button>
+ </div>
+ </div>
+</div>
+
+<script>
+const APP_VERSION = "V1.10";
+
+/* Modèle interne */
+let data = {
+ Date_meteo: new Date().toISOString().slice(0,10),
+ Nom_du_projet: "Système d’Information de Gestion Financière — Ville de Lille",
+ Description: "",
+ Id_marche: "",
+ Direction_porteur: "",
+ Phase_projet: "",
+ Acteur_CP: "",
+ Acteur_Metier: "",
+ Acteur_MOE: "",
+ Acteur_Presta: "",
+ Statut_planning: "Vert",
+ Statut_perimetre: "Vert",
+ Statut_ressources: "Vert",
+ Tendance: "soleil_nuages",
+ Tendance_code: "stable",
+ Tendance_detail: "",
+ Actions_realisees: [],
+ Actions_en_cours: [],
+ Points_attention: [],
+ Planning: [],
+ charges: {
+ referenceYear: 2026,
+ etpTotal: { budget: 105, actual: 0 },
+ domains: [
+ { code: "ETUDES", label: "CONSO ETP ETUDES", budgetEtp: 50, actualEtp: 0 },
+ { code: "PIIA", label: "CONSO ETP PIIA", budgetEtp: 25, actualEtp: 0 },
+ { code: "TIRS", label: "CONSO ETP TIRS", budgetEtp: 15, actualEtp: 0 },
+ { code: "SSI", label: "CONSO ETP SSI", budgetEtp: 15, actualEtp: 0 }
+ ]
+ },
+ progress: {
+ percent: 0,
+ label: ""
+ },
+ budget: {
+ year: 2026,
+ currency: "EUR",
+ amount: 0,
+ amountK: 0,
+ comment: ""
+ },
+ chargesProjet: {
+ unit: "jours",
+ assumption: "",
+ teams: [
+ { code: "ETUDES", label: "Études / Pilotage", estimated: 0 },
+ { code: "PIIA", label: "PIIA / Données / Interfaces", estimated: 0 },
+ { code: "TIRS", label: "TIRS / Infra / Réseau", estimated: 0 },
+ { code: "SSI", label: "SSI", estimated: 0 }
+ ],
+ totalEstimated: 0
+ }
+};
+
 
 /* =========================
-   CSS D'IMPRESSION STRICTEMENT LIMITÉ À 2 PAGES
+ Autosave brouillon (localStorage)
+ - protège contre fermeture brutale / oubli d'export JSON
+ - ne remplace pas l'export : c'est un brouillon local
 ========================= */
-@page{ size: A4 landscape; margin: 10mm; }
+const AUTOSAVE_KEY = "SIGF_FICHE_PROJET_AUTOSAVE";
 
-@media print {
-  * {
-    -webkit-print-color-adjust: exact !important; 
-    print-color-adjust: exact !important;
-  }
-  
-  html, body { 
-    background: #fff !important; 
-    font-size: 11px !important; 
-  }
+let __autosaveTimer = null;
+function scheduleAutoSave(){
+ try{
+ if(__autosaveTimer) clearTimeout(__autosaveTimer);
+ __autosaveTimer = setTimeout(autoSaveToLocalStorage, 800);
+ }catch(e){ /* noop */ }
+}
 
-  .sticky-header-group { 
-    position: static !important; 
-    background: transparent !important; 
-    padding: 0 !important; 
-    margin: 0 !important; 
-    box-shadow: none !important; 
-    border: none !important;
-  }
-  .toolbar, #editor, .help, .page-ver, .no-print, .support-section, .btn, button { 
-    display: none !important; 
-  }
-  .charges-block { display: none !important; }
+function autoSaveToLocalStorage(){
+ try{
+ if(pivotModel){
+ syncDataIntoPivot(pivotModel); // ✅ clé du fix
+ }
+ const payload = pivotModel ? pivotModel : data;
 
-  .wrap { max-width: none !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
-  
-  .bar { 
-    box-shadow: none !important; 
-    background: var(--brand) !important; 
-    color: #fff !important; 
-    border-radius: 10px !important; 
-    padding: 6px 12px !important; 
-    margin-bottom: 6px !important; 
-  }
-  .bar::before { display: none !important; }
-  .bar * { color: #fff !important; }
-  .title .name { font-size: 20px !important; margin-bottom: 2px !important; }
-  .title .date { font-size: 12px !important; }
-  .title .meta-line { font-size: 12px !important; }
+ localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
+ savedAt: new Date().toISOString(),
+ payload
+ }));
+ }catch(e){
+ console.warn("Autosave localStorage impossible", e);
+ }
+}
+window.addEventListener("beforeunload", () => {
+ autoSaveToLocalStorage();
+});
+setInterval(autoSaveToLocalStorage, 3000);
 
-  .section { margin-top: 6px !important; break-inside: avoid; page-break-inside: avoid; }
-  .box { 
-    padding: 8px 12px !important; 
-    border: 1px solid var(--border) !important; 
-    border-radius: 10px !important; 
-    background: #fff !important; 
-  }
-  .sect { font-size: 12px !important; margin-bottom: 4px !important; color: #111 !important; }
-  .kv, ul { font-size: 12px !important; line-height: 1.3 !important; }
-  ul { margin-top: 2px !important; margin-bottom: 2px !important; padding-left: 16px !important; }
-  li { margin-bottom: 2px !important; }
-  
-  .tendance-grid { gap: 6px !important; margin-top: 4px !important; display: flex !important; }
-  .tendance-item { 
-    flex: 1; padding: 6px !important; border: 1px solid #e0e0e0 !important; 
-    border-radius: 8px !important; background: #fdfdfd !important; 
-  }
-  .tendance-label { font-size: 11px !important; margin-bottom: 4px !important; }
-  .tendance-item .trend-badge { 
-    width: 34px !important; height: 34px !important; font-size: 18px !important; 
-    margin: 0 auto 4px !important; border: 1px solid #eee !important; 
-  }
-  .trend-state { font-size: 13px !important; margin-bottom: 2px !important; }
-  .trend-detail { font-size: 11px !important; }
-  .tendance-status { gap: 2px !important; }
-  .tendance-status li {
+function restoreAutoSaveIfAny(){
+ try{
+ const raw = localStorage.getItem(AUTOSAVE_KEY);
+ if(!raw) return false;
+ const saved = JSON.parse(raw);
+ if(!saved || !saved.payload) return false;
+
+ const payload = saved.payload;
+
+ // Cas pivot JSON
+ if(payload && payload.project && (payload.phases || payload.feuilleDeRoute)){
+ applyPivotToMeteo(payload);
+ }else{
+ pivotModel = null;
+ data = payload;
+ renderAll();
+ }
+ showToast("📝 Brouillon restauré automatiquement");
+ return true;
+ }catch(e){
+ return false;
+ }
+}
+
+function clearAutoSave(){
+ try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
+}
+function forceAutoSaveNow(){
+ autoSaveToLocalStorage();
+}
+function showToast(msg){
+ try{
+ const div = document.createElement("div");
+ div.textContent = msg;
+ div.style.position = "fixed";
+ div.style.bottom = "10px";
+ div.style.left = "10px";
+ div.style.background = "#111827";
+ div.style.color = "white";
+ div.style.padding = "6px 10px";
+ div.style.borderRadius = "999px";
+ div.style.fontSize = "12px";
+ div.style.zIndex = "99999";
+ div.style.opacity = "0.98";
+ document.body.appendChild(div);
+ setTimeout(()=>{ div.remove(); }, 2800);
+ }catch(e){}
+}
+
+let pivotModel = null;
+function syncDataIntoPivot(p){
+ if(!p || !p.project) return;
+ p.project = p.project || {};
+ p.project.actors = p.project.actors || {};
+
+ // Champs fiche projet -> pivot
+ p.project.title = data.Nom_du_projet || p.project.title || "";
+ p.project.description = data.Description || p.project.description || "";
+ p.project.domain = data.Direction_porteur || p.project.domain || ""; // <= direction porteuse
+ p.project.phaseCourante = data.Phase_projet || p.project.phaseCourante || "";
+ p.project.id = data.Id_marche || p.project.id || "";
+
+ p.project.actors.directeurProjet = data.Acteur_CP || p.project.actors.directeurProjet || "";
+ p.project.actors.expertMetier = data.Acteur_Metier || p.project.actors.expertMetier || "";
+ p.project.actors.moe = data.Acteur_MOE || p.project.actors.moe || "";
+ p.project.actors.prestataire = data.Acteur_Presta || p.project.actors.prestataire || "";
+
+ p.project.updatedAt = new Date().toISOString();
+}
+
+function $(s,c){return (c||document).querySelector(s);}
+function $$(s,c){return Array.from((c||document).querySelectorAll(s));}
+
+function toFR(iso){
+ const m = String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+ return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || "");
+}
+function toISO(fr){
+ const m = String(fr||"").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+ return m ? `${m[3]}-${m[2]}-${m[1]}` : (fr || "");
+}
+function dotClass(v){
+ v = (v||"").toLowerCase();
+ if(v.includes("vert")) return "ok";
+ if(v.includes("orange")) return "warn";
+ if(v.includes("rouge")) return "bad";
+ return "ok";
+}
+
+/* Rendu textes */
+function renderTextOrGhost(node,key){
+ let v = data[key], ph = node.getAttribute("data-ph") || "";
+ if(key === "Date_meteo") v = toFR(v);
+ if(key === "Id_marche" && (!v || !String(v).trim())){
+ node.textContent = "Non concerné";
+ node.classList.add("ghost");
+ return;
+ }
+ if(v && String(v).trim() !== ""){
+ node.textContent = v;
+ node.classList.remove("ghost");
+ }else{
+ node.textContent = ph;
+ node.classList.add("ghost");
+ }
+}
+function renderTexts(){
+ $$("[data-text]").forEach(n => renderTextOrGhost(n, n.getAttribute("data-text")));
+}
+
+/* Listes */
+function renderLists(){
+ $$("[data-list]").forEach(ul => {
+ const k = ul.getAttribute("data-list");
+ const arr = Array.isArray(data[k]) ? data[k] : [];
+ ul.innerHTML = "";
+ if(k === "Points_attention"){
+ $("#noAttention").style.display = arr.length ? "none" : "block";
+ }
+ const ph = (ul.getAttribute("data-ph-list") || "").split("|").filter(Boolean);
+ (arr.length ? arr : ph).forEach(x => {
+ const li = document.createElement("li");
+ li.textContent = x;
+ if(!arr.length) li.classList.add("ghost");
+ ul.appendChild(li);
+ });
+ });
+}
+
+/* Statuts */
+function renderStatus(){
+ $$("[data-dot]").forEach(e => {
+ e.classList.remove("ok","warn","bad");
+ e.classList.add(dotClass(data[e.getAttribute("data-dot")]));
+ });
+}
+
+/* Météo : icône + flèche */
+function applyTrendTheme(){
+ const map = {
+ "soleil" : { cls:"trend-soleil", emoji:"☀️" },
+ "soleil_nuages" : { cls:"trend-nuages", emoji:"⛅" },
+ "soleil_nuages_pluie" : { cls:"trend-pluie", emoji:"🌦️" }
+ };
+ const v = (data.Tendance || "soleil_nuages").toLowerCase();
+ const def = map[v] || map["soleil_nuages"];
+ document.body.classList.remove("trend-soleil","trend-nuages","trend-pluie");
+ document.body.classList.add(def.cls);
+ const badge = $("#trendBadge");
+ if(badge){
+ badge.textContent = def.emoji;
+ badge.title = data.Tendance_detail || "";
+ }
+}
+function renderTrendArrow(){
+ const el = document.getElementById("trendArrow");
+ const stateEl = document.getElementById("trendState");
+ const detailEl = document.getElementById("trendDetail");
+ if(!el || !stateEl || !detailEl) return;
+
+ const code = (data.Tendance_code || "stable").toLowerCase();
+
+ el.classList.remove(
+ "trend-arrow-dir-up","trend-arrow-dir-down","trend-arrow-dir-flat",
+ "trend-arrow-col-green","trend-arrow-col-red","trend-arrow-col-blue"
+ );
+
+ let libelle = "Stable";
+
+ if(code.includes("amelior")){
+ el.classList.add("trend-arrow-dir-up","trend-arrow-col-green");
+ libelle = "En amélioration";
+ }else if(code.includes("degrad")){
+ el.classList.add("trend-arrow-dir-down","trend-arrow-col-red");
+ libelle = "En dégradation";
+ }else{
+ el.classList.add("trend-arrow-dir-flat","trend-arrow-col-blue");
+ libelle = "Stable";
+ }
+
+ stateEl.textContent = libelle;
+ detailEl.textContent = data.Tendance_detail || "";
+}
+function renderWeather(){
+ applyTrendTheme();
+ renderTrendArrow();
+}
+
+/* === GANTT CANVAS (identique portail) === */
+
+const PHASES_META = [
+ {name:"Pré-cadrage", color:"#FFCDD2", accent:"#E57373"},
+ {name:"Cadrage", color:"#FFE0B2", accent:"#FFB74D"},
+ {name:"Conception", color:"#FFF9C4", accent:"#FFF176"},
+ {name:"Réalisation", color:"#C8E6C9", accent:"#81C784"},
+ {name:"Recette", color:"#BBDEFB", accent:"#64B5F6"},
+ {name:"Déploiement", color:"#E1BEE7", accent:"#BA68C8"}
+];
+
+let zoomFactor = 0; // pas de contrôle de zoom dans l'UI météo mais on garde l’API
+
+function textEllipsis(ctx, text, maxWidth){
+ if(!text) return '';
+ if(ctx.measureText(text).width <= maxWidth) return text;
+ const ell='…'; let lo=0, hi=text.length;
+ while(lo < hi){
+ const mid = Math.floor((lo+hi)/2);
+ const t = text.slice(0,mid).trim()+ell;
+ if(ctx.measureText(t).width <= maxWidth) lo=mid+1; else hi=mid;
+ }
+ return text.slice(0, lo-1).trim()+ell;
+}
+
+function drawOutsideLabel(ctx, xEdge, y, h, label, side, canvasW, opts={}){
+ const { bold=false, color='#111' } = opts;
+ ctx.textBaseline = 'middle';
+ ctx.font = `${bold? '700':'400'} 12px Calibri, Arial`;
+ ctx.fillStyle = color;
+ const padding = 20;
+ if(side==='right'){
+ const lineTo = xEdge + 12;
+ ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
+ ctx.beginPath(); ctx.moveTo(xEdge, y + h/2); ctx.lineTo(lineTo, y + h/2); ctx.stroke();
+ const avail = Math.max(40, canvasW - (lineTo + 8) - padding);
+ const txt = textEllipsis(ctx, label, avail);
+ ctx.textAlign = 'left'; ctx.fillText(txt, lineTo + 8, y + h/2 + 1);
+ }else{
+ const lineTo = xEdge - 12;
+ ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
+ ctx.beginPath(); ctx.moveTo(xEdge, y + h/2); ctx.lineTo(lineTo, y + h/2); ctx.stroke();
+ const avail = Math.max(40, lineTo - padding);
+ const txt = textEllipsis(ctx, label, avail);
+ ctx.textAlign = 'right'; ctx.fillText(txt, lineTo - 8, y + h/2 + 1);
+ }
+}
+
+function drawTwoLineLabel(ctx, monthTxt, yearTxt, centerX, headerH, maxWidth){
+ let size=13, ok=false;
+ while(size>=8){
+ ctx.font=`700 ${size}px Calibri, Arial`;
+ if(Math.max(ctx.measureText(monthTxt).width,ctx.measureText(yearTxt).width) <= maxWidth-4){ ok=true; break; }
+ size -= 1;
+ }
+ if(!ok) return false;
+ ctx.fillStyle='#111'; ctx.textAlign='center'; ctx.textBaseline='middle';
+ const lineGap=Math.max(2,Math.round(size*.25)); const midY=headerH/2;
+ ctx.fillText(monthTxt, centerX, midY-(size/2)-(lineGap/2));
+ ctx.fillText(yearTxt, centerX, midY+(size/2)+(lineGap/2));
+ return true;
+}
+
+function drawMonthsHeader(ctx, months, headerH){
+ const tryDraw=(step)=>{
+ for(let i=0;i<months.length;i++){
+ if(i%step) continue;
+ const m=months[i];
+ const lab=m.start.toLocaleDateString('fr-FR',{month:'short'});
+ const yy=String(m.start.getFullYear()).slice(-2);
+ if(!drawTwoLineLabel(ctx, lab, yy, m.x+m.w/2, headerH, m.w)) return false;
+ }
+ return true;
+ };
+ if(tryDraw(1)) return;
+ if(tryDraw(2)) return;
+ if(tryDraw(3)) return;
+ if(tryDraw(4)) return;
+ for(let i=0;i<months.length;i+=3){
+ const m0=months[i]; if(!m0) break;
+ const q=Math.floor(m0.start.getMonth()/3)+1;
+ const yy=String(m0.start.getFullYear()).slice(-2);
+ const m1=months[i+1]||m0, m2=months[i+2]||m0;
+ const xMid = (m0.x+m0.w/2 + m2.x+m2.w/2)/2;
+ drawTwoLineLabel(ctx, `T${q}`, yy, xMid, headerH, (m0.w+m1.w+m2.w));
+ }
+}
+
+function buildGanttDataFromPivot(pivot){
+ const phasesSrc = pivot.phases || [];
+ const phases = phasesSrc.map((ph,idx)=>{
+ const meta = PHASES_META[idx] || PHASES_META[PHASES_META.length-1];
+ const tasks = (ph.tasks || []).filter(t=>t.start && t.end).map(t=>({
+ title:(t.title || t.label || "").trim(),
+ start:t.start,
+ end: t.end || t.start,
+ isKey:!!t.isKey,
+ meta
+ }));
+ return { meta, tasks };
+ });
+ return { phases };
+}
+
+function renderGanttFromPivot(pivot){
+ const container = document.getElementById("ganttContainer");
+ if(!container) return;
+ container.innerHTML = "";
+ if(!pivot){
+ container.innerHTML = `
+ <div class="empty-state">
+ <p>Aucune frise à afficher.</p>
+ <p>Créez un projet ou ouvrez la feuille de route pour saisir vos chantiers.</p>
+ </div>`;
+ return;
+ }
+
+ const dataG = buildGanttDataFromPivot(pivot);
+ const all = dataG.phases.flatMap(p=>p.tasks);
+ if(all.length===0){
+ container.innerHTML = `
+ <div class="empty-state">
+ <p>Aucun chantier saisi pour l’instant.</p>
+ <p>Complétez la feuille de route pour générer le Gantt.</p>
+ </div>`;
+ return;
+ }
+
+ const wrap = document.createElement("div");
+ wrap.className="gantt-wrap";
+ const canvas = document.createElement("canvas");
+ canvas.id="projectGantt";
+ wrap.appendChild(canvas);
+ container.appendChild(wrap);
+
+ const ctx = canvas.getContext("2d");
+
+ const minDate = new Date(Math.min(...all.map(t=>new Date(t.start))));
+ const maxDate = new Date(Math.max(...all.map(t=>new Date(t.end))));
+ const totalDays = Math.max(1, Math.round((maxDate-minDate)/86400000)+1);
+
+ const rightPane = canvas.parentElement;
+ const containerW = Math.max(900, rightPane.clientWidth || 900);
+
+ const leftPad = (zoomFactor<=0)? 110 : 180;
+ const rightPad = 180;
+ const usableW = containerW - leftPad - rightPad;
+ const baseRatio = usableW/totalDays;
+ const ratio = (zoomFactor<=0)? baseRatio : baseRatio*(1+zoomFactor*2);
+ const widthNeeded = leftPad + totalDays*ratio + rightPad;
+ canvas.width = (zoomFactor<=0)? containerW : Math.ceil(widthNeeded);
+
+ const headerH = (window.__PRINTING__ ? 40 : 48);
+ const rowH = (window.__PRINTING__ ? 20 : 26);
+ const margin = (window.__PRINTING__ ? 10 : 16);
+
+ const totalRows = dataG.phases.reduce((acc,p)=>acc + (p.tasks.length||0),0);
+ const height = headerH + (totalRows*rowH) + 40;
+ canvas.height = height;
+
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ // bandes mensuelles
+ let cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+ const months=[];
+ while(cursor <= maxDate){
+ const mStart=new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+ const next=new Date(cursor.getFullYear(), cursor.getMonth()+1, 1);
+ const dayIdx=Math.floor((mStart-minDate)/86400000);
+ const x = leftPad + dayIdx*ratio;
+ const days=Math.max(1, Math.floor((next-mStart)/86400000));
+ const w=days*ratio;
+ months.push({start:mStart, next, x, w});
+ cursor=next;
+ }
+ months.forEach(m=>{
+ ctx.fillStyle = (m.start.getMonth()%2===0)? '#e1e4ec' : '#d5dae6';
+ ctx.fillRect(m.x, 0, m.w, canvas.height);
+ ctx.strokeStyle='#c2c8d3';
+ ctx.beginPath(); ctx.moveTo(m.x, 0); ctx.lineTo(m.x, canvas.height); ctx.stroke();
+ });
+ const endX = leftPad + totalDays*ratio;
+ ctx.beginPath(); ctx.moveTo(endX,0); ctx.lineTo(endX,canvas.height); ctx.stroke();
+
+ // en-tête blanche + mois
+ ctx.fillStyle='rgba(255,255,255,0.9)';
+ ctx.fillRect(0,0,canvas.width,headerH);
+ drawMonthsHeader(ctx, months, headerH);
+
+ // dernier chantier
+ let lastTaskEnd = -Infinity, lastTaskRef = null;
+ dataG.phases.forEach(p=>{
+ p.tasks.forEach(t=>{
+ const e=new Date(t.end).getTime();
+ if(e>lastTaskEnd){ lastTaskEnd=e; lastTaskRef=t; }
+ });
+ });
+
+ let y = headerH + 18;
+ dataG.phases.forEach(p=>{
+ const tasks = p.tasks || [];
+ if(!tasks.length) return;
+ tasks.forEach(t=>{
+ const s=new Date(t.start), e=new Date(t.end);
+ const d1=Math.max(0, Math.floor((s-minDate)/86400000));
+ const d2=Math.max(0, Math.floor((e-minDate)/86400000));
+ const x1=leftPad + d1*ratio;
+ const x2=leftPad + d2*ratio;
+ const h=14;
+
+ const labelFull = (t.start===t.end)
+ ? `${t.title} (le ${toFR(t.start)})`
+ : `${t.title} (du ${toFR(t.start)} au ${toFR(t.end)})`;
+ ctx.font="12px Calibri, Arial";
+ const labelNeed = ctx.measureText(labelFull).width + margin;
+
+ if(t.start===t.end){
+ // jalon rouge
+ const cx=x1, cy=y+h/2, r=7;
+ ctx.save();
+ ctx.shadowColor='rgba(34,40,55,0.18)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
+ ctx.fillStyle='#B30000';
+ ctx.beginPath();
+ ctx.moveTo(cx,cy-r);
+ ctx.lineTo(cx+r,cy);
+ ctx.lineTo(cx,cy+r);
+ ctx.lineTo(cx-r,cy);
+ ctx.closePath();
+ ctx.fill();
+ ctx.restore();
+
+ const label = labelFull;
+ const preferRight = (cx + labelNeed <= canvas.width - margin);
+ const side = (t===lastTaskRef)? 'left' : (preferRight?'right':'left');
+ drawOutsideLabel(ctx, cx + (side==='right'?6:0), y, h, label, side, canvas.width, {bold:true, color:'#B30000'});
+ }else{
+ // barre dégradée
+ const w=Math.max(12,(x2-x1)), r=7;
+ ctx.save();
+ ctx.shadowColor='rgba(34,40,55,0.16)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
+ const grad=ctx.createLinearGradient(x1,y,x1+w,y+h);
+ grad.addColorStop(0, t.meta.color);
+ grad.addColorStop(1, t.meta.accent);
+ ctx.fillStyle=grad;
+ ctx.strokeStyle='rgba(0,0,0,0.08)'; ctx.lineWidth=1;
+ ctx.beginPath();
+ ctx.moveTo(x1+r,y); ctx.lineTo(x1+w-r,y);
+ ctx.quadraticCurveTo(x1+w,y,x1+w,y+r);
+ ctx.lineTo(x1+w,y+h-r);
+ ctx.quadraticCurveTo(x1+w,y+h,x1+w-r,y+h);
+ ctx.lineTo(x1+r,y+h);
+ ctx.quadraticCurveTo(x1,y+h,x1,y+h-r);
+ ctx.lineTo(x1,y+r);
+ ctx.quadraticCurveTo(x1,y,x1+r,y);
+ ctx.closePath();
+ ctx.fill(); ctx.stroke();
+ ctx.restore();
+
+ const label = labelFull;
+ const preferRight = (x1 + w + labelNeed <= canvas.width - margin);
+ const side = (t===lastTaskRef)? 'left' : (preferRight?'right':'left');
+ const xEdge = (side==='right')? (x1+w) : x1;
+ drawOutsideLabel(ctx, xEdge, y, h, label, side, canvas.width);
+ }
+ y+=26;
+ });
+ y+=6;
+ });
+
+ // légende
+ const legend = document.createElement("div");
+ legend.className="legend";
+ legend.innerHTML = `
+ <span class="legend-item"><span class="legend-color" style="background:#E57373"></span> Pré-cadrage</span>
+ <span class="legend-item"><span class="legend-color" style="background:#FFB74D"></span> Cadrage</span>
+ <span class="legend-item"><span class="legend-color" style="background:#FFF176"></span> Conception</span>
+ <span class="legend-item"><span class="legend-color" style="background:#81C784"></span> Réalisation</span>
+ <span class="legend-item"><span class="legend-color" style="background:#64B5F6"></span> Recette</span>
+ <span class="legend-item"><span class="legend-color" style="background:#BA68C8"></span> Déploiement</span>
+ <span class="legend-item"><span class="legend-dot" style="width:8px;height:8px;border-radius:50%;background:#B30000;"></span> Jalons (dates uniques)</span>
+ `;
+ container.appendChild(legend);
+}
+
+/* Fallback Gantt pour le CSV (sans pivot) */
+function renderCsvGantt(actions){
+ const container = document.getElementById("ganttContainer");
+ if(!container) return;
+ container.innerHTML = "";
+
+ if(!actions.length){
+ container.innerHTML = `<div class="csv-gantt">Aucun planning saisi.</div>`;
+ return;
+ }
+
+ const parse = ym => {
+ const m = String(ym||"").match(/^(\d{4})-(\d{2})$/);
+ if(!m) return null;
+ return {y:+m[1],m:+m[2]};
+ };
+ const allYMs = [];
+ actions.forEach(a=>{
+ const s=parse(a.start), e=parse(a.end);
+ if(s) allYMs.push(s);
+ if(e) allYMs.push(e);
+ });
+ if(!allYMs.length){
+ container.innerHTML = `<div class="csv-gantt">Format AAAA-MM non reconnu.</div>`;
+ return;
+ }
+ let minY=allYMs[0].y, minM=allYMs[0].m, maxY=minY, maxM=minM;
+ allYMs.forEach(d=>{
+ if(d.y<minY || (d.y===minY && d.m<minM)){minY=d.y;minM=d.m;}
+ if(d.y>maxY || (d.y===maxY && d.m>maxM)){maxY=d.y;maxM=d.m;}
+ });
+ const months=[];
+ let cy=minY, cm=minM;
+ while(cy<maxY || (cy===maxY && cm<=maxM)){
+ months.push({y:cy,m:cm});
+ cm++;
+ if(cm>12){cm=1;cy++;}
+ }
+
+ const root = document.createElement("div");
+ root.className = "csv-gantt";
+
+ const header = document.createElement("div");
+ header.className = "csv-gantt-header";
+ header.innerHTML = `<div>Chantier</div><div class="csv-gantt-months">${
+ months.map(d=>`${String(d.m).padStart(2,"0")}/${String(d.y).slice(-2)}`).join("")
+ }</div>`;
+ root.appendChild(header);
+
+ actions.forEach(a=>{
+ const row = document.createElement("div");
+ row.className = "csv-gantt-row";
+
+ const label = document.createElement("div");
+ label.className = "csv-gantt-label";
+ label.textContent = a.label || "";
+ row.appendChild(label);
+
+ const monthsLine = document.createElement("div");
+ monthsLine.className = "csv-gantt-months";
+ months.forEach(()=>monthsLine.appendChild(document.createElement("div")));
+ row.appendChild(monthsLine);
+
+ const s=parse(a.start), e=parse(a.end);
+ if(s && e){
+ const startIndex = months.findIndex(d=>d.y===s.y && d.m===s.m);
+ const endIndex = months.findIndex(d=>d.y===e.y && d.m===e.m);
+ if(startIndex>=0 && endIndex>=startIndex){
+ const bar = document.createElement("div");
+ bar.className="csv-gantt-bar";
+ const widthPct = ((endIndex-startIndex+1)/months.length)*100;
+ const leftPct = (startIndex/months.length)*100;
+ bar.style.width = widthPct+"%";
+ bar.style.left = leftPct+"%";
+ monthsLine.style.position="relative";
+ monthsLine.appendChild(bar);
+ }
+ }
+ root.appendChild(row);
+ });
+
+ container.appendChild(root);
+}
+
+
+
+/* Timeline */
+function renderTimeline(){
+ if(pivotModel && Array.isArray(pivotModel.phases) && pivotModel.phases.length){
+ renderGanttFromPivot(pivotModel);
+ }else{
+ const container = document.getElementById("ganttContainer");
+ if(!container) return;
+ container.innerHTML = `
+ <div class="empty-state">
+ <p>Aucun chantier issu du pivot.</p>
+ <p>Complétez la feuille de route pour générer le Gantt.</p>
+ </div>`;
+ }
+}
+
+/* Rendu global */
+
+function ensureCharges(){
+ if(!data.charges){
+ data.charges = {
+ referenceYear: 2026,
+ etpTotal: { budget: 105, actual: 0 },
+ domains: [
+ { code: "ETUDES", label: "CONSO ETP ETUDES", budgetEtp: 50, actualEtp: 0 },
+ { code: "PIIA", label: "CONSO ETP PIIA", budgetEtp: 25, actualEtp: 0 },
+ { code: "TIRS", label: "CONSO ETP TIRS", budgetEtp: 15, actualEtp: 0 },
+ { code: "SSI", label: "CONSO ETP SSI", budgetEtp: 15, actualEtp: 0 }
+ ]
+ };
+ }
+ if(!data.progress){
+ data.progress = { percent: 0, label: "" };
+ }
+}
+
+
+function ensureBudgetChargesProjet(){
+ if(!data.budget){
+ data.budget = { year: 2026, currency: "EUR", amount: 0, amountK: 0, comment: "" };
+ }
+ if(!data.chargesProjet){
+ data.chargesProjet = { unit: "jours", assumption: "", teams: [], totalEstimated: 0 };
+ }
+ data.chargesProjet.teams = Array.isArray(data.chargesProjet.teams) ? data.chargesProjet.teams : [];
+ const defaults = [
+ { code:"ETUDES", label:"Études / Pilotage" },
+ { code:"PIIA", label:"PIIA / Données / Interfaces" },
+ { code:"TIRS", label:"TIRS / Infra / Réseau" },
+ { code:"SSI", label:"SSI" }
+ ];
+ defaults.forEach(d=>{
+ if(!data.chargesProjet.teams.find(t=>t.code===d.code)){
+ data.chargesProjet.teams.push({ code:d.code, label:d.label, estimated: 0 });
+ }
+ });
+ if(data.chargesProjet.totalEstimated == null){
+ data.chargesProjet.totalEstimated = data.chargesProjet.teams.reduce((s,t)=>s+(+t.estimated||0),0);
+ }
+}
+
+function renderBudgetChargesProjet(){
+ ensureBudgetChargesProjet();
+
+ const b = data.budget || {};
+ const amountK = (b.amountK != null && b.amountK !== "") ? (+b.amountK||0)
+ : ((b.amount!=null)? Math.round((+b.amount||0)/1000) : 0);
+ const year = b.year ? String(b.year) : "";
+
+ const budgetAmountK = document.getElementById("budgetAmountK");
+ const budgetYear = document.getElementById("budgetYear");
+ const budgetComment = document.getElementById("budgetComment");
+
+ if(budgetAmountK) budgetAmountK.textContent = amountK ? String(amountK) : "—";
+ if(budgetYear) budgetYear.textContent = year ? ("BP " + year) : "";
+ if(budgetComment) budgetComment.textContent = (b.comment || "").trim();
+
+ const cp = data.chargesProjet || {};
+ const total = (cp.totalEstimated != null) ? (+cp.totalEstimated||0)
+ : (cp.teams||[]).reduce((s,t)=>s+(+t.estimated||0),0);
+ const totalEl = document.getElementById("chargesProjetTotal");
+ if(totalEl) totalEl.textContent = total ? String(total) : "—";
+
+ const teamsEl = document.getElementById("chargesProjetTeams");
+ if(teamsEl){
+ teamsEl.innerHTML = "";
+ (cp.teams || []).forEach(t=>{
+ const pill = document.createElement("div");
+ pill.className = "bc-pill";
+ const lab = (t.label || t.code || "").trim();
+ const est = (+t.estimated||0);
+ pill.innerHTML = `<span>${lab}</span><b>${est} j</b>`;
+ teamsEl.appendChild(pill);
+ });
+ }
+
+ const aEl = document.getElementById("chargesProjetAssumption");
+ if(aEl) aEl.textContent = (cp.assumption || "").trim();
+}
+
+function renderProgress(){
+ ensureCharges();
+ const p = data.progress || {};
+ const pct = Math.max(0, Math.min(100, parseInt(p.percent || 0, 10) || 0));
+ const fill = document.getElementById("progressFill");
+ const pctLabel = document.getElementById("progressPercentLabel");
+ if(fill) fill.style.width = pct + "%";
+ if(pctLabel) pctLabel.textContent = pct + " %";
+}
+
+function renderCharges(){
+ ensureCharges();
+ const c = data.charges || {};
+ const yearEl = document.getElementById("chargesYear");
+ const totActEl = document.getElementById("chargesEtpActual");
+ const totBudEl = document.getElementById("chargesEtpBudget");
+ if(yearEl) yearEl.textContent = c.referenceYear || "";
+ if(totActEl) totActEl.textContent = (c.etpTotal && (c.etpTotal.actual ?? 0));
+ if(totBudEl) totBudEl.textContent = (c.etpTotal && (c.etpTotal.budget ?? 0));
+
+ const domContainer = document.getElementById("chargesDomains");
+ if(!domContainer) return;
+ domContainer.innerHTML = "";
+ const domains = Array.isArray(c.domains) ? c.domains : [];
+ if(!domains.length){
+ domContainer.innerHTML = "<div class=\"info\">Aucun domaine de charge défini.</div>";
+ return;
+ }
+ domains.forEach(d=>{
+ const row = document.createElement("div");
+ row.className = "charge-domain-row";
+ row.innerHTML = `
+ <div class="charge-domain-label">${d.label || d.code || ""}</div>
+ <div class="charge-domain-values">
+ <span class="charge-domain-actual">${d.actualEtp ?? 0}</span>
+ <span>/</span>
+ <span class="charge-domain-budget">${d.budgetEtp ?? 0}</span>
+ <span class="charge-domain-unit">ETP</span>
+ </div>`;
+ domContainer.appendChild(row);
+ });
+}
+
+function updateProgressPercent(v){
+ ensureCharges();
+ const n = parseInt(v,10);
+ data.progress.percent = isNaN(n) ? 0 : n;
+ renderProgress();
+}
+function updateProgressLabel(v){
+ ensureCharges();
+ data.progress.label = v || "";
+ renderTexts();
+ renderProgress();
+}
+function updateChargesEtpTotalActual(v){
+ ensureCharges();
+ const n = parseFloat(String(v).replace(",", "."));
+ data.charges.etpTotal.actual = isNaN(n) ? 0 : n;
+ renderCharges();
+}
+function findChargeDomain(code){
+ ensureCharges();
+ const list = data.charges.domains || [];
+ let d = list.find(x=>x.code === code);
+ if(!d){
+ d = { code, label: code, budgetEtp: 0, actualEtp: 0 };
+ list.push(d);
+ }
+ return d;
+}
+function updateChargesDomainActual(code,v){
+ const d = findChargeDomain(code);
+ const n = parseFloat(String(v).replace(",", "."));
+ d.actualEtp = isNaN(n) ? 0 : n;
+ renderCharges();
+}
+function renderAll(){
+ renderTexts();
+ renderLists();
+ renderStatus();
+ renderWeather();
+ renderProgress();
+ renderCharges();
+ renderBudgetChargesProjet();
+ renderTimeline();
+ scheduleAutoSave();
+}
+
+/* Éditeur */
+function openEditor(){
+ const e = $("#editor");
+ e.style.display = "flex";
+ $("#e_Nom_du_projet").value = data.Nom_du_projet || "";
+ $("#e_Date_meteo").value = toFR(data.Date_meteo || "");
+ $("#e_Description").value = data.Description || "";
+ $("#e_Id_marche").value = data.Id_marche || "";
+ $("#e_Direction_porteur").value = data.Direction_porteur || "";
+ $("#e_Phase_projet").value = data.Phase_projet || "";
+ $("#e_Acteur_CP").value = data.Acteur_CP || "";
+ $("#e_Acteur_Metier").value = data.Acteur_Metier || "";
+ $("#e_Acteur_MOE").value = data.Acteur_MOE || "";
+ $("#e_Acteur_Presta").value = data.Acteur_Presta || "";
+
+ ensureCharges();
+ if(document.getElementById("e_progress_percent")){
+ document.getElementById("e_progress_percent").value = data.progress && (data.progress.percent ?? 0);
+ }
+ if(document.getElementById("e_progress_label")){
+ document.getElementById("e_progress_label").value = data.progress && (data.progress.label || "");
+ }
+ if(document.getElementById("e_charges_etp_actual")){
+ document.getElementById("e_charges_etp_actual").value = data.charges && data.charges.etpTotal && (data.charges.etpTotal.actual ?? 0);
+ }
+ const dEtudes = findChargeDomain("ETUDES");
+ const dPiia = findChargeDomain("PIIA");
+ const dTirs = findChargeDomain("TIRS");
+ const dSsi = findChargeDomain("SSI");
+ if(document.getElementById("e_charges_etudes_actual")) document.getElementById("e_charges_etudes_actual").value = dEtudes.actualEtp ?? 0;
+ if(document.getElementById("e_charges_piia_actual")) document.getElementById("e_charges_piia_actual").value = dPiia.actualEtp ?? 0;
+ if(document.getElementById("e_charges_tirs_actual")) document.getElementById("e_charges_tirs_actual").value = dTirs.actualEtp ?? 0;
+ if(document.getElementById("e_charges_ssi_actual")) document.getElementById("e_charges_ssi_actual").value = dSsi.actualEtp ?? 0;
+ // Budget (marché) + charges projet DNSI (jours)
+ if(document.getElementById("e_budget_amountK")) document.getElementById("e_budget_amountK").value = (data.budget && data.budget.amountK != null) ? data.budget.amountK : 0;
+ if(document.getElementById("e_budget_year")) document.getElementById("e_budget_year").value = (data.budget && data.budget.year != null) ? data.budget.year : "";
+ if(document.getElementById("e_budget_comment")) document.getElementById("e_budget_comment").value = (data.budget && data.budget.comment) ? data.budget.comment : "";
+
+ const tEt = (data.chargesProjet && data.chargesProjet.teams || []).find(t=>t.code==="ETUDES");
+ const tPi = (data.chargesProjet && data.chargesProjet.teams || []).find(t=>t.code==="PIIA");
+ const tTi = (data.chargesProjet && data.chargesProjet.teams || []).find(t=>t.code==="TIRS");
+ const tSs = (data.chargesProjet && data.chargesProjet.teams || []).find(t=>t.code==="SSI");
+ if(document.getElementById("e_cp_etudes")) document.getElementById("e_cp_etudes").value = (tEt && tEt.estimated != null) ? tEt.estimated : 0;
+ if(document.getElementById("e_cp_piia")) document.getElementById("e_cp_piia").value = (tPi && tPi.estimated != null) ? tPi.estimated : 0;
+ if(document.getElementById("e_cp_tirs")) document.getElementById("e_cp_tirs").value = (tTi && tTi.estimated != null) ? tTi.estimated : 0;
+ if(document.getElementById("e_cp_ssi")) document.getElementById("e_cp_ssi").value = (tSs && tSs.estimated != null) ? tSs.estimated : 0;
+ if(document.getElementById("e_cp_assumption")) document.getElementById("e_cp_assumption").value = (data.chargesProjet && data.chargesProjet.assumption) ? data.chargesProjet.assumption : "";
+}
+function closeEditor(apply){
+ $("#editor").style.display = "none";
+ if(apply) renderAll();
+}
+function live(k,v){
+ data[k] = v;
+ renderAll();
+ autoSaveToLocalStorage(); // ✅ autosave à chaque frappe
+}
+
+function liveDate(fr){
+ data.Date_meteo = toISO(fr || "");
+ renderAll();
+ autoSaveToLocalStorage(); // ✅ idem
+}
+/* Pivot -> fiche projet / météo */
+function normaliseTrendCode(raw){
+ const t = (raw || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+ if(t.includes("amelior")) return "amelioration";
+ if(t.includes("degrad")) return "degradation";
+ if(t.includes("stable")) return "stable";
+ return "stable";
+}
+function applyPivotToMeteo(pivot){
+ pivotModel = pivot;
+
+ const proj = pivot.project || {};
+ const a = proj.actors || {};
+ const m = pivot.meteo || {};
+
+ // Titre / présentation
+ data.Nom_du_projet =
+ proj.title ||
+ proj.name ||
+ proj.libelle ||
+ proj.id ||
+ data.Nom_du_projet || "";
+
+ data.Description = proj.description || m.resume || data.Description || "";
+ data.Direction_porteur = proj.domain || proj.directionPorteuse || data.Direction_porteur || "";
+ data.Phase_projet = proj.phaseCourante || data.Phase_projet || "";
+ data.Id_marche = proj.id || data.Id_marche || "";
+
+ data.Acteur_CP = proj.owner || a.directeurProjet || data.Acteur_CP || "";
+ data.Acteur_Metier = a.expertMetier || data.Acteur_Metier || "";
+ data.Acteur_MOE = a.moe || data.Acteur_MOE || "";
+ data.Acteur_Presta = a.prestataire || data.Acteur_Presta || "";
+
+ const isoUpd = (proj.updatedAt || "").slice(0,10);
+ data.Date_meteo = isoUpd || data.Date_meteo || new Date().toISOString().slice(0,10);
+
+ // Tendance / météo
+ const situation = (m.situation || "").toLowerCase();
+ const code = normaliseTrendCode(m.tendance || data.Tendance_code || "stable");
+
+ if(["soleil","soleil_nuages","soleil_nuages_pluie"].includes(situation)){
+ data.Tendance = situation;
+ }else{
+ const color = (m.color || "").toLowerCase();
+ if(color.includes("vert")) data.Tendance = "soleil";
+ else if(color.includes("rouge")) data.Tendance = "soleil_nuages_pluie";
+ else data.Tendance = "soleil_nuages";
+ }
+
+ data.Tendance_code = code;
+ data.Tendance_detail = m.tendanceCommentaire || m.tendanceDetail ||
+ m.tendance || data.Tendance_detail || "";
+
+ data.Actions_realisees = Array.isArray(m.pointsPositifs)
+ ? m.pointsPositifs.slice() : (data.Actions_realisees || []);
+ data.Actions_en_cours = Array.isArray(m.actionsCourtesEcheance)
+ ? m.actionsCourtesEcheance.slice() : (data.Actions_en_cours || []);
+ data.Points_attention = Array.isArray(m.pointsVigilance)
+ ? m.pointsVigilance.slice() : (data.Points_attention || []);
+
+ // Planning (feuille de route / phases)
+ let actions = [];
+ if(pivot.feuilleDeRoute && Array.isArray(pivot.feuilleDeRoute.actions)){
+ actions = pivot.feuilleDeRoute.actions;
+ }else if(Array.isArray(pivot.phases)){
+ pivot.phases.forEach(ph=>{
+ (ph.tasks || []).forEach(t=>{
+ actions.push({
+ label: t.title,
+ start: t.start,
+ end: t.end,
+ type: t.type,
+ isKey: t.isKey
+ });
+ });
+ });
+ }
+ data.Planning = actions.map(a=>{
+ const s = (a.start || "").slice(0,10);
+ const e = (a.end || "").slice(0,10);
+ return {
+ intitule: a.label || a.title || "",
+ debut: s,
+ fin: e || s || "",
+ type: a.type || "period",
+ isKey: !!a.isKey
+ };
+ });
+ // Charges & avancement
+ ensureCharges();
+ if(pivot.charges){
+ data.charges = JSON.parse(JSON.stringify(pivot.charges));
+ }
+ if(pivot.progress){
+ data.progress = {
+ percent: pivot.progress.percent ?? 0,
+ label: pivot.progress.label || ""
+ };
+ }
+
+
+ // Budget & charges projet (jours) — optionnel
+ ensureBudgetChargesProjet();
+ if(pivot.budget){
+ const pb = pivot.budget || {};
+ data.budget = {
+ year: (pb.year != null ? pb.year : data.budget.year),
+ currency: pb.currency || data.budget.currency || "EUR",
+ amount: (pb.amount != null ? pb.amount : (data.budget.amount ?? 0)),
+ amountK: (pb.amountK != null ? pb.amountK : ((pb.amount!=null)? Math.round((+pb.amount||0)/1000) : (data.budget.amountK ?? 0))),
+ comment: pb.comment || ""
+ };
+ }
+ if(pivot.chargesProjet){
+ const pc = pivot.chargesProjet ||
