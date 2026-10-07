@@ -1,5 +1,5 @@
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open('gold-suite-v4').then((cache) => {
+  e.waitUntil(caches.open('gold-suite-v5').then((cache) => {
     return cache.addAll(['./', './index.html']);
   }));
 });
