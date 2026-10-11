@@ -1,210 +1,377 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Portail GOLD & Sprints</title>
-<!-- Lien vers le fichier de configuration de l'application -->
-<link rel="manifest" href="manifest.json">
-<style>
-  :root {
-    --brand: #C00000; --brand-light: #E43C52; --text: #222; --muted: #666; 
-    --border: #e8e8e8; --bg: #f4f6f9; --panel: #ffffff;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0; font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-    color: var(--text); background-color: var(--bg); height: 100vh; display: flex; flex-direction: column;
-  }
-  header {
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
-    color: #fff; padding: 16px 24px; box-shadow: 0 4px 12px rgba(192, 0, 0, 0.2);
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  header h1 { margin: 0; font-size: 24px; font-weight: 900; }
-  .header-actions { display: flex; gap: 12px; }
-  .btn {
-    background: #ffffff; color: var(--brand); border: 1px solid transparent;
-    padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px;
-    cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-  .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand-light); }
-  .btn.small { padding: 4px 8px; font-size: 11px; }
-  .container {
-    flex: 1; max-width: 1300px; margin: 0 auto; padding: 24px;
-    display: grid; grid-template-columns: 320px 1fr; gap: 24px; width: 100%; overflow: hidden;
-  }
-  .panel {
-    background: var(--panel); border-radius: 12px; border: 1px solid var(--border);
-    padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
-  }
-  .panel h2 { margin: 0 0 16px 0; font-size: 16px; text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
-  .left-col { display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
-  .project-stats { display: flex; flex-direction: column; gap: 10px; }
-  .stat-item { background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e1e4e8; }
-  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; }
-  .stat-value { font-size: 16px; font-weight: 900; color: var(--brand); margin-top: 4px; }
-  .support-grid { display: flex; flex-direction: column; gap: 8px; }
-  .support-btn {
-    background: #fff; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px;
-    text-align: left; font-weight: 600; font-size: 14px; color: #374151; cursor: pointer;
-  }
-  .right-col { display: flex; flex-direction: column; overflow: hidden; }
-  .sprint-form {
-    display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; margin-bottom: 20px;
-    background: #fdfdfd; padding: 16px; border-radius: 8px; border: 1px solid var(--border);
-  }
-  .sprint-form input, .sprint-form select, .sprint-form textarea {
-    width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; font-size: 13px;
-  }
-  .sprint-form textarea { grid-column: 1 / -1; min-height: 50px; }
-  .kanban-board { display: flex; gap: 16px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
-  .kanban-col {
-    flex: 1; background: #f4f5f7; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
-  }
-  .sprint-card {
-    background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); position: relative;
-  }
-  .sprint-card-target { font-size: 10px; font-weight: 800; color: #fff; background: #6b7280; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
-  .sprint-card-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
-  .sprint-card-desc { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
-  .sprint-card-actions { display: flex; justify-content: space-between; border-top: 1px solid #f3f4f6; padding-top: 8px; }
-  
-  @media (max-width: 980px) {
-    .container { grid-template-columns: 1fr; overflow-y: auto; padding: 12px; gap: 12px; }
-    .kanban-board { flex-direction: column; }
-    .sprint-form { grid-template-columns: 1fr; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fiche Projet Mobile</title>
+    <style>
+        :root {
+            --primary-color: #005b9f; /* Bleu institutionnel */
+            --secondary-color: #f4f4f9;
+            --text-color: #333333;
+            --border-color: #dddddd;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 2rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-en-cours { background-color: var(--success-color); color: white; }
+        .status-en-retard { background-color: var(--danger-color); color: white; }
+        .status-en-attente { background-color: var(--warning-color); color: #333; }
+
+        main {
+            padding: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 1rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .accordion-header:active {
+            background-color: #f9f9f9;
+        }
+
+        .accordion-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-content {
+            padding: 0 1rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease;
+            background-color: #fafafa;
+            opacity: 0;
+        }
+
+        .accordion-content.active {
+            padding: 1rem;
+            max-height: 1500px; /* Valeur suffisante pour englober le contenu déroulé */
+            border-bottom: 1px solid var(--border-color);
+            opacity: 1;
+        }
+
+        .info-row {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.2rem;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            word-wrap: break-word;
+        }
+
+        .milestone-list {
+            list-style: none;
+        }
+
+        .milestone-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            position: relative;
+            padding-left: 1.2rem;
+        }
+
+        .milestone-item::before {
+            content: '•';
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: -0.3rem;
+        }
+
+        .milestone-date {
+            font-weight: bold;
+            margin-right: 0.5rem;
+            min-width: 75px;
+            font-size: 0.9rem;
+        }
+
+        .milestone-details div {
+            font-size: 0.95rem;
+        }
+
+        /* Comportement Responsive pour écran plus large (ex: Fold 8 déplié) */
+        @media (min-width: 600px) {
+            .info-row {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .info-label {
+                margin-bottom: 0;
+                flex-basis: 30%;
+            }
+            .info-value {
+                text-align: right;
+                flex-basis: 70%;
+            }
+            .info-row.description-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .info-row.description-row .info-value {
+                text-align: left;
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<header>
-  <h1>Portail GOLD</h1>
-  <div class="header-actions">
-    <button class="btn" onclick="document.getElementById('importPivotInput').click()">📥 Importer Pivot JSON</button>
-    <input id="importPivotInput" type="file" accept=".json,application/json" style="display:none" onchange="doImportPivot(this)">
-  </div>
-</header>
+    <header>
+        <h1 id="projet-titre">Chargement...</h1>
+        <div id="projet-statut" class="status-badge">...</div>
+    </header>
 
-<div class="container">
-  <div class="left-col">
-    <div class="panel">
-      <h2>Le Projet</h2>
-      <div class="project-stats">
-        <div class="stat-item">
-          <div class="stat-label">Nom du projet</div>
-          <div class="stat-value" id="dashboard_projectName">Aucun projet chargé</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">Phase Courante</div>
-          <div class="stat-value" id="dashboard_projectPhase">—</div>
-        </div>
-      </div>
-    </div>
+    <main id="app-container">
+        <!-- Contenu généré dynamiquement -->
+    </main>
 
-    <div class="panel">
-      <h2>Accès aux Livrables</h2>
-      <!-- Redirections directes au lieu des iframes pour corriger le scroll -->
-      <div class="support-grid">
-        <button class="support-btn" onclick="window.location.href='GOLD_FicheProjet.html'">📄 Fiche Projet</button>
-        <button class="support-btn" onclick="window.location.href='GOLD_FeuilleDeRoute.html'">📅 Feuille de Route</button>
-        <button class="support-btn" onclick="window.location.href='GOLD_FicheMeteo.html'">🌤️ Fiche Météo</button>
-        <button class="support-btn" onclick="window.location.href='GOLD_Planning.html'">📋 Planning Détaillé</button>
-        <button class="support-btn" onclick="window.location.href='GOLD_RACI.html'">🧩 Matrice RACI</button>
-        <button class="support-btn" onclick="window.location.href='GOLD_Conges.html'">🏖️ Congés Acteurs</button>
-      </div>
-    </div>
-  </div>
+    <script>
+        // 1. Structure JSON des données du projet
+        const projetData = {
+            "id": "PRJ-EGF-26",
+            "nom": "Déploiement e-GF",
+            "chefDeProjet": "Stéphane RYZEK",
+            "direction": "DNSI",
+            "statut": "en-cours",
+            "statutLabel": "En cours",
+            "dates": {
+                "lancement": "15/10/2025",
+                "miseEnProduction": "01/03/2027",
+                "cloture": "30/04/2027"
+            },
+            "description": "Déploiement du nouveau système de gestion financière e-GF. Ce projet englobe l'architecture technique, la migration des données comptables et la formation des utilisateurs finaux.",
+            "intervenants": [
+                { "role": "Sponsor", "nom": "Direction Générale" },
+                { "role": "Chef de projet SI", "nom": "Stéphane RYZEK" },
+                { "role": "Référent Métier", "nom": "Direction des Finances" }
+            ],
+            "jalons": [
+                { "date": "10/2025", "titre": "Cadrage technique et architecture", "etat": "Terminé" },
+                { "date": "04/2026", "titre": "Environnement de test disponible", "etat": "Terminé" },
+                { "date": "11/2026", "titre": "Début de la migration des données", "etat": "A venir" },
+                { "date": "01/2027", "titre": "Formations utilisateurs", "etat": "A venir" }
+            ]
+        };
 
-  <div class="right-col panel">
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--border); margin-bottom: 16px; padding-bottom: 8px;">
-      <h2 style="border:none; padding:0; margin:0;">Sprints & Évolutions</h2>
-    </div>
+        // 2. Fonctions de rendu HTML basées sur le JSON
+        function renderInfosGenerales(data) {
+            return `
+                <div class="card">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Informations Générales</span>
+                        <span class="accordion-icon" style="transform: rotate(180deg);">▼</span>
+                    </div>
+                    <!-- Actif par défaut -->
+                    <div class="accordion-content active">
+                        <div class="info-row">
+                            <span class="info-label">Référence</span>
+                            <span class="info-value">${data.id}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Direction</span>
+                            <span class="info-value">${data.direction}</span>
+                        </div>
+                        <div class="info-row description-row">
+                            <span class="info-label">Description</span>
+                            <span class="info-value">${data.description}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
-    <form class="sprint-form" id="sprintForm" onsubmit="addSprint(event)">
-      <input type="text" id="sprintTitle" placeholder="Titre de l'évolution" required>
-      <select id="sprintTarget" required>
-        <option value="" disabled selected>Support concerné...</option>
-        <option value="Global (Pivot JSON)">Global (Pivot JSON)</option>
-        <option value="Fiche Projet">Fiche Projet</option>
-        <option value="Feuille de Route">Feuille de Route</option>
-        <option value="Fiche Météo">Fiche Météo</option>
-        <option value="Planning Détaillé">Planning Détaillé</option>
-        <option value="Matrice RACI">Matrice RACI</option>
-        <option value="Congés Acteurs">Congés Acteurs</option>
-      </select>
-      <button type="submit" class="btn primary">Créer le Sprint</button>
-      <textarea id="sprintDesc" placeholder="Description du besoin à transmettre à l'IA..." required></textarea>
-    </form>
+        function renderCalendrier(dates) {
+            return `
+                <div class="card">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Calendrier</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="info-row">
+                            <span class="info-label">Lancement</span>
+                            <span class="info-value">${dates.lancement}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Mise en Production</span>
+                            <span class="info-value">${dates.miseEnProduction}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Clôture prévue</span>
+                            <span class="info-value">${dates.cloture}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
-    <div class="kanban-board">
-      <div class="kanban-col" id="col-todo"><div style="font-weight:800; font-size:12px; margin-bottom:8px;">À FAIRE</div><div id="cards-todo"></div></div>
-      <div class="kanban-col" id="col-progress"><div style="font-weight:800; font-size:12px; margin-bottom:8px;">EN COURS</div><div id="cards-progress"></div></div>
-      <div class="kanban-col" id="col-done"><div style="font-weight:800; font-size:12px; margin-bottom:8px;">TERMINÉ</div><div id="cards-done"></div></div>
-    </div>
-  </div>
-</div>
+        function renderJalons(jalons) {
+            let jalonsHtml = '<ul class="milestone-list">';
+            jalons.forEach(jalon => {
+                jalonsHtml += `
+                    <li class="milestone-item">
+                        <span class="milestone-date">${jalon.date}</span>
+                        <div class="milestone-details">
+                            <div>${jalon.titre}</div>
+                            <small style="color: #666;">État : ${jalon.etat}</small>
+                        </div>
+                    </li>
+                `;
+            });
+            jalonsHtml += '</ul>';
 
-<script>
-  // Enregistrement de l'application (PWA)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
+            return `
+                <div class="card">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Jalons Clés</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        ${jalonsHtml}
+                    </div>
+                </div>
+            `;
+        }
 
-  const STORAGE_KEY_PROJECT = "currentProjectJson";
-  const STORAGE_KEY_SPRINTS = "sprints_backlog";
-  let currentProject = null;
-  let sprints = [];
+        function renderIntervenants(intervenants) {
+            let intervenantsHtml = '';
+            intervenants.forEach(intervenant => {
+                intervenantsHtml += `
+                    <div class="info-row">
+                        <span class="info-label">${intervenant.role}</span>
+                        <span class="info-value">${intervenant.nom}</span>
+                    </div>
+                `;
+            });
 
-  function updateProjectDashboard() {
-    if (!currentProject) return;
-    document.getElementById("dashboard_projectName").textContent = currentProject.project?.title || "Non défini";
-    document.getElementById("dashboard_projectPhase").textContent = currentProject.project?.phaseCourante || "—";
-  }
+            return `
+                <div class="card">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Équipe & Intervenants</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        ${intervenantsHtml}
+                    </div>
+                </div>
+            `;
+        }
 
-  function doImportPivot(inp) {
-    const file = inp.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        currentProject = JSON.parse(e.target.result);
-        localStorage.setItem(STORAGE_KEY_PROJECT, JSON.stringify(currentProject));
-        updateProjectDashboard();
-        alert("Pivot JSON importé avec succès.");
-      } catch (err) { alert("Fichier JSON invalide."); }
-    };
-    reader.readAsText(file);
-  }
+        // 3. Initialisation du DOM
+        function initApp() {
+            // Remplissage du Header
+            document.getElementById('projet-titre').innerText = projetData.nom;
+            
+            const badgeStatut = document.getElementById('projet-statut');
+            badgeStatut.innerText = projetData.statutLabel;
+            badgeStatut.className = `status-badge status-${projetData.statut}`;
 
-  function renderKanban() {
-    const cols = { todo: document.getElementById("cards-todo"), progress: document.getElementById("cards-progress"), done: document.getElementById("cards-done") };
-    Object.values(cols).forEach(col => col.innerHTML = "");
-    sprints.forEach(s => {
-      const card = document.createElement("div"); card.className = "sprint-card";
-      let actions = s.status === "todo" ? `<button class="btn small primary" onclick="moveSprint(${s.id}, 'progress')">Go 🚀</button>` : 
-                    s.status === "progress" ? `<button class="btn small" onclick="moveSprint(${s.id}, 'todo')">⬅</button><button class="btn small primary" onclick="moveSprint(${s.id}, 'done')">OK ✅</button>` : 
-                    `<button class="btn small" onclick="moveSprint(${s.id}, 'progress')">⬅</button><button class="btn small" style="color:red;" onclick="deleteSprint(${s.id})">✖</button>`;
-      card.innerHTML = `<div class="sprint-card-target">${s.target}</div><div class="sprint-card-title">${s.title}</div><div class="sprint-card-desc">${s.desc}</div><div class="sprint-card-actions">${actions}</div>`;
-      if(cols[s.status]) cols[s.status].appendChild(card);
-    });
-  }
+            // Injection des modules dans le Main
+            const container = document.getElementById('app-container');
+            container.innerHTML = 
+                renderInfosGenerales(projetData) + 
+                renderCalendrier(projetData.dates) + 
+                renderJalons(projetData.jalons) + 
+                renderIntervenants(projetData.intervenants);
+        }
 
-  function addSprint(e) {
-    e.preventDefault();
-    sprints.push({ id: Date.now(), title: document.getElementById("sprintTitle").value, target: document.getElementById("sprintTarget").value, desc: document.getElementById("sprintDesc").value, status: "todo" });
-    localStorage.setItem(STORAGE_KEY_SPRINTS, JSON.stringify(sprints));
-    document.getElementById("sprintForm").reset(); renderKanban();
-  }
+        // 4. Logique de l'interface (Accordéons)
+        window.toggleAccordion = function(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.accordion-icon');
+            
+            content.classList.toggle('active');
+            
+            if (content.classList.contains('active')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        };
 
-  function moveSprint(id, status) { sprints.find(s => s.id === id).status = status; localStorage.setItem(STORAGE_KEY_SPRINTS, JSON.stringify(sprints)); renderKanban(); }
-  function deleteSprint(id) { sprints = sprints.filter(s => s.id !== id); localStorage.setItem(STORAGE_KEY_SPRINTS, JSON.stringify(sprints)); renderKanban(); }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    try { currentProject = JSON.parse(localStorage.getItem(STORAGE_KEY_PROJECT)); updateProjectDashboard(); } catch(e){}
-    try { sprints = JSON.parse(localStorage.getItem(STORAGE_KEY_SPRINTS)) || []; renderKanban(); } catch(e){}
-  });
-</script>
+        // Exécution au chargement
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
 </body>
 </html>
