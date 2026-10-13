@@ -2,10 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Feuille de Route – V1.1.5 (Z Fold UI)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Feuille de Route – V1.1.6 (Touch Zoom)</title>
 
-<!-- Intégration de l'icône -->
 <link rel="icon" type="image/png" href="icon.png" />
 <link rel="apple-touch-icon" href="icon.png" />
 
@@ -21,7 +20,7 @@
  --milestone:#B30000;
  }
  *{box-sizing:border-box}
- html,body{margin:0;background:#F2F2F2;color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;height:100%}
+ html,body{margin:0;background:#F2F2F2;color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;height:100%; overscroll-behavior-y: contain;}
 
  header{
  position:sticky; top:0; z-index:50; height:var(--hdrH);
@@ -63,7 +62,7 @@
  .main{ display:grid; grid-template-columns: 560px 1fr; gap:8px; padding:8px 12px 12px; height: calc(100vh - var(--hdrH) - var(--tbH)); }
  .main.single{ grid-template-columns: 1fr; }
  .left{ overflow:auto; padding-right:6px; }
- .right{ background:var(--panel); border:1px solid #eef0f6; border-radius:16px; box-shadow:var(--shadow); overflow:auto; }
+ .right{ background:var(--panel); border:1px solid #eef0f6; border-radius:16px; box-shadow:var(--shadow); overflow:auto; touch-action: pan-x pan-y; }
 
  .phase{ border-radius:14px; padding:8px 8px 6px; margin-bottom:10px; overflow:hidden; box-shadow:var(--shadow); border:1px solid #eef0f6; }
  .phase h3{ margin:0 0 4px 0; font-size:14px }
@@ -79,28 +78,22 @@
  .modal .rowx{ display:flex; gap:8px; }
  .modal input[type="text"]{ flex:1; height:38px; font-size:14px; padding:6px 10px; border:1px solid #d1d7e4; border-radius:10px; }
 
- /* =========================================================
-    V1.1.5 : DESIGN Z FOLD (Double vue exclusive Saisie/Gantt)
- ========================================================= */
  @media (max-width:980px){
  :root{ --hdrH: 88px; --tbH: auto; }
  .hdr-title .project{ font-size:26px }
  
  .toolbar { padding: 8px; gap: 6px; justify-content: center; }
  .toolbar .btn { flex: 1 1 45%; justify-content: center; font-size: 12px; }
- /* Gros bouton de bascule mobile */
  #toggle { flex: 1 1 100%; font-size: 15px; padding: 12px; font-weight: 900; } 
  
  .main{ display: block; height: auto; min-height: calc(100vh - var(--hdrH) - 100px); padding: 4px; }
  
- /* Logique de bascule : si l'un est visible, l'autre est masqué */
  .main:not(.single) .right { display: none !important; }
  .main.single .left { display: none !important; }
  .main.single .right { display: block !important; }
  
  .phase { padding: 10px 6px; }
  
- /* Grille adaptée pour gros doigts */
  .row{ 
    display: grid;
    grid-template-columns: 1fr 1fr;
@@ -109,15 +102,10 @@
    border: 1px solid #d1d7e4; margin-bottom: 12px;
    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
  }
- /* 1: Titre (pleine largeur) */
  .row > input:nth-child(1) { grid-column: 1 / span 2; height: 42px; font-size: 15px; border-radius: 8px; }
- /* 2: Date Début */
  .row > input:nth-child(2) { grid-column: 1; height: 42px; font-size: 14px; border-radius: 8px; }
- /* 3: Date Fin */
  .row > input:nth-child(3) { grid-column: 2; height: 42px; font-size: 14px; border-radius: 8px; }
- /* 4: Poubelle */
  .row > button:nth-child(4) { grid-column: 1; width: 100%; height: 40px; border-radius: 8px; }
- /* 5: Etoile */
  .row > button:nth-child(5) { grid-column: 2; justify-self: end; width: 40px; height: 40px; border-radius: 8px; font-size: 20px;}
  }
 </style>
@@ -125,7 +113,7 @@
 <body>
 <header>
  <div class="hdr-wrap">
- <div class="hdr-top" id="hdrVer" title="Version de l’application">V1.1.5 (Z Fold UI)</div>
+ <div class="hdr-top" id="hdrVer" title="Version de l’application">V1.1.6 (Touch Zoom)</div>
  <div class="hdr-center" id="titleClick" title="Cliquez pour renommer le projet">
  <div class="hdr-title">
  <div class="project" id="hdrProject">Projet : non défini</div>
@@ -140,12 +128,12 @@
  <button class="btn secondary" id="importJsonBtn" title="Importer un projet au format JSON">Importer JSON</button>
  <input type="file" id="file" accept=".json" style="display:none">
  <button class="btn" id="exportPdf" title="Générer un PDF du Gantt">Exporter PDF</button>
- <div class="zoom">Zoom : <input type="range" id="zoom" min="0" max="200" value="0"> <span id="zv">0%</span></div>
+ <div class="zoom">Zoom : <input type="range" id="zoom" min="-70" max="300" value="0"> <span id="zv">0%</span></div>
 </div>
 
 <div class="main" id="main">
  <div class="left" id="left"></div>
- <div class="right"><canvas id="gantt" height="680" title="Le Gantt se met à jour automatiquement."></canvas></div>
+ <div class="right"><canvas id="gantt" height="680" title="Écartez ou resserrez deux doigts pour zoomer/dézoomer."></canvas></div>
 </div>
 
 <div class="modal-backdrop" id="welcome">
@@ -164,10 +152,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-/* ---------- État ---------- */
 let projectTitle = "";
 let zoomFactor = 0;
-const PORTAL_STORAGE_KEY = "currentProjectJson"; // Clé synchronisée
+const PORTAL_STORAGE_KEY = "currentProjectJson"; 
 
 function fromPortal(){
  try{ const params = new URLSearchParams(window.location.search); return params.get("from") === "portal"; }catch(e){ return false; }
@@ -340,6 +327,7 @@ function drawTwoLineLabel(ctx, monthTxt, yearTxt, centerX, headerH, maxWidth){
  ctx.fillText(yearTxt, centerX, midY+(size/2)+(lineGap/2));
  return true;
 }
+
 function drawMonthsHeader(ctx, months, headerH){
  const tryDraw=(step)=>{ for(let i=0;i<months.length;i++){ if(i%step) continue;
  const m=months[i]; const lab=m.start.toLocaleDateString('fr-FR',{month:'short'}); const yy=String(m.start.getFullYear()).slice(-2);
@@ -354,6 +342,7 @@ function drawMonthsHeader(ctx, months, headerH){
  drawTwoLineLabel(ctx, `T${q}`, yy, xMid, headerH, (m0.w+m1.w+m2.w));
  }
 }
+
 function draw(){
  const data = collect();
  const all = data.phases.flatMap(p=>p.tasks);
@@ -374,13 +363,16 @@ function draw(){
  const rightPane=canvas.parentElement;
  const containerW=Math.max(900, rightPane.clientWidth);
 
- const leftPad = (zoomFactor<=0)? 110 : 180;
- const rightPad = 180;
+ const leftPad = 110;
+ const rightPad = 80;
  const usableW = containerW - leftPad - rightPad;
- const baseRatio = usableW/totalDays;
- const ratio = (zoomFactor<=0)? baseRatio : baseRatio*(1+zoomFactor*2);
+ const baseRatio = usableW / totalDays;
+ 
+ // L'évolution majeure de la V1.1.6
+ const multiplier = Math.max(0.3, 1 + zoomFactor); 
+ const ratio = baseRatio * multiplier;
  const widthNeeded = leftPad + totalDays*ratio + rightPad;
- canvas.width = (zoomFactor<=0)? containerW : Math.ceil(widthNeeded);
+ canvas.width = Math.max(containerW, Math.ceil(widthNeeded));
 
  const rowH=50, headerH=48;
  canvas.height = headerH + (all.length + data.phases.length)*rowH + 60;
@@ -534,9 +526,6 @@ function tryLoadFromPortal(){
  return false;
 }
 
-/* =========================================================
-   MISE A JOUR DE LA BASCULE (Toggle Saisie / Gantt Mobile)
-========================================================= */
 function updateToggleText() {
   const btn = document.getElementById('toggle');
   const isHidden = mainGrid.classList.contains('single');
@@ -560,9 +549,54 @@ document.getElementById('toggle').addEventListener('click', ()=>{
  draw(); 
  updateToggleText();
 });
-document.getElementById('zoom').addEventListener('input', (e)=>{ zoomFactor = (parseInt(e.target.value,10)||0)/100; document.getElementById('zv').textContent = (parseInt(e.target.value,10)||0) + '%'; draw(); });
+document.getElementById('zoom').addEventListener('input', (e)=>{ 
+  zoomFactor = (parseInt(e.target.value,10)||0)/100; 
+  document.getElementById('zv').textContent = (parseInt(e.target.value,10)||0) + '%'; 
+  draw(); 
+});
 
-/* ===== MOTEUR DE SYNCHRONISATION TEMPS RÉEL ===== */
+/* ===== GESTION DU PINCH-TO-ZOOM (TACTILE) ===== */
+const ganttCanvas = document.getElementById('gantt');
+let initialPinchDistance = null;
+let initialZoomFactor = 0;
+
+ganttCanvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+        initialPinchDistance = Math.hypot(
+            e.touches[0].pageX - e.touches[1].pageX,
+            e.touches[0].pageY - e.touches[1].pageY
+        );
+        initialZoomFactor = zoomFactor;
+    }
+}, {passive: false});
+
+ganttCanvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && initialPinchDistance) {
+        e.preventDefault(); 
+        const currentDistance = Math.hypot(
+            e.touches[0].pageX - e.touches[1].pageX,
+            e.touches[0].pageY - e.touches[1].pageY
+        );
+        const scale = currentDistance / initialPinchDistance;
+        let newZoom = initialZoomFactor + (scale - 1);
+        
+        newZoom = Math.max(-0.7, Math.min(newZoom, 3)); 
+        
+        zoomFactor = newZoom;
+        const sliderVal = Math.round(zoomFactor * 100);
+        document.getElementById('zoom').value = sliderVal;
+        document.getElementById('zv').textContent = sliderVal + '%';
+        draw();
+    }
+}, {passive: false});
+
+ganttCanvas.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+        initialPinchDistance = null;
+    }
+});
+
+
 const syncChannel = new BroadcastChannel('gold-project-sync');
 
 function broadcastUpdate() {
