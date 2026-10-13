@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Feuille de Route – V1.1.4 (Synchro Auto)</title>
+<title>Feuille de Route – V1.1.5 (Z Fold UI)</title>
+
+<!-- Intégration de l'icône -->
+<link rel="icon" type="image/png" href="icon.png" />
+<link rel="apple-touch-icon" href="icon.png" />
+
 <style>
  :root{
  --vdl-red:#C00021; --vdl-red2:#E43C52;
@@ -67,7 +72,6 @@
  .row input{ height:30px; font-size:12px; padding:4px 8px; border:1px solid #d1d7e4; border-radius:10px; background:#fbfcff; outline:none; }
  .row input.invalid{ border-color:#E43C52; background:#fff4f5 }
 
- /* FIX OVERLAY Z-INDEX POUR MOBILE */
  .modal-backdrop{ position:fixed; inset:0; background:rgba(8,12,20,.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
  .modal{ background:#fff; width:min(560px,92vw); border-radius:16px; box-shadow:0 30px 80px rgba(0,0,0,.25); padding:20px 18px 16px; border:1px solid #eef0f6; }
  .modal h2{ margin:0 0 8px 0; font-size:20px }
@@ -75,18 +79,53 @@
  .modal .rowx{ display:flex; gap:8px; }
  .modal input[type="text"]{ flex:1; height:38px; font-size:14px; padding:6px 10px; border:1px solid #d1d7e4; border-radius:10px; }
 
+ /* =========================================================
+    V1.1.5 : DESIGN Z FOLD (Double vue exclusive Saisie/Gantt)
+ ========================================================= */
  @media (max-width:980px){
- :root{ --hdrH: 88px; --tbH: 64px; }
- .hdr-title .project{ font-size:28px }
- .main{ grid-template-columns: 1fr; }
- .row{ grid-template-columns:1fr; }
+ :root{ --hdrH: 88px; --tbH: auto; }
+ .hdr-title .project{ font-size:26px }
+ 
+ .toolbar { padding: 8px; gap: 6px; justify-content: center; }
+ .toolbar .btn { flex: 1 1 45%; justify-content: center; font-size: 12px; }
+ /* Gros bouton de bascule mobile */
+ #toggle { flex: 1 1 100%; font-size: 15px; padding: 12px; font-weight: 900; } 
+ 
+ .main{ display: block; height: auto; min-height: calc(100vh - var(--hdrH) - 100px); padding: 4px; }
+ 
+ /* Logique de bascule : si l'un est visible, l'autre est masqué */
+ .main:not(.single) .right { display: none !important; }
+ .main.single .left { display: none !important; }
+ .main.single .right { display: block !important; }
+ 
+ .phase { padding: 10px 6px; }
+ 
+ /* Grille adaptée pour gros doigts */
+ .row{ 
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   grid-template-rows: auto auto auto;
+   gap: 8px; background: #ffffff; padding: 12px; border-radius: 12px; 
+   border: 1px solid #d1d7e4; margin-bottom: 12px;
+   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+ }
+ /* 1: Titre (pleine largeur) */
+ .row > input:nth-child(1) { grid-column: 1 / span 2; height: 42px; font-size: 15px; border-radius: 8px; }
+ /* 2: Date Début */
+ .row > input:nth-child(2) { grid-column: 1; height: 42px; font-size: 14px; border-radius: 8px; }
+ /* 3: Date Fin */
+ .row > input:nth-child(3) { grid-column: 2; height: 42px; font-size: 14px; border-radius: 8px; }
+ /* 4: Poubelle */
+ .row > button:nth-child(4) { grid-column: 1; width: 100%; height: 40px; border-radius: 8px; }
+ /* 5: Etoile */
+ .row > button:nth-child(5) { grid-column: 2; justify-self: end; width: 40px; height: 40px; border-radius: 8px; font-size: 20px;}
  }
 </style>
 </head>
 <body>
 <header>
  <div class="hdr-wrap">
- <div class="hdr-top" id="hdrVer" title="Version de l’application">V1.1.4 (Synchro Auto)</div>
+ <div class="hdr-top" id="hdrVer" title="Version de l’application">V1.1.5 (Z Fold UI)</div>
  <div class="hdr-center" id="titleClick" title="Cliquez pour renommer le projet">
  <div class="hdr-title">
  <div class="project" id="hdrProject">Projet : non défini</div>
@@ -128,8 +167,7 @@
 /* ---------- État ---------- */
 let projectTitle = "";
 let zoomFactor = 0;
-// FIX MAJEUR : On utilise EXACTEMENT la même clé que la fiche projet
-const PORTAL_STORAGE_KEY = "currentProjectJson"; 
+const PORTAL_STORAGE_KEY = "currentProjectJson"; // Clé synchronisée
 
 function fromPortal(){
  try{ const params = new URLSearchParams(window.location.search); return params.get("from") === "portal"; }catch(e){ return false; }
@@ -496,11 +534,31 @@ function tryLoadFromPortal(){
  return false;
 }
 
+/* =========================================================
+   MISE A JOUR DE LA BASCULE (Toggle Saisie / Gantt Mobile)
+========================================================= */
+function updateToggleText() {
+  const btn = document.getElementById('toggle');
+  const isHidden = mainGrid.classList.contains('single');
+  if (window.innerWidth <= 980) {
+    btn.innerHTML = isHidden ? '🔙 Retour à la saisie' : '📊 Voir le Gantt complet';
+    btn.style.background = isHidden ? '#2C2C2C' : '#1BAE70';
+    btn.style.color = '#fff';
+  } else {
+    btn.innerHTML = isHidden ? 'Afficher la saisie' : 'Masquer la saisie';
+    btn.style.background = ''; 
+    btn.style.color = '';
+  }
+}
+
 document.getElementById('toggle').addEventListener('click', ()=>{
- const left=document.querySelector('.left'); const hide = left.style.display!=='none'; left.style.display = hide? 'none':'block';
+ const left=document.querySelector('.left'); 
+ const hide = left.style.display!=='none'; 
+ left.style.display = hide? 'none':'block';
  mainGrid.classList.toggle('single', hide);
  if(hide){ document.getElementById('zoom').value = "0"; document.getElementById('zv').textContent="0%"; zoomFactor=0; }
- draw(); document.getElementById('toggle').textContent = hide? 'Afficher la saisie' : 'Masquer la saisie';
+ draw(); 
+ updateToggleText();
 });
 document.getElementById('zoom').addEventListener('input', (e)=>{ zoomFactor = (parseInt(e.target.value,10)||0)/100; document.getElementById('zv').textContent = (parseInt(e.target.value,10)||0) + '%'; draw(); });
 
@@ -572,7 +630,6 @@ document.getElementById('exportPdf').addEventListener('click', ()=>{
  const bUse = document.getElementById('modalUseTitle');
  const bImport = document.getElementById('modalImport');
 
- // Éviter que l'overlay de bienvenue ne bloque si le portail est déjà chargé
  if(tryLoadFromPortal()){ w.style.display = 'none'; return; }
 
  const useTitle = ()=>{
@@ -585,8 +642,13 @@ document.getElementById('exportPdf').addEventListener('click', ()=>{
  setTimeout(()=> i?.focus(), 50);
 })();
 
-function init(){ if(leftPane.children.length === 0){ PHASES_META.forEach(m=>buildPhase(leftPane,m)); } draw(); }
-window.addEventListener('resize', draw);
+function init(){ 
+  if(leftPane.children.length === 0){ PHASES_META.forEach(m=>buildPhase(leftPane,m)); } 
+  draw(); 
+  updateToggleText(); 
+}
+
+window.addEventListener('resize', ()=>{ draw(); updateToggleText(); });
 init();
 </script>
 </body>
