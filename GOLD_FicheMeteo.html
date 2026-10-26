@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Fiche météo — V4.7.7 (Sync Temps Réel)</title>
 <style>
 /* --- STYLES GENERAUX --- */
@@ -94,40 +94,6 @@ canvas#projectGantt{ display:block; background:transparent; max-width:100%; }
 .editor .hint{ font-size:12px; color:#666; }
 .tooltip{ position:absolute; z-index:10; left:0; right:0; top:100%; margin-top:6px; background:#f5f7ff; border:1px solid #dfe6ff; border-radius:10px; color:#1f3a8a; font-size:12.5px; padding:8px 10px; display:none; }
 label:focus-within .tooltip, label:hover .tooltip{display:block}
-
-/* --- ADAPTATIONS MOBILE (Z Fold 8 & Smartphones) --- */
-@media (max-width: 768px) {
-  /* En-tête */
-  .title .name { font-size: 22px; }
-  .bar-inner { padding-top: 12px; padding-bottom: 24px; }
-  .ver { bottom: 4px; right: 50%; transform: translateX(50%); }
-
-  /* Synthèse Météo */
-  .synth-row { flex-direction: column; align-items: center; gap: 12px; }
-  .synth-card { width: 100%; justify-content: center; }
-  .trend-card-main { justify-content: center; }
-
-  /* Grilles 1 colonne */
-  .grid-2 { grid-template-columns: 1fr; }
-  .editor .grid { grid-template-columns: 1fr; }
-  .editor .full { grid-column: 1 / -1; }
-
-  /* Boutons plus larges pour le tactile */
-  .toolbar { gap: 10px; padding: 4px 0; }
-  .btn { 
-    flex: 1 1 calc(50% - 10px); /* 2 boutons par ligne max */
-    justify-content: center;
-    padding: 10px 14px; 
-  }
-  
-  /* Modal Editeur plein écran */
-  .editor { width: 95vw; padding: 12px; }
-  .editor .actions { flex-direction: column; }
-  .editor .actions .btn { width: 100%; margin-bottom: 8px; }
-
-  /* Gantt avec scroll tactile fluide */
-  .gantt-wrap { -webkit-overflow-scrolling: touch; }
-}
 
 /* Impression */
 @media print{
@@ -417,11 +383,25 @@ function renderTextOrGhost(node,key){
     node.textContent = ph; node.classList.add("ghost");
   }
 }
-function renderTexts(){ $$("[data-text]").forEach(n => renderTextOrGhost(n, n.getAttribute("data-text"))); }  function renderLists(){ $$("[data-list]").forEach(ul => {
+function renderTexts(){ $$("[data-text]").forEach(n => renderTextOrGhost(n, n.getAttribute("data-text"))); }
+
+function renderLists(){
+  $$("[data-list]").forEach(ul => {
     const k = ul.getAttribute("data-list");
     const arr = Array.isArray(data[k]) ? data[k] : [];
     ul.innerHTML = "";
-    if(k === "Points_attention"){ $("#noAttention").style.display = arr.length ? "none" : "block"; } const ph = (ul.getAttribute("data-ph-list") \vert{}\vert{} "").split("\vert{}").filter(Boolean); (arr.length ? arr : ph).forEach(x => { const li = document.createElement("li"); li.textContent = x; if(!arr.length) li.classList.add("ghost"); ul.appendChild(li); }); }); }  function renderStatus(){ $$("[data-dot]").forEach(e => {
+    if(k === "Points_attention"){ $("#noAttention").style.display = arr.length ? "none" : "block"; }
+    const ph = (ul.getAttribute("data-ph-list") || "").split("|").filter(Boolean);
+    (arr.length ? arr : ph).forEach(x => {
+      const li = document.createElement("li"); li.textContent = x;
+      if(!arr.length) li.classList.add("ghost");
+      ul.appendChild(li);
+    });
+  });
+}
+
+function renderStatus(){
+  $$("[data-dot]").forEach(e => {
     e.classList.remove("ok","warn","bad");
     e.classList.add(dotClass(data[e.getAttribute("data-dot")]));
   });
