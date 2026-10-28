@@ -147,6 +147,8 @@
     overflow-y: auto;
     border: 1px solid #d2d4e0;
     border-radius: 8px;
+    /* Bloque le zoom natif sur cette zone pour laisser JS prendre la main */
+    touch-action: pan-x pan-y;
   }
 
   table{border-collapse:collapse;width:100%;}
@@ -297,7 +299,6 @@
   @media (max-width:980px){
     :root{--hdrH:auto;--tbH:auto;}
     
-    /* Libération totale du scroll vertical natif */
     html, body { height: auto; display: block; overflow-x: hidden; }
     .content { display: block; height: auto; overflow: visible; padding: 0 0 24px 0; }
     .page.active { display: block; height: auto; overflow: visible; }
@@ -311,12 +312,10 @@
     .toolbar { height: auto; justify-content: center; padding: 12px; position: relative; }
     .project-info { width: 100%; text-align: center; margin-top: 8px; }
     
-    /* On annule le sticky de la légende pour gagner de la hauteur en scrollant */
     .raci-strip { position: static; padding: 8px 12px; } 
     
     .tabs-main { padding: 12px 12px 0 12px; flex-wrap: wrap; margin-bottom: 12px; }
     
-    /* Le bloc de contrôle devient STICKY au plafond lors du scroll ! */
     .sticky-controls {
       position: -webkit-sticky;
       position: sticky;
@@ -334,12 +333,13 @@
     .sticky-controls h2 { font-size: 14px; margin-top: 0; }
     .hint { font-size: 10px; padding: 6px; }
     
-    /* Le conteneur du tableau reste défilable horizontalement */
     .table-container { 
       overflow-x: auto; 
       overflow-y: visible;
       -webkit-overflow-scrolling: touch; 
       margin: 0 12px;
+      /* Obligatoire pour laisser la zone capter les gestes de pince JavaScript */
+      touch-action: pan-x pan-y; 
     }
     
     table { min-width: 900px; }
@@ -373,7 +373,6 @@
     .icon-btn { width: 24px; height: 24px; }
     .icon-btn .icon-trash { font-size: 13px; }
     
-    /* Vues graphiques sur mobile */
     .tabs-sub { margin: 0 12px; flex-wrap: wrap; }
     .subview.active { display: block; height: auto; overflow: visible; padding: 0 12px; }
     #matrixView, #actorsView, #instancesView { overflow-y: visible; }
@@ -405,36 +404,26 @@
   .startup-option-title{font-size:13px;font-weight:600;}
   .startup-option-desc{font-size:11px;color:#555;}
   
-  /* Style pour le tri */
   th.sortable { cursor: pointer; transition: background 0.2s; }
   th.sortable:hover { background: #e0e4f5; }
 
-  /* GESTION IMPRESSION POUR CONTOURNER FLEXBOX ET BUGS DE SAUT DE PAGE */
   @media print {
     @page { size: A4 landscape; margin: 12mm 10mm; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    
     body { background-color: #ffffff !important; height: auto !important; display: block !important; }
     .hdr-top, .toolbar, .tabs-main, .sticky-controls { display: none !important; }
-    
     header { position: static; background: linear-gradient(135deg, #C00021 0%, #E43C52 100%) !important; color: #fff !important; box-shadow: none !important; padding: 10px 16px !important; height: auto; }
     .hdr-title .project { text-shadow: none !important; color: #fff !important; }
-    
     .content { display: block !important; overflow: visible !important; height: auto !important; padding: 0 !important; }
     .page { display: none !important; height: auto !important; overflow: visible !important; }
     .page.active { display: block !important; }
-    
     .panel { border: none !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; display: block !important; overflow: visible !important; }
-    
     .table-container { overflow: visible !important; border: none !important; display: block !important;}
     table { border-collapse: collapse !important; width: 100% !important; margin-top: 10px !important; page-break-inside: auto !important; display: table !important; }
     table tr { page-break-inside: avoid !important; page-break-after: auto !important; }
-    
     table thead { display: table-header-group !important; } 
     table th { background-color: #f3f4f6 !important; border: 1px solid #b0b4c8 !important; border-bottom: 2px solid #C00021 !important; color: #111 !important; position: static !important; font-weight: bold !important; }
-    
     table td { border: 1px solid #e5e7eb !important; vertical-align: middle !important; padding: 6px 4px !important; }
-    
     th:last-child, td:last-child { display: none !important; } 
   }
 </style>
@@ -1127,7 +1116,6 @@ function renderActors(){
 
   filteredActors.forEach((a)=>{
     // Fonction utilitaire pour trouver l'index réel dans raciData.actors 
-    // nécessaire car "filteredActors" fausse l'index de la boucle.
     const getRealIdx = () => raciData.actors.findIndex(x => x.id === a.id);
 
     const tr=document.createElement("tr");
@@ -1260,10 +1248,8 @@ function renderActors(){
       clone.name = clone.name ? clone.name + " (copie)" : "Nouvel acteur";
       clone.shortName = clone.shortName ? clone.shortName + " (c)" : "";
       
-      // Insérer l'acteur juste après la ligne courante dans le vrai tableau
       raciData.actors.splice(realIdx + 1, 0, clone);
       
-      // Copier les affectations matricielles
       (raciData.matrix||[]).forEach(r=>{
         ["r","a","c","i"].forEach(k=>{
           if(r[k] && r[k].includes(a.id)) {
@@ -1277,7 +1263,7 @@ function renderActors(){
     };
     tdActions.appendChild(btnDup);
 
-    // BOUTON SUPPRIMER (AVEC CONFIRMATION)
+    // BOUTON SUPPRIMER
     const btnDel=document.createElement("button");
     btnDel.className="icon-btn icon-delete";
     btnDel.innerHTML="<span class='icon-trash'>🗑</span>";
@@ -1301,7 +1287,6 @@ function renderActors(){
     tdActions.appendChild(btnDel);
     
     tr.appendChild(tdActions);
-
     actorsBody.appendChild(tr);
   });
   updateProjectTitleUI();
@@ -1311,7 +1296,6 @@ function renderActors(){
 addActorBtn.onclick=()=>{
   const id=ensureActorId();
   raciData.actors.unshift({id,name:"",shortName:"",role:"",type:"",instances:[]});
-  // Remettre la barre de recherche à zéro si on ajoute pour bien voir l'acteur ajouté en haut
   currentActorSearch = "";
   if(searchActorInput) searchActorInput.value = "";
   
@@ -1460,7 +1444,6 @@ function renderMatrix(){
     const tdAct=document.createElement("td");
     tdAct.style.whiteSpace="nowrap";
 
-    // BOUTON DUPLIQUER (Matrice)
     const btnDupMatrix=document.createElement("button");
     btnDupMatrix.className="icon-btn icon-copy";
     btnDupMatrix.innerHTML="<span style='color:#fff;font-size:12px;'>📑</span>";
@@ -1468,18 +1451,15 @@ function renderMatrix(){
     btnDupMatrix.onclick=()=>{
       const clone = JSON.parse(JSON.stringify(row));
       clone.activity = clone.activity ? clone.activity + " (copie)" : "Nouvelle activité";
-      // S'assurer de la copie profonde des tableaux
       clone.r = [...(row.r||[])];
       clone.a = [...(row.a||[])];
       clone.c = [...(row.c||[])];
       clone.i = [...(row.i||[])];
-      // Insérer juste après
       raciData.matrix.splice(idx + 1, 0, clone);
       saveToLocalStorage();
       renderMatrix();renderViews();
     };
 
-    // BOUTON SUPPRIMER (AVEC CONFIRMATION)
     const btnDelMatrix=document.createElement("button");
     btnDelMatrix.className="icon-btn icon-delete";
     btnDelMatrix.innerHTML="<span class='icon-trash'>🗑</span>";
@@ -1495,7 +1475,6 @@ function renderMatrix(){
     tdAct.appendChild(btnDupMatrix);
     tdAct.appendChild(btnDelMatrix);
     tr.appendChild(tdAct);
-
     matrixBody.appendChild(tr);
   });
 }
@@ -2051,13 +2030,65 @@ startNewRaciBtn.onclick=()=>{
   raciData.project.title=titre && titre.trim()?titre.trim():"";
   updateProjectTitleUI();
   
-  // 🟢 CORRECTION SPRINT 3 : On déverrouille la sauvegarde pour le mode vierge !
   pivotLoaded = true;
   pivotCurrent = raciData;
   saveToLocalStorage(); 
   
   renderActors();renderMatrix();renderViews();hideStartupOverlay();
 };
+
+/* --- GESTION DU PINCH-TO-ZOOM (Geste à 2 doigts) --- */
+function setupPinchToZoom() {
+  const containers = document.querySelectorAll('.table-container');
+  
+  containers.forEach(container => {
+    let currentZoom = 1;
+    let initialPinchDist = null;
+
+    container.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        initialPinchDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        // Empêche le navigateur de zoomer toute la page
+        e.preventDefault(); 
+        
+        const currentDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        
+        // Calcul de la différence et ajustement de la vitesse de zoom
+        const delta = (currentDist - initialPinchDist) * 0.005;
+        currentZoom += delta;
+        
+        // Limites du zoom (de 50% à 250%)
+        currentZoom = Math.max(0.5, Math.min(currentZoom, 2.5)); 
+        
+        // Application du zoom via la propriété CSS spécifique au tableau
+        const table = container.querySelector('table');
+        if (table) {
+          table.style.zoom = currentZoom;
+        }
+        
+        initialPinchDist = currentDist;
+      }
+    }, { passive: false });
+
+    container.addEventListener('touchend', e => {
+      if (e.touches.length < 2) {
+        initialPinchDist = null;
+      }
+    });
+  });
+}
+
 function init(){
   const loaded = tryAutoLoadPivot();
   updateProjectTitleUI();
@@ -2068,8 +2099,12 @@ function init(){
   }else{
     showStartupOverlay();
   }
+  
+  // Activation du Pinch-to-zoom
+  setupPinchToZoom();
 }
 init();
+
 // --- 🛡️ ESPION SENTINELLE : Signale l'ouverture ---
 window.addEventListener('DOMContentLoaded', () => {
     try {
