@@ -374,10 +374,12 @@
     .tabs-sub { margin: 0 12px; flex-wrap: wrap; }
     .subview.active { display: block; height: auto; overflow: visible; padding: 0 12px; }
     
-    /* On ajoute le touch-action sur les vues pour permettre le Pinch-to-zoom */
+    /* Zones tactiles toujours préservées à 100% de la largeur */
     #matrixView, #actorsView, #instancesView { 
       overflow-y: visible; 
       touch-action: pan-x pan-y; 
+      width: 100%;
+      min-height: 200px;
     }
   }
 
@@ -1521,7 +1523,9 @@ function renderMatrixTruthView(){
     return String(a.activity||'').localeCompare(String(b.activity||''));
   });
 
-  let html="<div class='matrix-phase-table'>";
+  const z = matrixViewDiv._currentZoom || 1;
+  let html=`<div class='zoom-content' style='zoom:${z};'>`;
+  html+="<div class='matrix-phase-table'>";
   html+="<table><thead><tr><th style='min-width:260px;'>Activité</th>";
   actors.forEach(a=>{ html+=`<th>${a.shortName || a.name || a.id}</th>`; });
   html+="</tr></thead><tbody>";
@@ -1544,7 +1548,7 @@ function renderMatrixTruthView(){
     html+="</tr>";
   });
 
-  html+="</tbody></table></div>";
+  html+="</tbody></table></div></div>";
   matrixViewDiv.innerHTML=html;
 }
 
@@ -1570,7 +1574,8 @@ function renderMatrixPhaseGroupedView(){
     byPhase.get(key).push(r);
   });
 
-  let html="";
+  const z = matrixViewDiv._currentZoom || 1;
+  let html=`<div class='zoom-content' style='zoom:${z};'>`;
   Array.from(byPhase.keys()).forEach(phase=>{
     const pk=phaseKey(phase);
     const phaseClass=pk?`phase-label phase-${pk}`:"phase-label";
@@ -1597,6 +1602,7 @@ function renderMatrixPhaseGroupedView(){
 
     html+=`</tbody></table></div></div>`;
   });
+  html+="</div>";
   matrixViewDiv.innerHTML=html;
 }
 
@@ -1611,7 +1617,9 @@ function renderActorsView(){
     actorsViewDiv.innerHTML="<div class='hint'>Ajoutez des acteurs pour voir la vue par acteur.</div>";
     return;
   }
-  let html="";
+  
+  const z = actorsViewDiv._currentZoom || 1;
+  let html=`<div class='zoom-content' style='zoom:${z};'>`;
   actors.forEach(a=>{
     const linesR=[],linesA=[],linesC=[],linesI=[];
     matrix.forEach(r=>{
@@ -1648,6 +1656,7 @@ function renderActorsView(){
     html+=renderList("I – Informé","badge-i",linesI);
     html+=`</div>`;
   });
+  html+="</div>";
   actorsViewDiv.innerHTML=html;
 }
 function renderInstancesView(){
@@ -1682,7 +1691,9 @@ function renderInstancesView(){
     if(v1!==v2) return v1-v2;
     return String(k1).localeCompare(String(k2));
   });
-  let html="<div class='instance-grid'>";
+  
+  const z = instancesViewDiv._currentZoom || 1;
+  let html=`<div class='zoom-content' style='zoom:${z};'><div class='instance-grid'>`;
   keys.forEach(key=>{
     const list=groups[key];
     const label=key;
@@ -1701,7 +1712,7 @@ function renderInstancesView(){
     });
     html+=`</div></div>`;
   });
-  html+="</div>";
+  html+="</div></div>";
   instancesViewDiv.innerHTML=html;
 }
 function renderViews(){
@@ -2043,8 +2054,12 @@ function setupPinchToZoom() {
   const zones = document.querySelectorAll('.table-container, #matrixView, #actorsView, #instancesView');
   
   zones.forEach(zone => {
-    let currentZoom = 1;
     let initialPinchDist = null;
+    
+    // Initialisation de la mémoire de zoom pour la zone
+    if(typeof zone._currentZoom === 'undefined') {
+      zone._currentZoom = 1;
+    }
 
     zone.addEventListener('touchstart', e => {
       if (e.touches.length === 2) {
@@ -2057,7 +2072,6 @@ function setupPinchToZoom() {
 
     zone.addEventListener('touchmove', e => {
       if (e.touches.length === 2 && initialPinchDist) {
-        // Empêche le navigateur de zoomer toute la page
         e.preventDefault(); 
         
         const currentDist = Math.hypot(
@@ -2065,20 +2079,17 @@ function setupPinchToZoom() {
           e.touches[0].pageY - e.touches[1].pageY
         );
         
-        // Calcul de la différence et ajustement de la vitesse de zoom
         const delta = (currentDist - initialPinchDist) * 0.005;
-        currentZoom += delta;
-        
-        // Limites du zoom (de 50% à 250%)
-        currentZoom = Math.max(0.5, Math.min(currentZoom, 2.5)); 
+        zone._currentZoom += delta;
+        zone._currentZoom = Math.max(0.5, Math.min(zone._currentZoom, 2.5)); 
         
         if (zone.classList.contains('table-container')) {
-          // Pour les tableaux d'édition
           const table = zone.querySelector('table');
-          if (table) table.style.zoom = currentZoom;
+          if (table) table.style.zoom = zone._currentZoom;
         } else {
-          // Pour les vues RACI générées (Matrice, Acteurs, Instances)
-          zone.style.zoom = currentZoom;
+          // Sur les vues générées, le zoom s'applique au conteneur interne pour préserver la zone tactile
+          const content = zone.querySelector('.zoom-content');
+          if (content) content.style.zoom = zone._currentZoom;
         }
         
         initialPinchDist = currentDist;
@@ -2104,7 +2115,6 @@ function init(){
     showStartupOverlay();
   }
   
-  // Activation du Pinch-to-zoom
   setupPinchToZoom();
 }
 init();
