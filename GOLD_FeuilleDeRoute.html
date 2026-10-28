@@ -100,11 +100,59 @@
   .modal .rowx{ display:flex; gap:8px; }
   .modal input[type="text"]{ flex:1; height:38px; font-size:14px; padding:6px 10px; border:1px solid #d1d7e4; border-radius:10px; }
 
+  /* ========================================= */
+  /*  EVOLUTIONS RESPONSIVE (Mobiles/Tablettes) */
+  /* ========================================= */
   @media (max-width:980px){
-    :root{ --hdrH: 88px; --tbH: 64px; }
-    .hdr-title .project{ font-size:28px }
-    .main{ grid-template-columns: 1fr; }
-    .row{ grid-template-columns:1fr; }
+    :root{ --hdrH: auto; --tbH: auto; }
+    
+    header { position: relative; padding: 16px 12px; height: auto; }
+    .hdr-wrap { display: flex; flex-direction: column; gap: 12px; text-align: center; }
+    .hdr-top { position: static; align-self: center; display: inline-block; font-size: 13px; }
+    .hdr-title .project { font-size: 26px; }
+    
+    .toolbar { position: relative; top: 0; height: auto; justify-content: center; padding: 12px; }
+    .zoom { margin-left: 0; width: 100%; text-align: center; margin-top: 8px; }
+    
+    .main { 
+      grid-template-columns: 1fr; 
+      height: auto; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: visible; 
+      padding-bottom: 24px;
+    }
+    .main.single { display: flex; }
+    
+    .left { overflow: visible; padding-right: 0; }
+    
+    /* Scroll horizontal fluide pour le Gantt */
+    .right { 
+      overflow-x: auto; 
+      overflow-y: hidden; 
+      -webkit-overflow-scrolling: touch; 
+      border-radius: 12px; 
+      margin-top: 12px; 
+    }
+    
+    /* Lignes de saisie ergonomiques au doigt */
+    .row { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 8px; 
+      background: #ffffff; 
+      padding: 12px; 
+      border-radius: 10px; 
+      border: 1px solid #d1d7e4; 
+      margin-bottom: 12px;
+    }
+    .row input[type="text"] { flex: 1 1 100%; height: 38px; font-size: 14px; }
+    .row input.start, .row input.end { flex: 1 1 calc(50% - 48px); height: 38px; font-size: 14px; }
+    .row > button { flex: 0 0 38px; height: 38px; width: 38px; }
+    
+    /* Modale responsive */
+    .modal .rowx { flex-direction: column; }
+    .modal input[type="text"], .modal .rowx button { width: 100%; height: 44px; font-size: 16px; }
   }
 </style>
 </head>
