@@ -297,25 +297,51 @@
   @media (max-width:980px){
     :root{--hdrH:auto;--tbH:auto;}
     
-    header { padding: 16px 12px; height: auto; }
+    /* Libération totale du scroll vertical natif */
+    html, body { height: auto; display: block; overflow-x: hidden; }
+    .content { display: block; height: auto; overflow: visible; padding: 0 0 24px 0; }
+    .page.active { display: block; height: auto; overflow: visible; }
+    .panel { display: block; height: auto; overflow: visible; border: none; box-shadow: none; background: transparent; padding: 0; }
+    
+    header { padding: 16px 12px; height: auto; position: relative; }
     .hdr-wrap { display: flex; flex-direction: column; gap: 12px; text-align: center; }
     .hdr-top { position: static; align-self: center; display: inline-block; font-size: 11px; }
     .hdr-title .project { font-size: 24px; }
     
-    .toolbar { height: auto; justify-content: center; padding: 12px; }
+    .toolbar { height: auto; justify-content: center; padding: 12px; position: relative; }
     .project-info { width: 100%; text-align: center; margin-top: 8px; }
     
-    /* Compaction maximale pour voir plus de lignes verticalement */
-    .sticky-controls { padding: 8px 10px; margin-bottom: 8px; }
-    .sticky-controls h2 { font-size: 14px; }
+    /* On annule le sticky de la légende pour gagner de la hauteur en scrollant */
+    .raci-strip { position: static; padding: 8px 12px; } 
+    
+    .tabs-main { padding: 12px 12px 0 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    
+    /* Le bloc de contrôle devient STICKY au plafond lors du scroll ! */
+    .sticky-controls {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      margin: 0 0 12px 0;
+      padding: 12px;
+      border-radius: 0 0 12px 12px;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+      background: #ffffff;
+    }
+    .sticky-controls h2 { font-size: 14px; margin-top: 0; }
     .hint { font-size: 10px; padding: 6px; }
     
+    /* Le conteneur du tableau reste défilable horizontalement */
     .table-container { 
       overflow-x: auto; 
+      overflow-y: visible;
       -webkit-overflow-scrolling: touch; 
+      margin: 0 12px;
     }
     
-    /* Force le tableau à garder sa largeur pour activer le scroll horizontal fluide */
     table { min-width: 900px; }
     
     th, td { 
@@ -329,7 +355,6 @@
       font-size: 11px; 
     }
     
-    /* Grosse économie d'espace : les cases à cocher passent en 2 colonnes */
     .matrix-checkboxes, .instance-checkboxes {
       max-height: 85px;
       display: grid;
@@ -347,6 +372,11 @@
     
     .icon-btn { width: 24px; height: 24px; }
     .icon-btn .icon-trash { font-size: 13px; }
+    
+    /* Vues graphiques sur mobile */
+    .tabs-sub { margin: 0 12px; flex-wrap: wrap; }
+    .subview.active { display: block; height: auto; overflow: visible; padding: 0 12px; }
+    #matrixView, #actorsView, #instancesView { overflow-y: visible; }
   }
 
   /* Overlay démarrage */
@@ -486,7 +516,7 @@
       </div>
     </div>
 
-    <div class="panel" style="padding:0; border:none; background:transparent; box-shadow:none;">
+    <div class="panel">
       <div class="table-container">
         <table id="actorsTable" style="margin:0;">
           <thead>
@@ -521,7 +551,7 @@
       </div>
     </div>
 
-    <div class="panel" style="padding:0; border:none; background:transparent; box-shadow:none;">
+    <div class="panel">
       <div class="table-container">
         <table id="matrixTable" style="margin:0;">
           <thead>
@@ -558,7 +588,7 @@
       </div>
     </div>
     
-    <div class="panel" style="padding:10px; display:flex; flex-direction:column; overflow:hidden;">
+    <div class="panel">
       <div class="tabs-sub">
         <div class="tab-sub active" data-sub="sub-matrix">Matrice</div>
         <div class="tab-sub" data-sub="sub-actors">Vue par acteur</div>
@@ -570,10 +600,10 @@
           <button class="btn secondary" id="btnMatrixTruth">Activités (table de vérité)</button>
           <button class="btn secondary" id="btnMatrixPhase">Par phase (groupée)</button>
         </div>
-        <div id="matrixView" style="flex:1; overflow-y:auto; padding-right:4px;"></div>
+        <div id="matrixView"></div>
       </div>
-      <div id="sub-actors" class="subview"><div id="actorsView" style="flex:1; overflow-y:auto; padding-right:4px;"></div></div>
-      <div id="sub-instances" class="subview"><div id="instancesView" style="flex:1; overflow-y:auto; padding-right:4px;"></div></div>
+      <div id="sub-actors" class="subview"><div id="actorsView"></div></div>
+      <div id="sub-instances" class="subview"><div id="instancesView"></div></div>
     </div>
   </div>
 
