@@ -124,18 +124,23 @@
     }
     .main.single { display: flex; }
     
-    .left { overflow: visible; padding-right: 0; }
+    /* Touch-action est requis pour intercepter le Pinch-to-zoom */
+    .left { 
+      overflow: visible; 
+      padding-right: 0; 
+      touch-action: pan-x pan-y;
+      width: 100%;
+    }
     
-    /* Scroll horizontal fluide pour le Gantt */
     .right { 
       overflow-x: auto; 
       overflow-y: hidden; 
       -webkit-overflow-scrolling: touch; 
       border-radius: 12px; 
       margin-top: 12px; 
+      touch-action: pan-x pan-y;
     }
     
-    /* Lignes de saisie ultra compactes au doigt */
     .phase { padding: 6px; margin-bottom: 8px; }
     .row { 
       display: flex; 
@@ -151,7 +156,6 @@
     .row input.start, .row input.end { flex: 1 1 auto; height: 34px; font-size: 12px; padding: 4px; }
     .row > button.del, .row .star-btn { flex: 0 0 34px; height: 34px; width: 34px; }
     
-    /* Modale responsive */
     .modal .rowx { flex-direction: column; }
     .modal input[type="text"], .modal .rowx button { width: 100%; height: 44px; font-size: 16px; }
   }
@@ -179,7 +183,10 @@
 </div>
 
 <div class="main" id="main">
-  <div class="left" id="left"></div>
+  <!-- Wrapper de saisie pour préserver le zoom tactile fluide sur mobile -->
+  <div class="left" id="leftContainer">
+    <div id="left" class="zoom-content"></div>
+  </div>
   <div class="right"><canvas id="gantt" height="680" title="Le Gantt se met à jour automatiquement. Ajustez le zoom si besoin."></canvas></div>
 </div>
 
@@ -202,8 +209,8 @@
 /* ---------- État ---------- */
 let projectTitle = "";
 let zoomFactor = 0;
-let isBuildingUI = false; // FLAG POUR BLOQUER LA SAUVEGARDE AU CHARGEMENT
-const PORTAL_STORAGE_KEY = "currentProjectJson"; // UNIFICATION DE LA CLE DE STOCKAGE
+let isBuildingUI = false; 
+const PORTAL_STORAGE_KEY = "currentProjectJson"; 
 
 /* ----- Helper : savoir si on vient du portail ----- */
 function fromPortal(){
@@ -291,7 +298,6 @@ function addRow(container, values=null){
   const del=row.querySelector('.del');
   const star=row.querySelector('.star-btn');
 
-  // --- RESTAURATION DE LA MÉCANIQUE DES DATES ---
   s.addEventListener('change', () => {
     if (!e.value && s.value) { e.value = s.value; }
     e.min = s.value || "";
@@ -305,9 +311,7 @@ function addRow(container, values=null){
     input.addEventListener('input', () => { if(typeof syncToPivot === "function") syncToPivot(); });
   });
 
-  // VERIFICATION DU FLAG isBuildingUI POUR NE PAS ECRASER AU CHARGEMENT
   setTimeout(() => { if(typeof syncToPivot === "function" && !isBuildingUI) syncToPivot(); }, 100);
-  // ---------------------------------------------------
 
   [s,e].forEach(inp=>inp.addEventListener('change', ()=>{ forceDates(row); sortContainerByStart(container); refreshDeleteStates(container); draw(); syncToPivot(); }));
   t.addEventListener('input', ()=>{ refreshDeleteStates(container); });
@@ -475,9 +479,8 @@ function draw(){
   const rightPane=canvas.parentElement;
   const containerW=Math.max(900, rightPane.clientWidth);
 
-  // Utilisation d'un scale linéaire (-0.8 pour -80%, 2.0 pour +200%)
   let scale = 1 + zoomFactor;
-  if(scale < 0.1) scale = 0.1; // Sécurité pour ne pas écraser complètement
+  if(scale < 0.1) scale = 0.1;
 
   const leftPad  = (zoomFactor < 0) ? 110 : 180;
   const rightPad = 180;
@@ -572,7 +575,6 @@ function draw(){
   });
 }
 
-/* ----- JSON pivot v1.0 : construction à partir de collect() ----- */
 function buildPivotJsonV1(){
   const raw = collect();
   const now = new Date().toISOString();
@@ -637,7 +639,6 @@ function buildPivotJsonV1(){
   };
 }
 
-// --- Pivot 1.1 : on évite de "dégrader" le projet (on conserve météo / RACI / congés / planning, etc.)
 function buildPivotJsonV11Merged(){
   const core = buildPivotJsonV1();
 
@@ -667,7 +668,6 @@ function buildPivotJsonV11Merged(){
   return out;
 }
 
-/* ----- Import : détection pivot v1.x vs JSON commun vs ancien format ----- */
 function isPivotJsonV1(json){
   return json
     && typeof json.project === "object"
@@ -770,9 +770,8 @@ function convertPivotToInternal(json){
   return { title, phases: internalPhases };
 }
 
-// MISE A JOUR : SILENCE PENDANT LE CHARGEMENT DE L'UI
 function loadInternalToUI(data){
-  isBuildingUI = true; // ON BLOQUE LES SAUVEGARDES
+  isBuildingUI = true; 
   
   projectTitle = data.title || "";
   hdrProject.textContent = "Projet : " + (projectTitle || "non défini");
@@ -795,11 +794,9 @@ function loadInternalToUI(data){
   if(w) w.style.display = 'none';
   draw();
   
-  // ON ATTEND LA FIN DES setTimeout de addRow AVANT DE RELACHER LE VERROU
   setTimeout(() => { isBuildingUI = false; }, 200); 
 }
 
-/* ----- Chargement automatique depuis le portail ----- */
 function tryLoadFromPortal(){
   let raw = null;
   try{
@@ -831,11 +828,10 @@ function tryLoadFromPortal(){
 const refreshBtn = document.getElementById('refreshBtn');
 if(refreshBtn) refreshBtn.addEventListener('click', refreshFromStorage);
 
-/* ----- UI ----- */
 document.getElementById('toggle').addEventListener('click', ()=>{
-  const left=document.querySelector('.left');
-  const hide = left.style.display!=='none';
-  left.style.display = hide? 'none':'block';
+  const leftC = document.getElementById('leftContainer');
+  const hide = leftC.style.display!=='none';
+  leftC.style.display = hide? 'none':'block';
   mainGrid.classList.toggle('single', hide);
   if(hide){ document.getElementById('zoom').value = "0"; document.getElementById('zv').textContent="0%"; zoomFactor=0; }
   draw();
@@ -847,7 +843,6 @@ document.getElementById('zoom').addEventListener('input', (e)=>{
   draw();
 });
 
-/* ----- Export JSON : Pivot 1.1 (merge) ----- */
 document.getElementById('exportJson').addEventListener('click', ()=>{
   const pivot = buildPivotJsonV11Merged();
   try{ localStorage.setItem(PORTAL_STORAGE_KEY, JSON.stringify(pivot)); }catch(e){}
@@ -861,7 +856,6 @@ document.getElementById('exportJson').addEventListener('click', ()=>{
   URL.revokeObjectURL(a.href);
 });
 
-/* ----- Import JSON : pivot v1.x, JSON commun ou ancien format ----- */
 document.getElementById('importJsonBtn').addEventListener('click', ()=>document.getElementById('file').click());
 document.getElementById('file').addEventListener('change', (evt)=>{
   const f=evt.target.files[0]; if(!f) return;
@@ -891,7 +885,6 @@ document.getElementById('file').addEventListener('change', (evt)=>{
   r.readAsText(f);
 });
 
-/* ----- PDF ----- */
 document.getElementById('exportPdf').addEventListener('click', ()=>{
   if(!(window.jspdf && window.jspdf.jsPDF)){ alert("jsPDF indisponible"); return; }
   const pxToMm = (px)=> px*25.4/96;
@@ -930,7 +923,6 @@ document.getElementById('exportPdf').addEventListener('click', ()=>{
   pdf.save(`feuille-de-route_${slug}_${timestamp()}.pdf`);
 });
 
-/* ----- Modal d’accueil ----- */
 (function setupWelcome(){
   const w = document.getElementById('welcome');
   const i = document.getElementById('modalTitle');
@@ -960,11 +952,9 @@ document.getElementById('exportPdf').addEventListener('click', ()=>{
   setTimeout(()=> i?.focus(), 50);
 })();
 
-/* --- MODULE DE SYNCHRONISATION (GOLD SYNC) --- */
 const syncChannel = new BroadcastChannel('gold-project-sync');
 window.isReceivingSync = false;
 
-// 1. L'ANTIDOTE : Fusion intelligente des données
 function buildPivotJsonV11Merged() {
   let existingData = {};
   try {
@@ -987,7 +977,6 @@ function buildPivotJsonV11Merged() {
 }
 
 function syncToPivot() {
-  // VERROU DE SECURITE ICI AUSSI
   if (window.isReceivingSync || isBuildingUI) return; 
   try {
     const pivot = buildPivotJsonV11Merged();
@@ -998,7 +987,6 @@ function syncToPivot() {
   }
 }
 
-// 3. MISE A JOUR DU CANAL DE RECEPTION
 syncChannel.onmessage = (ev) => {
   if (ev.data?.type === "PROJECT_UPDATED" && ev.data.source !== "feuille-de-route") {
     const p = ev.data.payload;
@@ -1025,8 +1013,77 @@ syncChannel.onmessage = (ev) => {
   }
 };
 
-// 2. L'ESPION : Signal d'ouverture
+/* --- GESTION DU PINCH-TO-ZOOM (Geste à 2 doigts) --- */
+function setupPinchToZoom() {
+  const zones = document.querySelectorAll('#leftContainer, .right');
+
+  zones.forEach(zone => {
+    let initialPinchDist = null;
+    
+    // Mémoire du zoom CSS pour la liste de gauche
+    if (zone.id === 'leftContainer') {
+      zone._currentZoom = 1;
+    }
+
+    zone.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        initialPinchDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+      }
+    }, { passive: true });
+
+    zone.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        e.preventDefault(); 
+
+        const currentDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        
+        // --- ZONE DROITE (Gantt) ---
+        if (zone.classList.contains('right')) {
+          const delta = (currentDist - initialPinchDist) * 0.002; 
+          
+          zoomFactor += delta;
+          zoomFactor = Math.max(-0.8, Math.min(zoomFactor, 2.0)); 
+          
+          // Mise à jour de l'UI (le curseur html)
+          const zVal = Math.round(zoomFactor * 100);
+          document.getElementById('zoom').value = zVal;
+          document.getElementById('zv').textContent = zVal + '%';
+          
+          // On redessine le graphique nativement pour qu'il reste ultra net
+          draw();
+          
+        // --- ZONE GAUCHE (Saisie) ---
+        } else if (zone.id === 'leftContainer') {
+          const delta = (currentDist - initialPinchDist) * 0.005;
+          zone._currentZoom += delta;
+          zone._currentZoom = Math.max(0.5, Math.min(zone._currentZoom, 2.5)); 
+          
+          const content = document.getElementById('left');
+          if (content) content.style.zoom = zone._currentZoom;
+        }
+
+        initialPinchDist = currentDist;
+      }
+    }, { passive: false });
+
+    zone.addEventListener('touchend', e => {
+      if (e.touches.length < 2) {
+        initialPinchDist = null;
+      }
+    });
+  });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
+    // Initialiser le zoom
+    setupPinchToZoom();
+    
     try {
         const raw = localStorage.getItem(PORTAL_STORAGE_KEY);
         if(raw) {
