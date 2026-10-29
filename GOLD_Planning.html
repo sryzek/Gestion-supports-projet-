@@ -126,6 +126,54 @@ thead .plan-cell { background: #EEF1FA !important; font-weight: 700; color: #334
 .milestone-marker { width: 14px; height: 14px; background: #D32F2F; transform: rotate(45deg); display:inline-block; vertical-align:middle; box-shadow:0 2px 4px rgba(0,0,0,0.3); }
 .gantt-alert-icon { position: absolute; right: -20px; top: 50%; transform: translateY(-50%); font-size: 14px; cursor: pointer; z-index: 10; }
 
+/* ========================================= */
+/*  EVOLUTIONS RESPONSIVE (Mobiles/Tablettes) */
+/* ========================================= */
+@media (max-width:980px){
+  :root{--hdrH:auto;--tbH:auto;}
+  
+  /* Libération totale du scroll vertical natif */
+  html, body { height: auto; display: block; overflow-x: hidden; }
+  
+  /* Le bloc d'en-tête perd sa rigidité */
+  #top-fixed { display: flex; flex-direction: column; position: static; box-shadow: none; }
+  header { padding: 16px 12px; height: auto; flex-direction: column; align-items: flex-start; gap: 8px;}
+  .hdr-title { font-size: 24px; }
+  
+  .toolbar { height: auto; justify-content: center; padding: 12px; flex-wrap: wrap; }
+  
+  /* La zone des filtres s'accroche intelligemment au sommet lors du scroll ! */
+  .filters-area { 
+    position: -webkit-sticky; 
+    position: sticky; 
+    top: 0; 
+    z-index: 60; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+    padding: 12px; 
+    border-radius: 0 0 12px 12px; 
+    box-shadow: 0 8px 16px rgba(0,0,0,0.08); 
+  }
+  .filter-group { flex: 1 1 45%; min-width: 140px; }
+  .summary { width: 100%; justify-content: center; margin-top: 4px; }
+  
+  /* Le conteneur principal devient flexible en hauteur */
+  #bottom-scroll { display: block; height: auto; overflow: visible; padding: 12px; }
+  #view-table, #view-gantt { display: flex; height: auto; overflow: visible; }
+  
+  /* Les zones de tableau/Gantt gardent un scroll horizontal fluide */
+  .plan-wrapper, .gantt-container { 
+    overflow-x: auto; 
+    overflow-y: visible; 
+    touch-action: pan-x pan-y; 
+    border-radius: 8px; 
+    width: 100%;
+  }
+  
+  table.plan-grid { min-width: 1200px; }
+  .gantt-grid { min-width: 900px; }
+}
+
 </style>
 </head>
 <body>
@@ -371,7 +419,6 @@ function getFilteredActions() {
     if(fPhase && a.phaseId!==fPhase) return false;
     const computedStat = getAutoStatus(a);
     
-    // GESTION OBSOLÈTES MISE À JOUR
     if(computedStat === "obsolete" && !showObsolete) return false;
     if(computedStat !== "obsolete" && allowedStatuses.length && !allowedStatuses.includes(computedStat)) return false;
     
@@ -385,7 +432,6 @@ function getFilteredActions() {
   return filtered;
 }
 
-// === NOUVELLES FONCTIONS DE CONTRÔLE DE VUE (KPI, COLONNES, ZOOM) ===
 function updateKPIs(filtered) {
     if(!filtered) return;
     const total = filtered.length;
@@ -414,25 +460,22 @@ function changeGanttZoom(val) {
     currentGanttZoom = parseInt(val);
     renderView();
 }
-// ======================================================================
 
 function renderView() {
     if(!planningData) return;
     const filtered = getFilteredActions();
     document.getElementById("summaryText").textContent = `${filtered.length} action(s) affichée(s).`;
     
-    // APPEL À LA MISE À JOUR DES KPIs
     updateKPIs(filtered);
-    
     renderGantt(filtered); 
     renderTable(filtered); 
     
-    // Réappliquer l'état des colonnes après le render
     ['col-theme', 'col-comment', 'col-raci'].forEach(c => toggleCol(c));
 }
 
 function renderTable(filtered){
-  let html = `<table class='plan-grid'>
+  const z = document.getElementById("planWrapper")._currentZoom || 1;
+  let html = `<div class='zoom-content' style='zoom:${z};'><table class='plan-grid'>
     <thead><tr>
       <th class='plan-cell header' style='width:75px'>Actions</th><th class='plan-cell header' style='width:70px'>Alertes</th>
       <th class='plan-cell header col-theme' style='width:130px'>Thème</th><th class='plan-cell header col-theme' style='width:150px'>Chantier</th>
@@ -451,7 +494,6 @@ function renderTable(filtered){
     let rowStyle = `background-image: linear-gradient(to bottom, ${chantierColors.bg}, #ffffff); background-color: ${chantierColors.bg};`;
     if(isObsolete || isDone) rowStyle += `opacity: 0.6; text-decoration: ${isObsolete ? 'line-through' : 'none'};`;
     
-    // Grouping Chantier Header
     const safeChantier = a.chantierId || "Non assigné";
     const safeChantierClass = safeChantier.replace(/\W+/g, "_");
     if(safeChantier !== currentChantier){
@@ -499,7 +541,7 @@ function renderTable(filtered){
     });
     html += `</tr>`;
   });
-  html += "</tbody></table>"; document.getElementById("planWrapper").innerHTML = html; attachCellEditors();
+  html += "</tbody></table></div>"; document.getElementById("planWrapper").innerHTML = html; attachCellEditors();
 }
 
 function renderGantt(filtered){
@@ -508,7 +550,6 @@ function renderGantt(filtered){
     filtered.forEach(a => { if(a.start) minD = Math.min(minD, new Date(a.start).getTime()); if(a.end) maxD = Math.max(maxD, new Date(a.end).getTime()); });
     if (minD === Infinity) { wrapper.innerHTML = "<div style='padding:20px'>Aucune date saisie dans les actions filtrées.</div>"; return; }
 
-    // UTILISATION DE LA VARIABLE GLOBALE AU LIEU DE 15 FIXE
     const pxPerDay = currentGanttZoom; 
     let startGantt = new Date(minD); startGantt.setDate(1); 
     let endGantt = new Date(maxD); endGantt.setMonth(endGantt.getMonth() + 1); endGantt.setDate(0); 
@@ -516,13 +557,13 @@ function renderGantt(filtered){
     const totalDays = Math.round((endGantt - startGantt) / 86400000) + 1;
     const minGanttWidth = totalDays * pxPerDay;
 
-    let html = `<div class="g-hdr"><div class="g-label" style="font-weight:700; background:#EEF1FA;">Action / Livrable</div><div class="g-months-container" style="display:flex; flex:1; min-width:${minGanttWidth}px; position:relative;">`;
+    const z = wrapper._currentZoom || 1;
+    let html = `<div class='zoom-content' style='zoom:${z};'><div class="g-hdr"><div class="g-label" style="font-weight:700; background:#EEF1FA;">Action / Livrable</div><div class="g-months-container" style="display:flex; flex:1; min-width:${minGanttWidth}px; position:relative;">`;
     let curr = new Date(startGantt);
     while(curr <= endGantt) {
         let y = curr.getFullYear(), m = curr.getMonth(); let daysInMonth = new Date(y, m+1, 0).getDate();
         if(curr.getTime() === startGantt.getTime()) daysInMonth = daysInMonth - startGantt.getDate() + 1;
         let monthPct = (daysInMonth / totalDays) * 100;
-        // Ajustement visuel pour le texte selon le niveau de zoom
         let monthLabel = currentGanttZoom === 1 ? curr.toLocaleString('fr-FR', {month:'narrow'}) : curr.toLocaleString('fr-FR', {month:'short', year:'2-digit'});
         html += `<div class="g-month" style="width:${monthPct}%">${monthLabel}</div>`;
         curr.setMonth(m+1); curr.setDate(1);
@@ -587,7 +628,7 @@ function renderGantt(filtered){
         }
         html += `</div></div>`;
     });
-    wrapper.innerHTML = html;
+    wrapper.innerHTML = html + "</div>";
 }
 
 document.getElementById('btnToggleView').addEventListener("click", ()=>{
@@ -595,7 +636,6 @@ document.getElementById('btnToggleView').addEventListener("click", ()=>{
     document.getElementById("view-table").style.display = isGanttView ? "none" : "flex";
     document.getElementById("view-gantt").style.display = isGanttView ? "flex" : "none";
     document.getElementById('btnToggleView').innerHTML = isGanttView ? "📋 Vue Grille de Saisie" : "📊 Vue Gantt Global";
-    // Affichage dynamique du sélecteur de zoom
     document.getElementById('ganttZoomSelect').style.display = isGanttView ? "inline-block" : "none";
 });
 
@@ -633,7 +673,6 @@ function attachCellEditors(){
 
 document.getElementById('btnRefreshSort').addEventListener("click", () => refreshSortState(false));
 document.getElementById('btnReset').addEventListener("click", () => { if(confirm("⚠️ Tout effacer ?")) { planningData.actions = []; saveToLocalStorage(); renderView(); }});
-// Ajout de l'écouteur stObsolete
 ["filterPhase", "filterActor", "stActive", "stTodo", "stDone", "stObsolete"].forEach(id => document.getElementById(id)?.addEventListener("change", renderView));
 
 document.getElementById('btnImportExcel').addEventListener("click", () => {
@@ -674,7 +713,6 @@ function formatExcelDate(val) {
     return `${y}-${m}-${d}`;
 }
 
-// === IMPORT INTELLIGENT V2 (Correction du bug LILLE) ===
 document.getElementById('fileInputExcel').addEventListener("change", (evt) => {
   const file = evt.target.files[0]; if(!file) return; const reader = new FileReader();
   reader.onload = (e) => {
@@ -799,7 +837,60 @@ function processStrictExcelRows(rows) {
 
 document.getElementById('fileInput').addEventListener("change", (evt)=>{ const f = evt.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{ loadPlanning(normalizePlanningImport(JSON.parse(reader.result))); }; reader.readAsText(f); });
 document.getElementById('btnExport').addEventListener("click", ()=>{ const dataToExport = pivotProject ? pivotProject : planningData; if(pivotProject) pivotProject.planningDetailed = JSON.parse(JSON.stringify(planningData)); const blob = new Blob([JSON.stringify(dataToExport,null,2)],{type:"application/json"}); const a = document.createElement("a"); a.download = "planning_"+Date.now()+".json"; a.href = URL.createObjectURL(blob); a.click(); URL.revokeObjectURL(a.href); });
-(function init(){ try{ const raw = localStorage.getItem("currentProjectJson"); if(raw) loadPlanning(normalizePlanningImport(JSON.parse(raw))); }catch(e){ console.error(e); } })();
+
+/* --- GESTION DU PINCH-TO-ZOOM (Geste à 2 doigts) --- */
+function setupPinchToZoom() {
+  const zones = document.querySelectorAll('.plan-wrapper, .gantt-container');
+  
+  zones.forEach(zone => {
+    let initialPinchDist = null;
+    
+    if(typeof zone._currentZoom === 'undefined') {
+      zone._currentZoom = 1;
+    }
+
+    zone.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        initialPinchDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+      }
+    }, { passive: true });
+
+    zone.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        e.preventDefault(); 
+        
+        const currentDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        
+        const delta = (currentDist - initialPinchDist) * 0.005;
+        zone._currentZoom += delta;
+        zone._currentZoom = Math.max(0.5, Math.min(zone._currentZoom, 2.5)); 
+        
+        const content = zone.querySelector('.zoom-content');
+        if (content) content.style.zoom = zone._currentZoom;
+        
+        initialPinchDist = currentDist;
+      }
+    }, { passive: false });
+
+    zone.addEventListener('touchend', e => {
+      if (e.touches.length < 2) {
+        initialPinchDist = null;
+      }
+    });
+  });
+}
+
+(function init(){ 
+    setupPinchToZoom();
+    try{ const raw = localStorage.getItem("currentProjectJson"); if(raw) loadPlanning(normalizePlanningImport(JSON.parse(raw))); }catch(e){ console.error(e); } 
+})();
+
 // --- 🛡️ ESPION SENTINELLE : Signale l'ouverture ---
 window.addEventListener('DOMContentLoaded', () => {
     try {
