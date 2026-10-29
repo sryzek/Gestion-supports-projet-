@@ -149,6 +149,66 @@
   .dropdown-check-list label { display: flex; align-items:center; font-size: 11px; padding: 3px 4px; cursor: pointer; margin-bottom: 2px; border-radius:4px;}
   .dropdown-check-list label:hover { background: #e8f0fe; }
   .dropdown-check-list label input { margin: 0 6px 0 0; width: auto; }
+
+  /* ========================================= */
+  /*  EVOLUTIONS RESPONSIVE (Mobiles/Tablettes) */
+  /* ========================================= */
+  @media (max-width:980px){
+    :root{--hdrH:auto;--tbH:auto;}
+    
+    html, body { height: auto; display: block; overflow-x: hidden; }
+    .content { display: block; height: auto; overflow: visible; padding: 0 0 24px 0; }
+    .page.active { display: block; height: auto; overflow: visible; }
+    .panel { display: block; height: auto; overflow: visible; border: none; box-shadow: none; background: transparent; padding: 0; }
+    
+    header { padding: 16px 12px; height: auto; position: relative; }
+    .hdr-wrap { display: flex; flex-direction: column; gap: 12px; text-align: center; }
+    .hdr-top { position: static; align-self: center; display: inline-block; font-size: 11px; }
+    .hdr-title .project { font-size: 24px; }
+    
+    .toolbar { height: auto; justify-content: center; padding: 12px; position: relative; }
+    .project-info { width: 100%; text-align: center; margin-top: 8px; }
+    
+    .tabs-main { padding: 12px 12px 0 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    
+    /* Rend les contrôles fixes en haut lors du défilement */
+    .sticky-controls {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      margin: 0 0 12px 0;
+      padding: 12px;
+      border-radius: 0 0 12px 12px;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+      background: #ffffff;
+      width: 100%;
+    }
+    
+    .table-container { 
+      overflow-x: auto; 
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch; 
+      margin: 0 12px;
+      touch-action: pan-x pan-y; 
+    }
+    table { min-width: 900px; }
+    th, td { padding: 2px 4px !important; font-size: 11px !important; }
+    input[type="text"], input[type="date"], select { height: 26px; padding: 2px 6px; font-size: 11px; }
+    
+    /* Vues graphiques sur mobile */
+    #ganttContainer, #actorsView { 
+      overflow-y: visible; 
+      overflow-x: auto;
+      touch-action: pan-x pan-y; 
+      width: auto;
+      margin: 0 12px;
+    }
+    .gantt-grid { min-width: 800px; }
+  }
   
   /* IMPRESSION ROBUSTE SANS FLEXBOX POUR ÉVITER LES BUGS DE SAUT DE PAGE */
   @media print {
@@ -751,12 +811,19 @@ function renderLeavesTable(){
 }
 
 function renderActorsView(){
-  const v = document.getElementById("actorsView"); v.innerHTML=""; const map={};
+  const v = document.getElementById("actorsView");
+  const z = v._currentZoom || 1;
+  let finalHtml = `<div class='zoom-content' style='zoom:${z};'>`;
+  let hasData = false;
+  
+  const map={};
   (leavesData.actors||[]).forEach(a=> map[a.actorId]={n:a.shortName||a.name||a.actorId, r:[]});
   (leavesData.leaves||[]).forEach(l=> { if(l.actorId && map[l.actorId]) map[l.actorId].r.push(l); });
+  
   Object.keys(map).forEach(k => {
     let h = `<div class="actor-block"><div class="actor-block-header">${map[k].n}</div>`;
     if(!map[k].r.length) return; 
+    hasData = true;
     h += `<ul class="compact">`; 
     map[k].r.forEach(r=> {
       let bkStr = "";
@@ -775,9 +842,12 @@ function renderActorsView(){
       }
     }); 
     h += `</ul></div>`; 
-    v.innerHTML += h;
+    finalHtml += h;
   });
-  if(v.innerHTML === "") v.innerHTML = "<div class='hint'>Aucun congé n'est enregistré pour le moment.</div>";
+  
+  finalHtml += `</div>`;
+  if(!hasData) v.innerHTML = "<div class='hint'>Aucun congé n'est enregistré pour le moment.</div>";
+  else v.innerHTML = finalHtml;
 }
 
 function renderGantt(){
@@ -817,7 +887,9 @@ function renderGantt(){
   MxTs=Date.UTC(MxD.getUTCFullYear(), MxD.getUTCMonth()+1, 0);
   const tD = Math.max(1, (MxTs-mTs)/dMs + 1);
 
-  let h=`<div class='gantt-title'>Planning Graphique ${fYear?"(Restreint à "+fYear+")":""}</div><div class='gantt-grid'><div class='gantt-left-header'>Acteurs</div><div class='gantt-month-header'>`;
+  const z = gc._currentZoom || 1;
+  let h = `<div class='zoom-content' style='zoom:${z};'><div class='gantt-title'>Planning Graphique ${fYear?"(Restreint à "+fYear+")":""}</div><div class='gantt-grid'><div class='gantt-left-header'>Acteurs</div><div class='gantt-month-header'>`;
+  
   let cTs=mTs, mo=[];
   while(cTs <= MxTs) {
     const d=new Date(cTs), cY=d.getUTCFullYear(), cM=d.getUTCMonth(), nY=cM===11?cY+1:cY, nM=cM===11?0:cM+1;
@@ -860,6 +932,8 @@ function renderGantt(){
     h+="</div></div>";
   });
   
+  h+="</div>"; // fermeture zoom-content
+  
   let legendHtml = `
     <div class="legend" style="margin-top:12px; display:flex; justify-content:center; gap:16px; font-size:11px; color:#444; flex-shrink: 0;">
       <span style="display:flex; align-items:center; gap:4px;"><span class="leg-box" style="background:#E43C52 !important;"></span> Congés / Autre</span>
@@ -867,7 +941,7 @@ function renderGantt(){
       <span style="display:flex; align-items:center; gap:4px;"><span class="leg-box" style="background:#BA68C8 !important;"></span> Maladie</span>
       <span style="display:flex; align-items:center; gap:4px;"><span class="leg-box" style="background:#64B5F6 !important;"></span> Formation</span>
     </div>`;
-  gc.innerHTML = h + "</div>" + legendHtml;
+  gc.innerHTML = h + legendHtml;
 }
 
 function applyPivotToUI(p){
@@ -914,6 +988,7 @@ window.addEventListener("storage", (ev) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  setupPinchToZoom();
   const raw = localStorage.getItem(STORAGE_KEY); 
   if(raw && JSON.parse(raw).version) applyPivotToUI(JSON.parse(raw));
   else document.getElementById("startupOverlay").style.display="flex";
@@ -959,6 +1034,59 @@ window.addEventListener('afterprint', () => {
     leaves.insertAdjacentElement('afterend', gantt);
   }
 });
+
+/* --- GESTION DU PINCH-TO-ZOOM (Geste à 2 doigts) --- */
+function setupPinchToZoom() {
+  const zones = document.querySelectorAll('.table-container, #ganttContainer, #actorsView');
+  
+  zones.forEach(zone => {
+    let initialPinchDist = null;
+    
+    if(typeof zone._currentZoom === 'undefined') {
+      zone._currentZoom = 1;
+    }
+
+    zone.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        initialPinchDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+      }
+    }, { passive: true });
+
+    zone.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        e.preventDefault(); 
+        
+        const currentDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        
+        const delta = (currentDist - initialPinchDist) * 0.005;
+        zone._currentZoom += delta;
+        zone._currentZoom = Math.max(0.5, Math.min(zone._currentZoom, 2.5)); 
+        
+        if (zone.classList.contains('table-container')) {
+          const table = zone.querySelector('table');
+          if (table) table.style.zoom = zone._currentZoom;
+        } else {
+          const content = zone.querySelector('.zoom-content');
+          if (content) content.style.zoom = zone._currentZoom;
+        }
+        
+        initialPinchDist = currentDist;
+      }
+    }, { passive: false });
+
+    zone.addEventListener('touchend', e => {
+      if (e.touches.length < 2) {
+        initialPinchDist = null;
+      }
+    });
+  });
+}
 
 window.addEventListener('DOMContentLoaded', () => {
     try {
