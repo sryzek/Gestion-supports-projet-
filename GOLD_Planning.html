@@ -132,22 +132,32 @@ thead .plan-cell { background: #EEF1FA !important; font-weight: 700; color: #334
 @media (max-width:980px){
   :root{--hdrH:auto;--tbH:auto;}
   
-  /* Libération totale du scroll vertical natif */
-  html, body { height: auto; display: block; overflow-x: hidden; }
+  /* CASSURE DU CARCAN FLEXBOX POUR AUTORISER LE SCROLL NATIF */
+  html, body { 
+      height: auto !important; 
+      min-height: 100vh !important;
+      display: block !important; 
+      overflow-y: auto !important; 
+      overflow-x: hidden !important;
+  }
   
-  /* Le bloc d'en-tête perd sa rigidité */
-  #top-fixed { display: flex; flex-direction: column; position: static; box-shadow: none; }
+  #top-fixed { 
+      display: block !important; 
+      position: static !important; 
+      box-shadow: none !important; 
+  }
+  
   header { padding: 16px 12px; height: auto; flex-direction: column; align-items: flex-start; gap: 8px;}
   .hdr-title { font-size: 24px; }
   
   .toolbar { height: auto; justify-content: center; padding: 12px; flex-wrap: wrap; }
   
-  /* La zone des filtres s'accroche intelligemment au sommet lors du scroll ! */
+  /* Zone de filtres fixée au plafond pendant le défilement */
   .filters-area { 
-    position: -webkit-sticky; 
-    position: sticky; 
-    top: 0; 
-    z-index: 60; 
+    position: -webkit-sticky !important; 
+    position: sticky !important; 
+    top: 0 !important; 
+    z-index: 200 !important; 
     flex-wrap: wrap; 
     gap: 10px; 
     padding: 12px; 
@@ -157,14 +167,24 @@ thead .plan-cell { background: #EEF1FA !important; font-weight: 700; color: #334
   .filter-group { flex: 1 1 45%; min-width: 140px; }
   .summary { width: 100%; justify-content: center; margin-top: 4px; }
   
-  /* Le conteneur principal devient flexible en hauteur */
-  #bottom-scroll { display: block; height: auto; overflow: visible; padding: 12px; }
-  #view-table, #view-gantt { display: flex; height: auto; overflow: visible; }
+  /* CASSURE DU CARCAN DU BAS */
+  #bottom-scroll { 
+      display: block !important; 
+      height: auto !important; 
+      overflow: visible !important; 
+      padding: 12px !important; 
+  }
   
-  /* Les zones de tableau/Gantt gardent un scroll horizontal fluide */
+  #view-table, #view-gantt { 
+      height: auto !important; 
+      flex: none !important;
+      overflow: visible !important; 
+  }
+  
+  /* Les zones de tableau gardent uniquement leur scroll horizontal */
   .plan-wrapper, .gantt-container { 
-    overflow-x: auto; 
-    overflow-y: visible; 
+    overflow-x: auto !important; 
+    overflow-y: visible !important; 
     touch-action: pan-x pan-y; 
     border-radius: 8px; 
     width: 100%;
