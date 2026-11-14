@@ -2418,26 +2418,71 @@ function openMeteo(){ openSupport("fiche-projet","GOLD_FicheMeteo.html"); }
 function openRaci(){ openSupport("fiche-projet","GOLD_RACI.html"); }
 function openPlanningDetaille(){ openSupport("fiche-projet","GOLD_Planning.html"); }
 function openConges(){ openSupport("fiche-projet","GOLD_Conges.html"); }
-document.addEventListener("DOMContentLoaded", ()=>{
-  const loaded = loadFromPortalIfAny();
+
+/* ==========================================
+   ROUTEUR DYNAMIQUE (Deep Linking GitHub)
+   ========================================== */
+async function loadProjectFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const projectId = params.get("id");
   
-  if(loaded){
-    try{ clearAutoSave(); }catch(e){}
-    
-    // 🛑 ÉVOLUTION : Forcer la Sentinelle à OFF au chargement du JSON
-    if(pivotModel && pivotModel.config) pivotModel.config.sentinelleActive = false;
-    
-    updateSentinelleUI();
-    return;
+  if (!projectId) {
+    return false;
   }
+
+  showToast(`📡 Chargement de ${projectId} depuis GitHub...`);
+
+  // URL du fichier brut sur GitHub
+  const repoOwner = "sryzek"; 
+  const repoName = "Support-Projets"; // Assure-toi que ce nom est exact (sensible à la casse)
+  const jsonUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/pivots/${projectId}.json`;
+
+  try {
+    const response = await fetch(jsonUrl, { cache: "no-store" });
+    
+    if (!response.ok) {
+      throw new Error(`Fichier ${projectId}.json introuvable sur le dépôt ${repoName}.`);
+    }
+
+    const projectJson = await response.json();
+
+    if (projectJson && (projectJson.project || projectJson.phases || projectJson.feuilleDeRoute)) {
+      applyPivotToMeteo(projectJson);
+      
+      // Stockage local pour que la Météo et le RACI puissent le lire
+      localStorage.setItem("currentProjectJson", JSON.stringify(pivotModel || data));
+      
+      showToast(`✅ Projet ${projectId} chargé avec succès !`);
+      return true;
+    }
+  } catch (error) {
+    console.error("Erreur de routage :", error);
+    showToast(`❌ Impossible de charger ${projectId}.`);
+  }
+  return false;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  // 1. On tente d'abord de charger depuis l'URL dynamique
+  const loadedFromUrl = await loadProjectFromUrl();
   
-  try{ restoreAutoSaveIfAny(); }catch(e){}
-  renderAll();
-  
-  // 🛑 ÉVOLUTION : Forcer la Sentinelle à OFF au chargement depuis le cache
-  if(pivotModel && pivotModel.config) pivotModel.config.sentinelleActive = false;
-  
-  updateSentinelleUI();
+  if (!loadedFromUrl) {
+    // 2. Si pas d'URL (ou échec), comportement classique
+    const loaded = loadFromPortalIfAny();
+    
+    if(loaded){
+      try{ clearAutoSave(); }catch(e){}
+      if(pivotModel && pivotModel.config) pivotModel.config.sentinelleActive = false;
+      updateSentinelleUI();
+      return;
+    }
+    
+    try{ restoreAutoSaveIfAny(); }catch(e){}
+    renderAll();
+    
+    if(pivotModel && pivotModel.config) pivotModel.config.sentinelleActive = false;
+    updateSentinelleUI();
+  }
 });
 </script>
 </body>
