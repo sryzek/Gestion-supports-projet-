@@ -1,2489 +1,1473 @@
-<!DOCTYPE html>
+html_portefeuille = r'''<!DOCTYPE html>
 <html lang="fr">
 <head>
-<link rel="icon" type="image/png" href="./icon.png" />
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Fiche projet — V1.15 (SENTINELLE)</title>
-<style>
-:root{
-  --brand:#C00000;
-  --text:#222;
-  --muted:#666;
-  --ok:#1BAE70;
-  --warn:#F39C12;
-  --bad:#E74C3C;
-  --border:#e8e8e8;
-  --ghost:#9aa3af;
-  
-  /* Variables pour hauteurs dynamiques */
-  --stripH: 34px;
-  --tabsH: 44px;
-}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Gouvernance — Portefeuille projets (PPM V2.7)</title>
+  <meta name="theme-color" content="#C10F1A"/>
+  <link rel="manifest" href="./manifest.json"/>
+  <link rel="icon" type="image/png" href="./icon.png"/>
+  <link rel="apple-touch-icon" href="./icon.png"/>
+  <style>
+    :root{
+      --lille-red:#C10F1A;
+      --lille-red-2:#a50d16;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --border:#e5e7eb;
+      --shadow:0 10px 24px rgba(15,23,42,.08);
+      --r:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background:var(--bg);
+    }
 
-*{box-sizing:border-box;}
+    @page{ size:A4 landscape; margin:10mm; }
+    @media print{
+      *{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+      body{background:#fff !important;}
+      .topbar{position:static; box-shadow:none;}
+      .ppm-nav, .split-entries, .filter-bar, .actions, .actions-th, .actions-td, .toast, .modal-backdrop{display:none !important;}
+      .main{max-width:100%; margin:0; padding:0;}
+      .panel{box-shadow:none; border:none;}
+      table{min-width:0 !important;}
+    }
 
-html,body{
-  margin:0;
-  padding:0;
-  font-family:Calibri,Arial,sans-serif;
-  color:var(--text);
-  font-size:13px;
-}
+    /* Top bar */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      background:var(--lille-red);
+      color:#fff;
+      padding:12px 16px;
+      box-shadow:0 6px 18px rgba(0,0,0,.18);
+    }
+    .topbar-row{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      max-width:1380px; margin:0 auto; flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px; min-width:0;
+    }
+    .brand .badge{
+      width:38px; height:38px; border-radius:10px;
+      background:rgba(255,255,255,.14);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800;
+    }
+    .brand .titles{min-width:0}
+    .brand .h1{
+      font-weight:800; letter-spacing:.2px;
+      font-size:16px; line-height:1.15;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .brand .sub{
+      font-size:12px; opacity:.92;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .actions{
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.35);
+      background:transparent;
+      color:#fff;
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:12px;
+      cursor:pointer;
+      display:inline-flex; align-items:center; gap:6px;
+      transition:all .15s ease;
+      user-select:none;
+    }
+    .btn:hover{background:rgba(255,255,255,.10)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{
+      background:#fff;
+      color:var(--lille-red);
+      border-color:#fff;
+    }
+    .btn.primary:hover{background:#f1f5f9; border-color:#f1f5f9}
 
-/* wrapper */
-.wrap{
-  max-width:1200px;
-  margin:0 auto;
-  padding:8px 10px 24px;
-}
+    /* Navigation inter-supports PPM */
+    .ppm-nav{
+      background:#fff;
+      border-bottom:1px solid var(--border);
+      padding:8px 16px;
+    }
+    .ppm-nav-row{
+      max-width:1380px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .ppm-links{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .ppm-link{
+      text-decoration:none;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      color:var(--ink);
+      background:#f1f5f9;
+      border:1px solid var(--border);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .ppm-link:hover{background:#e2e8f0}
+    .ppm-link.active{
+      background:rgba(193,15,26,.10);
+      color:var(--lille-red);
+      border-color:rgba(193,15,26,.30);
+    }
 
-/* Bloc figé (Sticky Header) */
-.sticky-header-group {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--bg);
-  padding: 8px 10px 10px;
-  margin: -8px -10px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.03);
-}
+    .main{
+      max-width:1380px;
+      margin:14px auto 24px;
+      padding:0 14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
 
-/* body weather themes */
-body.trend-soleil{background:#fffdf5;}
-body.trend-nuages{background:#f7f9ff;}
-body.trend-pluie{background:#f5f7fb;}
+    /* LES 2 ENTREES */
+    .split-entries{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+    }
+    @media (max-width: 900px){
+      .split-entries{grid-template-columns: 1fr;}
+    }
+    .entry-card{
+      border-radius:20px;
+      padding:20px;
+      border:1px solid var(--border);
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      position:relative;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+    .entry-card h2{
+      margin:0 0 6px 0;
+      font-size:18px;
+      font-weight:900;
+      position:relative;
+      z-index:2;
+    }
+    .entry-card p{
+      margin:0 0 18px 0;
+      font-size:12.5px;
+      color:var(--muted);
+      line-height:1.4;
+      position:relative;
+      z-index:2;
+    }
+    .entry-btn{
+      padding:14px 20px;
+      border-radius:12px;
+      border:none;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
+      text-align:center;
+      transition:transform 0.1s;
+      position:relative;
+      z-index:2;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    .entry-btn:active{transform:scale(0.98);}
 
-body.trend-soleil .sticky-header-group { background: #fffdf5; }
-body.trend-nuages .sticky-header-group { background: #f7f9ff; }
-body.trend-pluie .sticky-header-group { background: #f5f7fb; }
+    .entry-idee{
+      background:linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+      border-color:#d1d5db;
+    }
+    .entry-idee h2{color:#0f172a;}
+    .entry-idee .entry-btn{background:#0f172a; color:#fff;}
+    .entry-idee .entry-btn:hover{background:#1e293b;}
+    .entry-icon-1{
+      position:absolute; right:-10px; top:-20px; font-size:120px; opacity:0.04; z-index:1; transform:rotate(15deg);
+    }
 
+    .entry-douane{
+      background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-color:#bbf7d0;
+    }
+    .entry-douane h2{color:#14532d;}
+    .entry-douane p{color:#166534;}
+    .entry-douane .entry-btn{background:#16a34a; color:#fff;}
+    .entry-douane .entry-btn:hover{background:#15803d;}
+    .entry-icon-2{
+      position:absolute; right:10px; top:-10px; font-size:100px; opacity:0.06; z-index:1;
+    }
 
-/* Bandeau principal */
-.bar{
-  background:var(--brand);
-  color:#fff;
-  border-radius:18px;
-  padding:8px 14px;
-  box-shadow:0 8px 18px rgba(0,0,0,.25);
-  margin-bottom:6px;
-  position:relative;
-}
-.bar::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,.25);
-  pointer-events:none;
-}
-.bar-inner{
-  position:relative;
-  min-height:50px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:2px 10px;
-}
-.title{text-align:center}
-.title .date{
-  font-weight:700;
-  font-size:14px;
-  letter-spacing:.2px;
-  margin-bottom:2px;
-}
-.title .name{
-  font-weight:900;
-  font-size:28px;
-  line-height:1.1;
-  margin:0 auto;
-}
-.title .meta-line{
-  margin-top:2px;
-  font-size:13px;
-  opacity:.9;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.bar .ver{
-  position:absolute;
-  right:10px;
-  top:6px;
-  font-size:10px;
-  opacity:.85;
-  font-weight:700;
-}
+    .entry-kpis{
+      display:flex; gap:12px; margin-bottom:14px; position:relative; z-index:2;
+    }
+    .ekpi{
+      background:rgba(255,255,255,0.75);
+      padding:8px 12px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,0.05);
+      flex:1;
+    }
+    .ekpi .val{font-size:20px; font-weight:900;}
+    .ekpi .lab{font-size:11px; font-weight:800; text-transform:uppercase; color:var(--muted); margin-top:2px;}
 
-/* version coin bas droit */
-.page-ver{
-  position:fixed;
-  right:8px;
-  bottom:4px;
-  font-size:10px;
-  color:#999;
-}
+    /* Table Panel */
+    .panel{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      min-width:0;
+    }
+    .panel-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+      background:linear-gradient(180deg, rgba(193,15,26,.05), rgba(255,255,255,0));
+    }
+    .panel-title{font-weight:900}
+    .panel-sub{color:var(--muted); font-size:12px; margin-top:2px}
+    .chip{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12px; font-weight:800;
+      white-space:nowrap;
+    }
+    .panel-body{padding:12px 14px}
 
-/* Ghost text */
-.ghost{
-  color:var(--ghost);
-  font-style:italic;
-}
+    /* Filter Bar PPM */
+    .filter-bar{
+      display:grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1.2fr 1fr auto;
+      gap:8px;
+      margin-bottom:12px;
+      background:#f8fafc;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      align-items:center;
+    }
+    @media (max-width: 1050px){
+      .filter-bar{grid-template-columns: 1fr 1fr;}
+    }
 
-/* Toolbar */
-.toolbar{
-  margin:4px 0 2px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.btn{
-  border:none;
-  border-radius:999px;
-  padding:6px 12px;
-  font-size:12px;
-  cursor:pointer;
-  background:#C00000;
-  color:#fff;
-  box-shadow:0 3px 8px rgba(0,0,0,.18);
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-}
-.btn.secondary{
-  background:#e5e7eb;
-  color:#111827;
-  box-shadow:none;
-}
-.btn.link{
-  background:transparent;
-  color:#C00000;
-  box-shadow:none;
-  padding:0;
-}
-.btn:hover{filter:brightness(1.05)}
-.btn:active{transform:translateY(1px)}
-.help{
-  font-size:11px;
-  margin-bottom:4px;
-  color:var(--muted);
-}
+    /* Table */
+    .table-wrap{overflow:auto; border:1px solid var(--border); border-radius:12px;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width: 1320px;
+      table-layout: fixed;
+    }
+    th, td{
+      padding:10px 8px;
+      border-bottom:1px solid var(--border);
+      vertical-align:middle;
+      font-size:12.5px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    th{
+      position:sticky; top:0;
+      background:#f8fafc;
+      z-index:1;
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      font-weight:800;
+      border-bottom:2px solid var(--border);
+      text-align:left;
+    }
+    tr:hover td{background:#f8fafc;}
+    td.wrap{white-space:normal;}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
+    .small{font-size:11.5px; color:var(--muted)}
 
-/* Conso ETP : masqué dans la fiche projet */
-.charges-block{display:none;}
+    .badge{
+      display:inline-flex; align-items:center;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-weight:800;
+      font-size:11px;
+      gap:4px;
+      max-width:100%;
+    }
+    .b-qualif{border-color:#cbd5e1; background:#f1f5f9; color:#0f172a}
+    .b-precad{border-color:#bae6fd; background:#f0f9ff; color:#0369a1}
+    .b-pivot{border-color:#bbf7d0; background:#f0fdf4; color:#166534}
+    .b-orphan{border-color:#fdba74; background:#fff7ed; color:#9a3412}
 
-/* Bloc supports projet */
-.support-section {
-  margin-top: 6px;
-}
-.support-section .box{
-  padding-bottom:6px;
-  border-color: #d1d5db;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-}
-.support-flow{
-  margin:2px 0 2px;
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:6px;
-}
-.support-chip{
-  border:none;
-  border-radius:999px;
-  padding:4px 10px;
-  font-size:12px;
-  cursor:pointer;
-  background:#f3f4ff;
-  color:#111827;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  box-shadow:0 1px 3px rgba(15,23,42,.15);
-}
-.support-chip.primary{
-  background:#ffffff;
-  color:#C00000;
-  font-weight:600;
-  box-shadow:0 2px 6px rgba(15,23,42,.2);
-}
-.support-chip.secondary{
-  background:#fff7ed;
-  color:#9a3412;
-  font-weight:600;
-}
-.support-chip:hover{filter:brightness(1.03);}
-.support-chip:active{transform:translateY(1px);}
-.support-arrow{
-  font-size:15px;
-  color:#9ca3af;
-}
+    /* Priorités */
+    .b-prio1{border-color:#fca5a5; background:#fef2f2; color:#b91c1c;}
+    .b-prio2{border-color:#fdba74; background:#fff7ed; color:#c2410c;}
+    .b-prio3{border-color:#93c5fd; background:#eff6ff; color:#1d4ed8;}
+    .b-prio4{border-color:#cbd5e1; background:#f8fafc; color:#475569;}
 
-/* Info text */
-.info{
-  font-size:11px;
-  margin-top:4px;
-  color:var(--muted);
-}
+    /* Status Dot (Fraîcheur) */
+    .status-dot{
+      display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px;
+    }
+    .st-ok{background:#22c55e; box-shadow:0 0 4px rgba(34,197,94,.5);}
+    .st-warn{background:#f59e0b; box-shadow:0 0 4px rgba(245,158,11,.5);}
+    .st-bad{background:#ef4444; box-shadow:0 0 4px rgba(239,68,68,.5);}
 
-/* Sections */
-.section{margin-top:8px;}
-.box{
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:8px 9px;
-  background:#fff;
-}
-.sect{
-  font-weight:700;
-  font-size:13px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  margin-bottom:3px;
-}
+    .actions-col{
+      display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .iconbtn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:800;
+      cursor:pointer;
+      font-size:11.5px;
+      display:inline-flex; gap:5px; align-items:center;
+      white-space:nowrap;
+      transition:background .15s;
+    }
+    .iconbtn:hover{background:#f8fafc}
+    .iconbtn.primary{background:var(--lille-red); color:#fff; border-color:var(--lille-red)}
+    .iconbtn.primary:hover{background:var(--lille-red-2)}
+    .iconbtn.action{background:#0f172a; color:#fff; border-color:#0f172a}
+    .iconbtn.action:hover{background:#1e293b}
+    .iconbtn.danger{border-color:#fecaca; background:#fff1f2; color:#991b1b}
 
-/* KV grid */
-.kv{
-  display:grid;
-  grid-template-columns:auto 1fr;
-  column-gap:6px;
-  row-gap:2px;
-  font-size:13px;
-}
-.kv .k{color:var(--muted);}
+    .toast{
+      position:fixed; left:14px; bottom:14px; background:#111827; color:#fff;
+      padding:10px 16px; border-radius:999px; font-size:13px; z-index:9999;
+      box-shadow:0 10px 18px rgba(0,0,0,.18);
+    }
 
-/* Dots */
-.dot{
-  width:9px;
-  height:9px;
-  border-radius:999px;
-  margin-right:4px;
-}
-.dot.ok{background:var(--ok);}
-.dot.warn{background:var(--warn);}
-.dot.bad{background:var(--bad);}
+    /* Modals */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(15,23,42,.6);
+      display:none; align-items:center; justify-content:center;
+      padding:14px; z-index:10000;
+    }
+    .modal{
+      width:min(780px, 100%); max-height:92vh; overflow:auto;
+      background:#fff; border-radius:18px; border:1px solid var(--border);
+      box-shadow:var(--shadow);
+    }
+    .modal-head{
+      padding:16px 20px;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(193,15,26,.04), rgba(255,255,255,0));
+    }
+    .modal-title{font-weight:950; font-size:16px; margin-bottom:4px;}
+    .modal-body{padding:20px}
+    .form{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width: 700px){ .form{grid-template-columns:1fr} }
+    label{font-size:12.5px; color:var(--muted); font-weight:800; display:block; margin-bottom:6px;}
+    input, select, textarea{
+      width:100%; padding:10px; border:1px solid var(--border); border-radius:10px;
+      font-size:13px; outline:none; background:#fff; font-family:inherit;
+    }
+    textarea{min-height:70px; resize:vertical; line-height:1.4;}
+    input:focus, select:focus, textarea:focus{border-color:#cbd5e1; box-shadow:0 0 0 3px rgba(148,163,184,.15)}
+    .modal-foot{
+      padding:16px 20px; border-top:1px solid var(--border);
+      display:flex; gap:10px; justify-content:flex-end; background:#f8fafc;
+    }
+    .btn2{
+      border:1px solid var(--border); background:#fff; padding:10px 18px;
+      border-radius:999px; font-weight:900; cursor:pointer; font-size:13px;
+    }
+    .btn2.primary{background:var(--lille-red); color:#fff; border-color:var(--lille-red)}
+    .btn2.ghost{background:transparent; border-color:transparent;}
 
-/* Statuts empilés */
-.status-stack{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-  font-size:12px;
-}
-.status-item{
-  display:flex;
-  align-items:center;
-  gap:4px;
-}
+    .section-title{
+      grid-column:1/-1; font-weight:900; font-size:14px;
+      padding-bottom:8px; border-bottom:1px solid var(--border);
+      margin-top:8px; margin-bottom:4px;
+    }
 
-/* Lists */
-ul{
-  margin:3px 0 0;
-  padding-left:18px;
-  font-size:13px;
-}
-ul li{margin-bottom:1px;}
+    .report-list{
+      margin-top:6px;
+      font-size:12.5px;
+      background:#f8fafc;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:12px;
+      max-height:220px;
+      overflow-y:auto;
+    }
+    .report-item{
+      margin-bottom:8px;
+      padding-bottom:8px;
+      border-bottom:1px solid rgba(17,24,39,.05);
+    }
+    .report-item:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
 
-/* Trend badge */
-.trend-badge{
-  width:30px;
-  height:30px;
-  border-radius:999px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:18px;
-  box-shadow:0 2px 6px rgba(15,23,42,.25);
-}
-
-/* Trend arrow 3D */
-.trend-card-main{
-  display:flex;
-  gap:6px;
-  align-items:center;
-}
-.trend-arrow-3d{
-  width:46px;
-  height:26px;
-  border-radius:9px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:19px;
-  box-shadow:0 6px 12px rgba(0,0,0,.15);
-}
-.trend-arrow-dir-up::before{content:"⬆️";}
-.trend-arrow-dir-flat::before{content:"➡️";}
-.trend-arrow-dir-down::before{content:"⬇️";}
-.trend-arrow-col-green{background:#e6f6ec;}
-.trend-arrow-col-blue{background:#e6f0ff;}
-.trend-arrow-col-red{background:#fde7e7;}
-.trend-state{
-  font-weight:700;
-  font-size:13px;
-}
-.trend-detail{
-  font-size:11px;
-  color:var(--muted);
-}
-
-/* Tendance générale : 3 colonnes */
-.tendance-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-  align-items:stretch;
-  margin-top:6px;
-}
-.tendance-item{
-  border-radius:12px;
-  padding:8px 10px;
-  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,1));
-  box-shadow:0 3px 8px rgba(15,23,42,.12);
-  border:1px solid rgba(255,255,255,.8);
-  text-align:center;
-}
-.tendance-item .trend-badge{width:44px;height:44px;font-size:22px;margin:0 auto;}
-
-.tendance-label{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  color:var(--muted);
-  margin-bottom:6px;
-  font-weight:700;
-}
-.tendance-status{
-  list-style:none;
-  padding:0;
-  margin:0;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  align-items:flex-start;
-  justify-content:center;
-}
-.tendance-status li{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:13px;
-}
-
-/* État d’avancement */
-.progress-wrapper{
-  margin-top:4px;
-}
-.progress-row{
-  margin-bottom:6px;
-}
-.progress-meta{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:6px;
-  font-size:12px;
-  color:var(--muted);
-}
-.progress-meta strong{
-  color:var(--text);
-}
-.progress-bar-bg{
-  width:100%;
-  height:8px;
-  border-radius:999px;
-  background:#e5e7eb;
-  overflow:hidden;
-}
-.progress-bar-fill{
-  height:100%;
-  width:0%;
-  border-radius:999px;
-  background:var(--ok);
-  transition:width .25s ease-out;
-}
-
-/* Grille des listes d’avancement */
-.lists-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:6px;
-}
-
-/* Planning / Gantt wrapper */
-.timeline-card{
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:5px;
-  background:#fff;
-}
-.gantt-wrap{
-  overflow:auto;
-  border-radius:14px;
-  border:1px solid #dde2f1;
-  background:#f8f9fc;
-  padding:8px;
-  position:relative;
-  margin-top:3px;
-}
-canvas#projectGantt{
-  display:block;
-  background:transparent;
-  max-width:100%;
-}
-.legend{
-  margin-top:6px;
-  font-size:10px;
-  color:#4b5563;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.legend-item{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-}
-.legend-color{
-  width:13px;
-  height:7px;
-  border-radius:4px;
-  background:#9ca3af;
-}
-.legend-color.phase1{background:#FFCDD2;}
-.legend-color.phase2{background:#FFE0B2;}
-.legend-color.phase3{background:#FFF9C4;}
-.legend-color.phase4{background:#C8E6C9;}
-.legend-color.phase5{background:#BBDEFB;}
-.legend-color.phase6{background:#E1BEE7;}
-
-.empty-state{
-  font-size:12px;
-  color:#4b5563;
-  text-align:center;
-  padding:6px 4px;
-}
-.empty-state p{margin:2px 0;}
-
-/* Budget & charges projet */
-.bc-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  gap:8px;
-  align-items:stretch;
-  margin-top:4px;
-}
-.bc-card{
-  border-radius:12px;
-  padding:8px 10px;
-  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,1));
-  box-shadow:0 3px 8px rgba(15,23,42,.12);
-  border:1px solid rgba(255,255,255,.85);
-}
-.bc-title{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  color:var(--muted);
-  font-weight:800;
-  margin-bottom:6px;
-}
-.bc-kpi{
-  display:flex;
-  align-items:baseline;
-  gap:8px;
-}
-.bc-kpi .value{
-  font-weight:900;
-  font-size:22px;
-  line-height:1;
-}
-.bc-kpi .unit{
-  font-weight:800;
-  color:#374151;
-}
-.bc-note{
-  margin-top:6px;
-  font-size:11px;
-  color:var(--muted);
-}
-.bc-pills{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:6px;
-}
-.bc-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 9px;
-  border-radius:999px;
-  background:#f3f4ff;
-  color:#111827;
-  font-size:12px;
-  box-shadow:0 1px 3px rgba(15,23,42,.12);
-}
-
-/* Éditeur Modal */
-.editor-backdrop{
-  position:fixed; inset:0;
-  background:rgba(0,0,0,.35);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-}
-.editor-modal{
-  width:min(1100px, 92vw);
-  max-height:86vh;
-  overflow:auto;
-  background:#fff;
-  border-radius:18px;
-  border:1px solid #e5e7eb;
-  box-shadow:0 20px 60px rgba(0,0,0,.25);
-  padding:16px;
-}
-.editor-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:12px;
-}
-.editor-sub{
-  color:#6b7280;
-  font-size:12px;
-  margin-top:4px;
-}
-.editor-foot{
-  position:sticky;
-  bottom:0;
-  background:linear-gradient(180deg, rgba(255,255,255,0), #fff 45%);
-  padding-top:12px;
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  margin-top:10px;
-}
-.edit-card{
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:12px 12px 10px;
-  margin-top:12px;
-  background:linear-gradient(180deg,#ffffff,#fafbff);
-}
-.edit-card-title{
-  font-weight:900;
-  letter-spacing:.4px;
-  text-transform:uppercase;
-  font-size:12px;
-  color:#111827;
-  padding-bottom:8px;
-  border-bottom:1px solid #eef2f7;
-  margin-bottom:10px;
-}
-.edit-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px 12px;
-}
-.edit-row2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-@media (max-width: 980px){
-  .edit-row2{ grid-template-columns: 1fr; }
-  .edit-grid{ grid-template-columns: 1fr; }
-}
-.field label{
-  display:block;
-  font-weight:700;
-  font-size:12px;
-  margin-bottom:4px;
-}
-.field input, .field textarea{
-  width:100%;
-  border:1px solid #d1d5db;
-  border-radius:12px;
-  padding:8px 10px;
-  font-size:12px;
-  outline:none;
-  background:#f9fafb;
-}
-.field textarea{ min-height:70px; resize:vertical; }
-.edit-card-budget{ border-left:8px solid #c00000; }
-.edit-card-charges{ border-left:8px solid #1f5fbf; }
-
-
-/* =========================
-   CSS D'IMPRESSION STRICTEMENT LIMITÉ À 2 PAGES
-========================= */
-@page{ size: A4 landscape; margin: 10mm; }
-
-@media print {
-  * {
-    -webkit-print-color-adjust: exact !important; 
-    print-color-adjust: exact !important;
-  }
-  
-  html, body { 
-    background: #fff !important; 
-    font-size: 11px !important; 
-  }
-
-  .sticky-header-group { 
-    position: static !important; 
-    background: transparent !important; 
-    padding: 0 !important; 
-    margin: 0 !important; 
-    box-shadow: none !important; 
-    border: none !important;
-  }
-  .toolbar, #editor, .help, .page-ver, .no-print, .support-section, .btn, button { 
-    display: none !important; 
-  }
-  .charges-block { display: none !important; }
-
-  .wrap { max-width: none !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
-  
-  .bar { 
-    box-shadow: none !important; 
-    background: var(--brand) !important; 
-    color: #fff !important; 
-    border-radius: 10px !important; 
-    padding: 6px 12px !important; 
-    margin-bottom: 6px !important; 
-  }
-  .bar::before { display: none !important; }
-  .bar * { color: #fff !important; }
-  .title .name { font-size: 20px !important; margin-bottom: 2px !important; }
-  .title .date { font-size: 12px !important; }
-  .title .meta-line { font-size: 12px !important; }
-
-  .section { margin-top: 6px !important; break-inside: avoid; page-break-inside: avoid; }
-  .box { 
-    padding: 8px 12px !important; 
-    border: 1px solid var(--border) !important; 
-    border-radius: 10px !important; 
-    background: #fff !important; 
-  }
-  .sect { font-size: 12px !important; margin-bottom: 4px !important; color: #111 !important; }
-  .kv, ul { font-size: 12px !important; line-height: 1.3 !important; }
-  ul { margin-top: 2px !important; margin-bottom: 2px !important; padding-left: 16px !important; }
-  li { margin-bottom: 2px !important; }
-  
-  .tendance-grid { gap: 6px !important; margin-top: 4px !important; display: flex !important; }
-  .tendance-item { 
-    flex: 1; padding: 6px !important; border: 1px solid #e0e0e0 !important; 
-    border-radius: 8px !important; background: #fdfdfd !important; 
-  }
-  .tendance-label { font-size: 11px !important; margin-bottom: 4px !important; }
-  .tendance-item .trend-badge { 
-    width: 34px !important; height: 34px !important; font-size: 18px !important; 
-    margin: 0 auto 4px !important; border: 1px solid #eee !important; 
-  }
-  .trend-state { font-size: 13px !important; margin-bottom: 2px !important; }
-  .trend-detail { font-size: 11px !important; }
-  .tendance-status { gap: 2px !important; }
-  .tendance-status li { font-size: 12px !important; }
-  .dot { width: 8px !important; height: 8px !important; margin-right: 4px !important; }
-  
-  .progress-wrapper { margin-top: 4px !important; }
-  .progress-meta { font-size: 12px !important; margin-bottom: 4px !important; }
-  .progress-bar-bg { height: 8px !important; background: #eee !important; }
-  
-  .lists-grid { gap: 8px !important; display: flex !important; }
-  .lists-grid > div { flex: 1; }
-  .lists-grid strong { font-size: 12px !important; display: inline-block; margin-bottom: 2px !important; }
-
-  /* ================== PAGE 2 ================== */
-  .print-page-2 { page-break-before: always !important; break-before: page !important; margin-top: 0 !important; }
-
-  .bc-grid { gap: 8px !important; display: flex !important; }
-  .bc-card { flex: 1; padding: 8px 12px !important; border: 1px solid #e0e0e0 !important; background: #fdfdfd !important; }
-  .bc-title { font-size: 11px !important; margin-bottom: 4px !important; }
-  .bc-kpi .value { font-size: 18px !important; }
-  .bc-kpi .unit { font-size: 12px !important; }
-  .bc-note { font-size: 11px !important; margin-top: 4px !important; }
-  .bc-pill { font-size: 11px !important; padding: 2px 6px !important; border: 1px solid #e0e0e0 !important; background: #fff !important; }
-  
-  .planning-section { page-break-before: avoid !important; break-before: avoid !important; margin-top: 8px !important; }
-  .timeline-card { padding: 6px !important; border: 1px solid var(--border) !important; }
-  .gantt-wrap { padding: 0 !important; border: none !important; background: #fff !important; overflow: hidden !important; }
-  
-  canvas#projectGantt { width: 100% !important; max-height: 125mm !important; object-fit: contain !important; }
-
-  .legend { font-size: 11px !important; margin-top: 6px !important; gap: 8px !important; justify-content: center !important; }
-  .legend-color { width: 12px !important; height: 8px !important; border: 1px solid #ccc !important; }
-  
-  .info { display: none !important; }
-}
-
-/* --- STYLE MODE SENTINELLE & ALARMES --- */
-.sentinelle-badge {
-  display: none;
-  background: #E67E22;
-  color: #fff;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-weight: bold;
-  animation: pulse 2s infinite;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  margin-left: 8px;
-}
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(230, 126, 34, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0); }
-}
-.mode-corrompu {
-  background: #C0392B !important;
-  animation: blinker 0.6s linear infinite !important;
-}
-@keyframes blinker { 50% { opacity: 0.3; } }
-
-.switch { position: relative; display: inline-block; width: 36px; height: 18px; margin-right: 8px; margin-top: 2px;}
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-.slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: #E67E22; }
-input:checked + .slider:before { transform: translateX(18px); }
-
-</style>
+    /* Largeurs de colonnes PPM (9 colonnes alignées) */
+    th.col-id, td.col-id{ width:110px; }
+    th.col-proj, td.col-proj{ width:260px; }
+    th.col-dir, td.col-dir{ width:130px; }
+    th.col-cdp, td.col-cdp{ width:145px; }
+    th.col-stat, td.col-stat{ width:110px; }
+    th.col-prio, td.col-prio{ width:75px; text-align:center; }
+    th.col-bud, td.col-bud{ width:110px; }
+    th.charge-th, td.charge-td{ width:125px; }
+    th.actions-th, td.actions-td{ width:215px; text-align:right; }
+  </style>
 </head>
 
-<body class="trend-nuages">
+<body>
+  <header class="topbar">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="badge">DNSI</div>
+        <div class="titles">
+          <div class="h1">Portefeuille projets — PPM V2.7</div>
+          <div class="sub" id="govName">Gouvernance ➔ Programme ➔ Projet / Idée (Pont Supports Projet)</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnRefresh">🔄 Réactualiser</button>
+        <button class="btn" id="btnExportGov">⬇️ Exporter (.json)</button>
+        <button class="btn" id="btnPdf">🧾 PDF</button>
+        <button class="btn" id="btnSaveToGov" style="background:rgba(0,0,0,.25); border-color:transparent;">💾 Enregistrer localement</button>
+      </div>
+    </div>
+  </header>
 
-<div class="wrap" id="printRoot">
-  
-  <div class="sticky-header-group">
-    <div class="bar">
-      <div class="bar-inner">
-        <div class="title">
-          <div class="date">FICHE PROJET — <span data-text="Date_meteo"></span></div>
-          <div class="name">
-            <span data-text="Nom_du_projet"
-                  data-ph="&lt;Nom du projet&gt;"
-                  class="ghost"></span>
+  <!-- Navigation 5 Piliers (0. Synthèse en maître) -->
+  <nav class="ppm-nav">
+    <div class="ppm-nav-row">
+      <div class="ppm-links">
+        <a class="ppm-link" href="Gouvernance - 0. Synthese.html">📊 0. Synthèse CODIR</a>
+        <a class="ppm-link" href="Gouvernance - 1. Programmes.html">🎯 1. Programmes</a>
+        <a class="ppm-link active" href="Gouvernance - 2. Portefeuille.html">📚 2. Portefeuille Projets</a>
+        <a class="ppm-link" href="Gouvernance - 3. Capacite.html">⚙️ 3. Capacité DNSI</a>
+        <a class="ppm-link" href="Gouvernance - 4. Strategie.html">🧠 4. Stratégie & Arbitrage</a>
+      </div>
+      <div class="small">
+        <span class="chip" id="chipSync" style="padding:2px 8px; font-size:11px;">—</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <div class="split-entries">
+      <!-- CAPTER DEMANDE (Temps 1) -->
+      <div class="entry-card entry-idee">
+        <div class="entry-icon-1">💡</div>
+        <div>
+          <h2>Capter une Demande / Idée</h2>
+          <p>Collecte des besoins métiers. Saisie ultra-rapide des intentions sans chiffrage initial.</p>
+        </div>
+        <div class="entry-kpis">
+          <div class="ekpi">
+            <div class="val" id="kpiIdees" style="color:#0f172a">0</div>
+            <div class="lab">À qualifier / Pré-cadrages</div>
           </div>
-          <div class="meta-line">
-            <span data-text="Direction_porteur" data-ph="&lt;Direction porteuse&gt;" class="ghost"></span>
-            ·
-            <span data-text="Acteur_CP" data-ph="&lt;Chef de projet&gt;" class="ghost"></span>
-            ·
-            <span data-text="Phase_projet" data-ph="&lt;Phase du projet&gt;" class="ghost"></span>
+          <div class="ekpi">
+            <div class="val" id="kpiOrphans" style="color:#c2410c">0</div>
+            <div class="lab">Hors programme</div>
           </div>
         </div>
-        <div class="ver">V1.15 (SENTINELLE)</div>
+        <button class="entry-btn" id="btnOpenDemande">➕ Nouvelle Demande</button>
+      </div>
+
+      <!-- SUIVI PROJETS LANCES (JSON CP) -->
+      <div class="entry-card entry-douane">
+        <div class="entry-icon-2">🛂</div>
+        <div>
+          <h2>Suivi des Projets Lancés</h2>
+          <p>Mise à jour du portefeuille via les JSON des CDP. Contrôle automatique de fraîcheur et mémorisation des pivots complets.</p>
+        </div>
+        <div class="entry-kpis">
+          <div class="ekpi">
+            <div class="val" id="kpiPivots" style="color:#166534">0</div>
+            <div class="lab">Projets pilotés (JSON)</div>
+          </div>
+          <div class="ekpi">
+            <div class="val" id="kpiPivotsStored" style="color:#0369a1">0</div>
+            <div class="lab">Pivots détaillés liés</div>
+          </div>
+        </div>
+        <button class="entry-btn" id="btnLoadPivots">⬆️ Auditer & Charger JSON</button>
       </div>
     </div>
 
-    <div class="toolbar">
-      <button class="btn" onclick="window.print()">🖨️ Exporter en PDF (2 pages)</button>
-      <button class="btn" onclick="openEditor()">✏️ Éditer la présentation</button>
-      <button class="btn secondary" onclick="saveJson()">💾 Sauvegarder (.json)</button>
-      <button class="btn secondary" onclick="triggerImport()">📥 Importer projet (.json)</button>
-      <input id="importInput" type="file" accept=".json,application/json" style="display:none" onchange="doImport(this)">
-      <button class="btn secondary" onclick="refreshFromStorage()">🔄 Réactualiser</button>
-
-      <div class="sentinelle-ctrl" style="display:flex; align-items:center; margin-left: auto; background: #fdfdfd; padding: 4px 12px; border-radius: 8px; border: 1px solid #ddd;">
-        <label class="switch" title="Activer la surveillance Sentinelle">
-          <input type="checkbox" id="checkSentinelle" onchange="toggleSentinelle()">
-          <span class="slider round"></span>
-        </label>
-        <span style="font-weight:bold; font-size:12px; color:#555;">MODE SENTINELLE</span>
-        <span id="badgeSentinelle" class="sentinelle-badge">🛡️ ACTIF</span>
+    <!-- REFERENTIEL PORTEFEUILLE -->
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Référentiel des Demandes et Projets</div>
+          <div class="panel-sub">Workflow : Idée ➔ Qualification PMO (Programme + Chiffrage) ➔ Pré-Cadrage ➔ Projet Lancé ➔ 🚀 Supports Projet</div>
         </div>
-    </div>
-    
-    <div class="help">
-      Workflow recommandé : <b>1) Présentation du projet (ici)</b> → <b>2) Feuille de route</b> (planning) → <b>3) Fiche météo</b> (tendance & actions).
-    </div>
-
-    <div class="section support-section">
-      <div class="box">
-        <div class="sect" style="margin-bottom:0;">SUPPORTS PROJET</div>
-        <div class="support-flow">
-          <button class="support-chip primary" onclick="openFeuilleDeRoute()">
-            📅 Feuille de route
-          </button>
-          <span class="support-arrow">➜</span>
-          <button class="support-chip" onclick="openRaci()">
-            🧩 RACI
-          </button>
-          <span class="support-arrow">➜</span>
-          <button class="support-chip" onclick="openPlanningDetaille()">
-            📋 Planning détaillé
-          </button>
-          <span class="support-arrow">➜</span>
-          <button class="support-chip" onclick="openConges()">
-            🏖️ Absences
-          </button>
-          <span style="margin-left:10px;"></span>
-          <button class="support-chip secondary" onclick="openMeteo()">
-            🌤️ Fiche météo (tendance finale)
-          </button>
-        </div>
+        <div class="chip" id="chipCount" style="background:#f1f5f9; border:none;">—</div>
       </div>
-    </div>
-  </div> 
 
-  <div class="page-ver">V1.15</div>
+      <div class="panel-body">
+        <div class="filter-bar">
+          <input type="text" id="fltSearch" placeholder="🔍 Rechercher (ID, Projet, CDP, Programme...)" />
+          <select id="fltDir">
+            <option value="">🏢 Toutes les directions</option>
+          </select>
+          <select id="fltPrio">
+            <option value="">🎯 Toutes priorités</option>
+            <option value="P1">🔴 P1 (Prioritaire)</option>
+            <option value="P2">🟠 P2 (Haute)</option>
+            <option value="P3">🔵 P3 (Normale)</option>
+            <option value="P4">⚪ P4 (Basse)</option>
+          </select>
 
-  <div class="section">
-    <div class="box">
-      <div class="sect">PRÉSENTATION DU PROJET</div>
-      <div data-text="Description"
-           data-ph="&lt;Contexte et objectifs (4–6 phrases)&gt;"
-           class="ghost"></div>
+          <!-- FILTRE DYNAMIQUE DES PROGRAMMES + HORS PROGRAMME -->
+          <select id="fltProg">
+            <option value="">🎯 Tous les programmes</option>
+          </select>
 
-      <div class="kv" style="margin-top:6px;">
-        <div class="k">Direction porteuse</div>
-        <div>: <span data-text="Direction_porteur" data-ph="&lt;Direction&gt;" class="ghost"></span></div>
-
-        <div class="k">Phase du projet</div>
-        <div>: <span data-text="Phase_projet" data-ph="&lt;Phase&gt;" class="ghost"></span></div>
-
-        <div class="k">Identifiant du marché</div>
-        <div>: <span data-text="Id_marche" data-ph="Non concerné" class="ghost"></span></div>
-
-        <div class="k">Directeur·rice de projet / CP</div>
-        <div>: <span data-text="Acteur_CP" data-ph="Nom Prénom" class="ghost"></span></div>
-
-        <div class="k">Expert·e métier</div>
-        <div>: <span data-text="Acteur_Metier" data-ph="Nom Prénom" class="ghost"></span></div>
-
-        <div class="k">MOE</div>
-        <div>: <span data-text="Acteur_MOE" data-ph="Nom / Équipe" class="ghost"></span></div>
-
-        <div class="k">Prestataire</div>
-        <div>: <span data-text="Acteur_Presta" data-ph="Nom / Société" class="ghost"></span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="box">
-      <div class="sect">TENDANCE GÉNÉRALE</div>
-
-      <div class="tendance-grid">
-
-        <div class="tendance-item">
-          <div class="tendance-label">Situation</div>
-          <div class="trend-badge" id="trendBadge" aria-label="Situation">⛅</div>
+          <select id="fltPivot">
+            <option value="">📂 Tous statuts</option>
+            <option value="with">✅ Projets Lancés (Pivot)</option>
+            <option value="without">💡 Idées & Pré-Cadrages</option>
+          </select>
+          <button class="btn2 ghost" id="btnResetFilters" style="padding:6px; font-size:16px;" title="Effacer les filtres">✖</button>
         </div>
 
-        <div class="tendance-item">
-          <div class="tendance-label">Tendance</div>
-          <div class="trend-card-main" style="justify-content:center;">
-            <div id="trendArrow" class="trend-arrow-3d trend-arrow-dir-flat trend-arrow-col-blue"></div>
-            <div style="text-align:left;">
-              <div id="trendState" class="trend-state">Stable</div>
-              <div id="trendDetail" class="trend-detail"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-id">ID</th>
+                <th class="col-proj">Demande / Projet & Programme</th>
+                <th class="col-dir">Direction</th>
+                <th class="col-cdp">CDP & Fraîcheur</th>
+                <th class="col-stat">Statut Cycle</th>
+                <th class="col-prio">Prio.</th>
+                <th class="col-bud">Budget</th>
+                <th class="charge-th">Charges</th>
+                <th class="actions-th">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div style="text-align:center; color:var(--muted); font-size:12px; margin-top:12px;">Portefeuille projets — PPM V2.7 (Pont contextualisé vers Gestion-supports-projet- & Douane 4 pôles SIGF)</div>
+      </div>
+    </section>
+  </main>
+
+  <input type="file" id="filePivots" accept="application/json,.json" multiple style="display:none"/>
+
+  <!-- MODAL TEMPS 1 : Expression du Besoin -->
+  <div class="modal-backdrop" id="modalIdee" role="dialog" aria-modal="true">
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">➕ Temps 1 : Expression du Besoin (Métier)</div>
+          <div class="small">Déclaration pure de l'intention et de la douleur. Zéro chiffrage.</div>
+        </div>
+        <button class="btn2 ghost" onclick="el('modalIdee').style.display='none'">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form" style="grid-template-columns:1fr;">
+          <div style="display:flex; gap:16px;">
+            <div style="flex:1;">
+              <label>ID projet *</label>
+              <input id="iId" placeholder="ex : FIN-2027-01"/>
+            </div>
+            <div style="flex:2;">
+              <label>Titre de la demande *</label>
+              <input id="iName" placeholder="Titre explicite de l'attente métier..."/>
             </div>
           </div>
-        </div>
 
-        <div class="tendance-item">
-          <div class="tendance-label">Statut global</div>
-          <ul class="tendance-status">
-            <li><span class="dot ok" data-dot="Statut_planning"></span><span>Planning</span></li>
-            <li><span class="dot ok" data-dot="Statut_perimetre"></span><span>Périmètre</span></li>
-            <li><span class="dot ok" data-dot="Statut_ressources"></span><span>Ressources</span></li>
-          </ul>
-        </div>
-
-      </div>
-
-      <div class="info">
-        Vert : conforme · Orange : sous vigilance · Rouge : dégradé.  
-        <b>Non modifiable ici :</b> cette tendance est alimentée par la fiche météo.
-      </div>
-      <button class="btn link" onclick="openMeteo()">➡ <span class="no-print">Modifier la tendance dans la fiche météo</span></button>
-    </div>
-  </div>
-
-  
-  <div class="section">
-    <div class="box">
-      <div class="sect">ÉTAT D’AVANCEMENT</div>
-      <div class="progress-wrapper">
-        <div class="progress-row">
-          <div class="progress-meta">
-            <strong>État d’avancement du projet</strong>
-            <span id="progressPercentLabel">0 %</span>
-            <span class="ghost" data-text="progress.label" data-ph="Ex. En cadrage, En réalisation…"></span>
+          <div style="display:flex; gap:16px;">
+            <div style="flex:1;">
+              <label>Direction / Service</label>
+              <input id="iDir" placeholder="ex : Finances"/>
+            </div>
+            <div style="flex:1;">
+              <label>Sponsor / Demandeur</label>
+              <input id="iSponsor" placeholder="Nom du référent métier"/>
+            </div>
           </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressFill"></div>
+
+          <div>
+            <label>Origine du besoin *</label>
+            <select id="iOrigine">
+              <option value="">-- Sélectionnez l'origine principale --</option>
+              <option value="dette">🏗️ Dette technique / Rationalisation SI</option>
+              <option value="obsolescence">🚨 Fin de vie / Obsolescence / Fin de maintenance</option>
+              <option value="marche">📜 Renouvellement de marché public</option>
+              <option value="legal">⚖️ Obligation réglementaire ou légale (RGPD, loi...)</option>
+              <option value="mandat">🏛️ Engagement du mandat / Décision DGA</option>
+              <option value="service">🚀 Création d'un nouveau service usager</option>
+              <option value="interne">📈 Gain d'efficacité interne métier</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Quel est le problème à résoudre ou l'attente ? *</label>
+            <textarea id="iDescription" placeholder="Décrivez la douleur métier actuelle ou l'objectif attendu. Ne décrivez pas une solution technique."></textarea>
           </div>
         </div>
       </div>
-      <div class="charges-block">
-        <div class="charges-header-row">
-          <div>Budget BP <span id="chargesYear">2026</span></div>
-          <div class="charges-total">
-            ETP TOTAL :
-            <span id="chargesEtpActual">0</span>
-            /
-            <span id="chargesEtpBudget">105</span>
-          </div>
-        </div>
-        <div id="chargesDomains" class="charges-domains"></div>
+      <div class="modal-foot">
+        <button class="btn2 ghost" onclick="el('modalIdee').style.display='none'">Annuler</button>
+        <button class="btn2 primary" id="btnCreateIdee">Capter la demande</button>
       </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="box">
-      <div class="sect">POINT D’AVANCEMENT DU PROJET</div>
-      <div class="lists-grid">
+  <!-- MODAL TEMPS 2 : Qualification PMO -->
+  <div class="modal-backdrop" id="modalQualif" role="dialog" aria-modal="true">
+    <div class="modal" style="max-width:800px;">
+      <div class="modal-head">
         <div>
-          <strong>Actions réalisées</strong>
-          <ul data-list="Actions_realisees"
-              data-ph-list="Ex. Atelier de cadrage tenu|Ex. Maquettes V1 présentées"></ul>
+          <div class="modal-title">🎯 Temps 2 : Qualification PMO & Rattachement Programme</div>
+          <div class="small">Challenger la demande, la rattacher à un Programme, définir la Priorité et le Macro-chiffrage.</div>
         </div>
+        <button class="btn2 ghost" onclick="el('modalQualif').style.display='none'">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="qIdProj" />
+
+        <div style="background:#f8fafc; padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
+          <div style="font-size:12px; color:var(--muted); font-weight:800; margin-bottom:4px;">Demande originelle</div>
+          <div style="font-weight:900; font-size:14px; margin-bottom:8px;" id="qDisplayTitle">—</div>
+          <div style="font-size:12px; color:#334155; font-style:italic;" id="qDisplayDesc">—</div>
+          <div style="margin-top:8px; font-size:12px; font-weight:800; color:var(--lille-red);">Origine : <span id="qDisplayOrigine">—</span></div>
+        </div>
+
+        <div class="form">
+          <div class="section-title">1. Rattachement Programme & Priorisation</div>
+
+          <div>
+            <label>Programme de rattachement</label>
+            <select id="qProg">
+              <!-- Rempli dynamiquement depuis GOV.programmes -->
+            </select>
+          </div>
+          <div>
+            <label>Priorité évaluée</label>
+            <select id="qPrio">
+              <option value="P1">🔴 P1 (Vitale / Absolue)</option>
+              <option value="P2">🟠 P2 (Haute)</option>
+              <option value="P3">🔵 P3 (Normale / De confort)</option>
+              <option value="P4">⚪ P4 (Basse / Optionnelle)</option>
+            </select>
+          </div>
+
+          <div class="section-title">2. Macro-chiffrage « À dire d'expert »</div>
+
+          <div style="grid-column:1/-1;">
+            <label>Taille du projet (Pré-remplissage rapide)</label>
+            <select id="qTShirt" onchange="applyTShirtSizing()" style="border-color:#0f172a; width:50%;">
+              <option value="">-- Choisir un T-Shirt Sizing --</option>
+              <option value="S">Taille S (~15j)</option>
+              <option value="M">Taille M (~40j)</option>
+              <option value="L">Taille L (~80j)</option>
+              <option value="XL">Taille XL (~150j+)</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Charge CDP / Études (Jours)</label>
+            <input id="qChargeCDP" type="number" min="0" step="1" value="0"/>
+          </div>
+          <div>
+            <label>Charge MCO / Infra (Jours)</label>
+            <input id="qChargeMCO" type="number" min="0" step="1" value="0"/>
+          </div>
+          <div>
+            <label>Budget Investissement (k€)</label>
+            <input id="qBudgetK" type="number" min="0" step="1" value="0"/>
+          </div>
+          <div>
+            <label>Budget Fonctionnement (k€/an)</label>
+            <input id="qBudgetFonctK" type="number" min="0" step="1" value="0"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn2 ghost" onclick="el('modalQualif').style.display='none'">Annuler</button>
+        <button class="btn2 primary" id="btnSaveQualif" style="background:#0f172a; border-color:#0f172a;">Valider la Qualification</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL RAPPORT D'AUDIT & INTEGRATION JSON -->
+  <div class="modal-backdrop" id="modalIntegration" role="dialog" aria-modal="true">
+    <div class="modal" style="width:min(720px, 100%);">
+      <div class="modal-head">
         <div>
-          <strong>Actions en cours</strong>
-          <ul data-list="Actions_en_cours"
-              data-ph-list="Ex. Rédaction CCTP|Ex. Préparation démonstration"></ul>
+          <div class="modal-title">🛂 Rapport d'Audit & Chargement JSON</div>
+          <div class="small">Bilan de l'intégration des fichiers JSON de vos chefs de projets (pivots complets conservés pour le pont)</div>
         </div>
-        <div>
-          <strong>Points d’attention</strong>
-          <ul data-list="Points_attention"></ul>
-          <div id="noAttention" class="info">
-            S’il n’y a aucun élément listé, c’est que rien n’est jugé bloquant ou en vigilance haute.
-          </div>
+        <button class="btn2 ghost" onclick="el('modalIntegration').style.display='none'">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-weight:900; font-size:14px; color:#166534; margin-bottom:6px;">
+          ✅ Projets chargés / mis à jour (<span id="intUpdatedCount">0</span>)
         </div>
-      </div>
-      <div class="info">
-        <b>Non modifiable ici :</b> ces listes sont les mêmes que dans la fiche météo.
-      </div>
-    </div>
-  </div>
+        <div class="report-list" id="listUpdated"></div>
 
-  <div class="section print-page-2">
-    <div class="box">
-      <div class="sect">BUDGET &amp; CHARGES PROJET</div>
-      <div class="bc-grid">
-        <div class="bc-card">
-          <div class="bc-title">Budget projet</div>
-          <div class="bc-kpi">
-            <div class="value" id="budgetAmountK">—</div>
-            <div class="unit">k€</div>
-            <div class="ghost" style="margin-left:auto" id="budgetYear"></div>
-          </div>
-          <div class="bc-note" id="budgetComment"></div>
+        <div style="font-weight:900; font-size:14px; color:#991b1b; margin-top:18px; margin-bottom:6px;">
+          ⚠️ Projets pilotés absents de ce lot (<span id="intMissingCount">0</span>)
         </div>
-
-        <div class="bc-card">
-          <div class="bc-title">Charges projet DNSI</div>
-          <div class="bc-kpi">
-            <div class="value" id="chargesProjetTotal">—</div>
-            <div class="unit">jours</div>
-          </div>
-          <div class="bc-pills" id="chargesProjetTeams"></div>
-          <div class="bc-note" id="chargesProjetAssumption"></div>
+        <div class="small" style="margin-bottom:8px;">
+          Ces projets sont marqués comme lancés dans la gouvernance mais n'étaient pas présents dans votre sélection.
         </div>
+        <div class="report-list" id="listMissing"></div>
       </div>
-      <div class="info" style="margin-top:6px;">
-        Ces champs proviennent du <b>pivot JSON</b> (budget marché + estimation charges DNSI en jours).
+      <div class="modal-foot">
+        <button class="btn2 primary" style="background:#16a34a; border-color:#16a34a;" onclick="el('modalIntegration').style.display='none'">Fermer le rapport</button>
       </div>
     </div>
   </div>
 
-  <div class="section planning-section">
-    <div class="box">
-      <div class="sect">PLANNING</div>
-      <div class="timeline-card">
-        <div id="ganttContainer"></div>
-      </div>
-      <div class="info">
-        <b>Non modifiable ici :</b> ce planning vient de la feuille de route cible.  
-      </div>
-      <button class="btn link" onclick="openFeuilleDeRoute()">➡ <span class="no-print">Modifier le planning dans la feuille de route</span></button>
-    </div>
-  </div>
-  
-</div>
+  <script>
+    const APP_VERSION = "V2.7";
+    const SUPPORT_PROJECT_URL = "https://sryzek.github.io/Gestion-supports-projet-/";
+    const STORAGE_KEY = "GOUVERNANCE_JSON";
 
-<div class="editor-backdrop" id="editor" role="dialog" aria-modal="true" style="display:none">
-  <div class="editor-modal">
-    <div class="editor-head">
-      <div>
-        <h3 style="margin:0">Éditer la fiche projet</h3>
-        <div class="editor-sub">Modifie uniquement les champs de la fiche projet. La tendance et le planning restent alimentés par les autres supports.</div>
-      </div>
-      <button class="btn small secondary" onclick="closeEditor(false)" title="Fermer">✕</button>
-    </div>
+    function nowISO(){ return new Date().toISOString(); }
+    function el(id){ return document.getElementById(id); }
+    function safeJsonParse(t){ try{ return JSON.parse(t); }catch(e){ return null; } }
 
-    <div class="edit-card">
-      <div class="edit-card-title">Présentation du projet</div>
-      <div class="edit-grid">
-        <div class="field">
-          <label>Nom du projet *</label>
-          <input id="e_Nom_du_projet" placeholder="Nom officiel du projet" oninput="live('Nom_du_projet', this.value)">
-          <div class="hint">Nom officiel du projet tel qu’il figure dans vos documents.</div>
-        </div>
-
-        <div class="field">
-          <label>Date de mise à jour (JJ/MM/AAAA)</label>
-          <input id="e_Date_meteo" placeholder="JJ/MM/AAAA" oninput="liveDate(this.value)">
-          <div class="hint">Date de mise à jour de la fiche projet.</div>
-        </div>
-
-        <div class="field">
-          <label>Identifiant du marché</label>
-          <input id="e_Id_marche" placeholder="acquisition-nouvel-sigf-..." oninput="live('Id_marche', this.value)">
-          <div class="hint">Numéro ou nom du marché, si applicable.</div>
-        </div>
-
-        <div class="field">
-          <label>Phase du projet</label>
-          <input id="e_Phase_projet" placeholder="Ex. Cadrage" oninput="live('Phase_projet', this.value)">
-        </div>
-
-        <div class="field" style="grid-column:1/-1;">
-          <label>Description du projet *</label>
-          <textarea id="e_Description" placeholder="Contexte, enjeux, objectifs principaux (4–6 phrases)."
-                    oninput="live('Description', this.value)"></textarea>
-        </div>
-
-        <div class="field">
-          <label>Direction porteuse</label>
-          <input id="e_Direction_porteur" placeholder="Ex. DAF / DNSI" oninput="live('Direction_porteur', this.value)">
-        </div>
-
-        <div class="field">
-          <label>Directeur·rice du projet / CP</label>
-          <input id="e_Acteur_CP" placeholder="Nom Prénom" oninput="live('Acteur_CP', this.value)">
-        </div>
-
-        <div class="field">
-          <label>Expert·e métier</label>
-          <input id="e_Acteur_Metier" placeholder="Nom Prénom" oninput="live('Acteur_Metier', this.value)">
-        </div>
-
-        <div class="field">
-          <label>MOE</label>
-          <input id="e_Acteur_MOE" placeholder="Nom / Équipe" oninput="live('Acteur_MOE', this.value)">
-        </div>
-
-        <div class="field">
-          <label>Prestataire</label>
-          <input id="e_Acteur_Presta" placeholder="Société" oninput="live('Acteur_Presta', this.value)">
-        </div>
-      </div>
-    </div>
-
-    <div class="edit-row2">
-      <div class="edit-card">
-        <div class="edit-card-title">État d’avancement</div>
-        <div class="edit-grid">
-          <div class="field">
-            <label>État d’avancement (%)</label>
-            <input id="e_progress_percent" type="number" min="0" max="100" step="1" oninput="updateProgressPercent(this.value)">
-            <div class="hint">0 à 100. Exemple : 40 pour 40%.</div>
-          </div>
-          <div class="field">
-            <label>Libellé d’avancement</label>
-            <input id="e_progress_label" placeholder="Ex. Cadré" oninput="updateProgressLabel(this.value)">
-            <div class="hint">Texte court : « En cadrage », « En réalisation »…</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="edit-card">
-        <div class="edit-card-title">Conso ETP (DNSI)</div>
-        <div class="edit-grid">
-          <div class="field">
-            <label>ETP total consommé (tous pôles)</label>
-            <input id="e_charges_etp_actual" type="number" step="0.1" min="0" oninput="updateChargesEtpTotalActual(this.value)">
-          </div>
-          <div class="field">
-            <label>Conso ETP Études</label>
-            <input id="e_charges_etudes_actual" type="number" step="0.1" min="0" oninput="updateChargesDomainActual('ETUDES', this.value)">
-          </div>
-          <div class="field">
-            <label>Conso ETP PIIA</label>
-            <input id="e_charges_piia_actual" type="number" step="0.1" min="0" oninput="updateChargesDomainActual('PIIA', this.value)">
-          </div>
-          <div class="field">
-            <label>Conso ETP TIRS</label>
-            <input id="e_charges_tirs_actual" type="number" step="0.1" min="0" oninput="updateChargesDomainActual('TIRS', this.value)">
-          </div>
-          <div class="field">
-            <label>Conso ETP SSI</label>
-            <input id="e_charges_ssi_actual" type="number" step="0.1" min="0" oninput="updateChargesDomainActual('SSI', this.value)">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="edit-row2">
-      <div class="edit-card edit-card-budget">
-        <div class="edit-card-title">Budget projet (marché)</div>
-        <div class="edit-grid">
-          <div class="field">
-            <label>Budget (k€)</label>
-            <input id="e_budget_amountK" type="number" step="1" min="0" oninput="updateBudgetAmountK(this.value)">
-            <div class="hint">Saisir en k€ (ex. 600).</div>
-          </div>
-          <div class="field">
-            <label>Année BP</label>
-            <input id="e_budget_year" type="number" step="1" oninput="updateBudgetYear(this.value)">
-          </div>
-          <div class="field" style="grid-column:1/-1;">
-            <label>Commentaire budget</label>
-            <textarea id="e_budget_comment" placeholder="Licences + intégration + maintenance + AMO…"
-                      oninput="updateBudgetComment(this.value)"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="edit-card edit-card-charges">
-        <div class="edit-card-title">Charges projet DNSI (jours)</div>
-        <div class="edit-grid">
-          <div class="field">
-            <label>Études / Pilotage (jours)</label>
-            <input id="e_cp_etudes" type="number" step="1" min="0" oninput="updateChargesProjetTeam('ETUDES', this.value)">
-          </div>
-          <div class="field">
-            <label>PIIA / Données / Interfaces (jours)</label>
-            <input id="e_cp_piia" type="number" step="1" min="0" oninput="updateChargesProjetTeam('PIIA', this.value)">
-          </div>
-          <div class="field">
-            <label>TIRS / Infra / Réseau (jours)</label>
-            <input id="e_cp_tirs" type="number" step="1" min="0" oninput="updateChargesProjetTeam('TIRS', this.value)">
-          </div>
-          <div class="field">
-            <label>SSI (jours)</label>
-            <input id="e_cp_ssi" type="number" step="1" min="0" oninput="updateChargesProjetTeam('SSI', this.value)">
-          </div>
-          <div class="field" style="grid-column:1/-1;">
-            <label>Hypothèses / commentaire</label>
-            <textarea id="e_cp_assumption" placeholder="Hypothèses : éditeur fait l’intégration…"
-                      oninput="updateChargesProjetAssumption(this.value)"></textarea>
-            <div class="hint">Le total (jours) est recalculé automatiquement.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="editor-foot">
-      <button class="btn secondary" onclick="closeEditor(false)">Annuler</button>
-      <button class="btn" onclick="closeEditor(true)">Appliquer</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const APP_VERSION = "V1.15";
-
-/* Modèle interne */
-let data = {
-  Date_meteo: new Date().toISOString().slice(0,10),
-  Nom_du_projet: "Système d’Information de Gestion Financière — Ville de Lille",
-  Description: "",
-  Id_marche: "",
-  Direction_porteur: "",
-  Phase_projet: "",
-  Acteur_CP: "",
-  Acteur_Metier: "",
-  Acteur_MOE: "",
-  Acteur_Presta: "",
-  Statut_planning: "Vert",
-  Statut_perimetre: "Vert",
-  Statut_ressources: "Vert",
-  Tendance: "soleil_nuages",
-  Tendance_code: "stable",
-  Tendance_detail: "",
-  Actions_realisees: [],
-  Actions_en_cours: [],
-  Points_attention: [],
-  Planning: [],
-  charges: {
-    referenceYear: 2026,
-    etpTotal: { budget: 105, actual: 0 },
-    domains: [
-      { code: "ETUDES", label: "CONSO ETP ETUDES", budgetEtp: 50, actualEtp: 0 },
-      { code: "PIIA",   label: "CONSO ETP PIIA",   budgetEtp: 25, actualEtp: 0 },
-      { code: "TIRS",   label: "CONSO ETP TIRS",   budgetEtp: 15, actualEtp: 0 },
-      { code: "SSI",    label: "CONSO ETP SSI",    budgetEtp: 15, actualEtp: 0 }
-    ]
-  },
-  progress: {
-    percent: 0,
-    label: ""
-  },
-  budget: {
-    year: 2026,
-    currency: "EUR",
-    amount: 0,
-    amountK: 0,
-    comment: ""
-  },
-  chargesProjet: {
-    unit: "jours",
-    assumption: "",
-    teams: [
-      { code: "ETUDES", label: "Études / Pilotage", estimated: 0 },
-      { code: "PIIA",   label: "PIIA / Données / Interfaces", estimated: 0 },
-      { code: "TIRS",   label: "TIRS / Infra / Réseau", estimated: 0 },
-      { code: "SSI",    label: "SSI", estimated: 0 }
-    ],
-    totalEstimated: 0
-  }
-};
-
-// --- LOGIQUE SENTINELLE ---
-function toggleSentinelle() {
-  const isActive = document.getElementById('checkSentinelle').checked;
-  if(!pivotModel) pivotModel = { project: {} };
-  if(!pivotModel.config) pivotModel.config = {};
-  pivotModel.config.sentinelleActive = isActive;
-
-  if(isActive) {
-      localStorage.setItem('sentinelle_baseline', JSON.stringify(pivotModel));
-      
-      // OUVERTURE AUTOMATIQUE DE LA VIGIE DANS UN ONGLET UNIQUE
-      window.open('GOLD_Vigie.html', 'VigieWindow');
-  }
-  
-  if (typeof autoSaveToLocalStorage === "function") autoSaveToLocalStorage();
-  if (typeof broadcastProjectUpdate === "function") broadcastProjectUpdate();
-  updateSentinelleUI();
-}
-
-function updateSentinelleUI() {
-    const isActive = pivotModel && pivotModel.config && pivotModel.config.sentinelleActive;
-    const check = document.getElementById('checkSentinelle');
-    const badge = document.getElementById('badgeSentinelle');
-    
-    if(check) check.checked = isActive;
-    if(badge) {
-        badge.style.display = isActive ? 'flex' : 'none';
-        if(!isActive) {
-            badge.innerHTML = "🛡️ ACTIF";
-            badge.classList.remove("mode-corrompu");
-        }
+    function diffDays(isoString, nowObj) {
+      if(!isoString) return 999;
+      const d = new Date(isoString);
+      if(isNaN(d.getTime())) return 999;
+      return Math.floor(Math.abs(nowObj - d) / (1000 * 60 * 60 * 24));
     }
-}
 
-/* ==========================================
-   Moteur de Synchronisation Temps Réel
-   ========================================== */
-window.isReceivingSync = false;
-
-function handleIncomingUpdate(parsedData, source) {
-  if(source === "portal" || source === "fiche-projet") return;
-  
-  if(parsedData && parsedData.project) {
-    console.log("📥 [GOLD SYNC] Mise à jour reçue de : " + source);
-    
-    if (pivotModel && pivotModel.config && pivotModel.config.sentinelleActive) {
-        if (!parsedData.config) parsedData.config = {};
-        parsedData.config.sentinelleActive = true;
+    function escapeHtml(s){
+      return String(s||"").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
     }
-    
-    pivotModel = parsedData; 
-    updateSentinelleUI();
-    applyPivotToMeteo(parsedData); 
-    renderAll(); 
-    
-    const toast = document.createElement("div");
-    toast.style = "position:fixed; bottom:20px; right:20px; background:#1BAE70; color:#fff; padding:8px 16px; border-radius:20px; z-index:9999; font-size:12px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.15);";
-    toast.textContent = "Données synchronisées (" + source + ")";
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-  }
-}
-try {
-  new BroadcastChannel('gold-project-sync').onmessage = (ev) => {
-    if (ev?.data?.type === "PROJECT_UPDATED") {
-      handleIncomingUpdate(ev.data.payload, ev.data.source);
+
+    function toast(msg){
+      const d = document.createElement("div");
+      d.className = "toast";
+      d.textContent = msg;
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(), 2600);
     }
-    if (ev?.data?.type === "SYNC_LEAVES") {
-       try {
-           const raw = localStorage.getItem("currentProjectJson");
-           if(raw) handleIncomingUpdate(JSON.parse(raw), "conges");
-       } catch(e){}
+
+    function applyTShirtSizing(){
+      const val = el("qTShirt").value;
+      if(val === "S") { el("qChargeCDP").value = 10; el("qChargeMCO").value = 5; }
+      else if(val === "M") { el("qChargeCDP").value = 30; el("qChargeMCO").value = 10; }
+      else if(val === "L") { el("qChargeCDP").value = 60; el("qChargeMCO").value = 20; }
+      else if(val === "XL") { el("qChargeCDP").value = 110; el("qChargeMCO").value = 40; }
     }
-    if (ev?.data?.type === "INTEGRITY_ALARM") {
-        const badge = document.getElementById('badgeSentinelle');
-        if (badge) {
-            badge.innerHTML = "⚠️ CORRUPTION DÉTECTÉE (" + ev.data.source + ")";
-            badge.classList.add("mode-corrompu");
-        }
+
+    function normalizePriorityValue(v){
+      let s = (v===null || v===undefined) ? "" : String(v);
+      s = s.trim().toUpperCase();
+      if(!s) return "P2";
+      let m = s.match(/P\s*0*([1-4])/);
+      if(m) return "P"+m[1];
+      m = s.match(/^\s*([1-4])\s*$/);
+      if(m) return "P"+m[1];
+      return "P2";
     }
-  };
-} catch(e){ console.warn("BroadcastChannel non supporté"); }
 
-window.addEventListener("storage", (ev) => {
-  if (ev.key === "currentProjectJson") {
-    try { handleIncomingUpdate(JSON.parse(ev.newValue), "storage"); } catch(e){}
-  }
-});
-
-
-/* Autosave brouillon (localStorage) */
-const AUTOSAVE_KEY = "SIGF_FICHE_PROJET_AUTOSAVE";
-
-let __autosaveTimer = null;
-function scheduleAutoSave(){
-  try{
-    if(__autosaveTimer) clearTimeout(__autosaveTimer);
-    __autosaveTimer = setTimeout(autoSaveToLocalStorage, 800);
-  }catch(e){ /* noop */ }
-}
-
-function autoSaveToLocalStorage(){
-  if(window.isReceivingSync) return; 
-  try{
-    if(pivotModel){
-      syncDataIntoPivot(pivotModel); 
+    /* =============================
+       Normalisation Gouvernance & Programmes
+    ============================== */
+    function getProgrammesList(g){
+      if(Array.isArray(g?.programmes) && g.programmes.length > 0) return g.programmes;
+      if(Array.isArray(g?.politiques) && g.politiques.length > 0) return g.politiques;
+      return [];
     }
-    const payload = pivotModel ? pivotModel : data;
 
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
-      savedAt: new Date().toISOString(),
-      payload
-    }));
-    localStorage.setItem("currentProjectJson", JSON.stringify(payload));
-  }catch(e){
-    console.warn("Autosave localStorage impossible", e);
-  }
-}
-window.addEventListener("beforeunload", () => {
-  autoSaveToLocalStorage();
-});
+    function normalizeProjectRecord(p){
+      if(!p || typeof p !== "object") return null;
+      const id = String(p.id || p.code || "").trim();
+      const nom = String(p.nom || p.name || id).trim();
+      const priorite = normalizePriorityValue(p.priorite ?? p.prio ?? "P2");
+      const has_pivot = !!(p.has_pivot ?? p.hasPivot);
 
-function restoreAutoSaveIfAny(){
-  try{
-    const raw = localStorage.getItem(AUTOSAVE_KEY);
-    if(!raw) return false;
-    const saved = JSON.parse(raw);
-    if(!saved || !saved.payload) return false;
-
-    const payload = saved.payload;
-
-    if(payload && payload.project && (payload.phases || payload.feuilleDeRoute)){
-      applyPivotToMeteo(payload);
-    }else{
-      pivotModel = null;
-      data = payload;
-      renderAll();
-    }
-    showToast("📝 Brouillon restauré automatiquement");
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-function clearAutoSave(){
-  try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
-}
-function forceAutoSaveNow(){
-  autoSaveToLocalStorage();
-}
-function showToast(msg){
-  try{
-    const div = document.createElement("div");
-    div.textContent = msg;
-    div.style.position = "fixed";
-    div.style.bottom = "10px";
-    div.style.left = "10px";
-    div.style.background = "#111827";
-    div.style.color = "white";
-    div.style.padding = "6px 10px";
-    div.style.borderRadius = "999px";
-    div.style.fontSize = "12px";
-    div.style.zIndex = "99999";
-    div.style.opacity = "0.98";
-    document.body.appendChild(div);
-    setTimeout(()=>{ div.remove(); }, 2800);
-  }catch(e){}
-}
-
-let pivotModel = null;
-function syncDataIntoPivot(p){
-  if(!p || !p.project) return;
-  p.project = p.project || {};
-  p.project.actors = p.project.actors || {};
-
-  p.project.title = data.Nom_du_projet || p.project.title || "";
-  p.project.description = data.Description || p.project.description || "";
-  p.project.domain = data.Direction_porteur || p.project.domain || "";
-  p.project.phaseCourante = data.Phase_projet || p.project.phaseCourante || "";
-  p.project.id = data.Id_marche || p.project.id || "";
-
-  p.project.actors.directeurProjet = data.Acteur_CP || p.project.actors.directeurProjet || "";
-  p.project.actors.expertMetier = data.Acteur_Metier || p.project.actors.expertMetier || "";
-  p.project.actors.moe = data.Acteur_MOE || p.project.actors.moe || "";
-  p.project.actors.prestataire = data.Acteur_Presta || p.project.actors.prestataire || "";
-
-  if (!p.project.progress) p.project.progress = {};
-  if (data.progress) {
-    p.project.progress.percent = data.progress.percent || 0;
-    p.project.progress.label = data.progress.label || "";
-  }
-
-  p.project.updatedAt = new Date().toISOString();
-}
-
-function $(s,c){return (c||document).querySelector(s);}
-function $$(s,c){return Array.from((c||document).querySelectorAll(s));}
-
-function toFR(iso){
-  const m = String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || "");
-}
-function toISO(fr){
-  const m = String(fr||"").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : (fr || "");
-}
-function dotClass(v){
-  v = (v||"").toLowerCase();
-  if(v.includes("vert"))   return "ok";
-  if(v.includes("orange")) return "warn";
-  if(v.includes("rouge"))  return "bad";
-  return "ok";
-}
-
-/* Rendu textes */
-function renderTextOrGhost(node,key){
-  let v = data[key], ph = node.getAttribute("data-ph") || "";
-  if(key === "Date_meteo") v = toFR(v);
-  if(key === "Id_marche" && (!v || !String(v).trim())){
-    node.textContent = "Non concerné";
-    node.classList.add("ghost");
-    return;
-  }
-  if(v && String(v).trim() !== ""){
-    node.textContent = v;
-    node.classList.remove("ghost");
-  }else{
-    node.textContent = ph;
-    node.classList.add("ghost");
-  }
-}
-function renderTexts(){
-  $$("[data-text]").forEach(n => renderTextOrGhost(n, n.getAttribute("data-text")));
-}
-
-/* Listes */
-function renderLists(){
-  $$("[data-list]").forEach(ul => {
-    const k = ul.getAttribute("data-list");
-    const arr = Array.isArray(data[k]) ? data[k] : [];
-    ul.innerHTML = "";
-    if(k === "Points_attention"){
-      $("#noAttention").style.display = arr.length ? "none" : "block";
-    }
-    const ph = (ul.getAttribute("data-ph-list") || "").split("|").filter(Boolean);
-    (arr.length ? arr : ph).forEach(x => {
-      const li = document.createElement("li");
-      li.textContent = x;
-      if(!arr.length) li.classList.add("ghost");
-      ul.appendChild(li);
-    });
-  });
-}
-
-/* Statuts */
-function renderStatus(){
-  $$("[data-dot]").forEach(e => {
-    e.classList.remove("ok","warn","bad");
-    e.classList.add(dotClass(data[e.getAttribute("data-dot")]));
-  });
-}
-
-/* Météo */
-function applyTrendTheme(){
-  const map = {
-    "soleil"              : { cls:"trend-soleil", emoji:"☀️" },
-    "soleil_nuages"       : { cls:"trend-nuages", emoji:"⛅" },
-    "soleil_nuages_pluie" : { cls:"trend-pluie",  emoji:"🌦️" }
-  };
-  const v = (data.Tendance || "soleil_nuages").toLowerCase();
-  const def = map[v] || map["soleil_nuages"];
-  document.body.classList.remove("trend-soleil","trend-nuages","trend-pluie");
-  document.body.classList.add(def.cls);
-  const badge = $("#trendBadge");
-  if(badge){
-    badge.textContent = def.emoji;
-    badge.title = data.Tendance_detail || "";
-  }
-}
-function renderTrendArrow(){
-  const el = document.getElementById("trendArrow");
-  const stateEl = document.getElementById("trendState");
-  const detailEl = document.getElementById("trendDetail");
-  if(!el || !stateEl || !detailEl) return;
-
-  const code = (data.Tendance_code || "stable").toLowerCase();
-
-  el.classList.remove("trend-arrow-dir-up","trend-arrow-dir-down","trend-arrow-dir-flat","trend-arrow-col-green","trend-arrow-col-red","trend-arrow-col-blue");
-
-  let libelle = "Stable";
-  if(code.includes("amelior")){
-    el.classList.add("trend-arrow-dir-up","trend-arrow-col-green");
-    libelle = "En amélioration";
-  }else if(code.includes("degrad")){
-    el.classList.add("trend-arrow-dir-down","trend-arrow-col-red");
-    libelle = "En dégradation";
-  }else{
-    el.classList.add("trend-arrow-dir-flat","trend-arrow-col-blue");
-    libelle = "Stable";
-  }
-
-  stateEl.textContent = libelle;
-  detailEl.textContent = data.Tendance_detail || "";
-}
-function renderWeather(){
-  applyTrendTheme();
-  renderTrendArrow();
-}
-
-/* === GANTT CANVAS === */
-const PHASES_META = [
-  {name:"Pré-cadrage", color:"#FFCDD2", accent:"#E57373"},
-  {name:"Cadrage",     color:"#FFE0B2", accent:"#FFB74D"},
-  {name:"Conception",  color:"#FFF9C4", accent:"#FFF176"},
-  {name:"Réalisation", color:"#C8E6C9", accent:"#81C784"},
-  {name:"Recette",     color:"#BBDEFB", accent:"#64B5F6"},
-  {name:"Déploiement", color:"#E1BEE7", accent:"#BA68C8"}
-];
-
-let zoomFactor = 0; 
-
-function textEllipsis(ctx, text, maxWidth){
-  if(!text) return '';
-  if(ctx.measureText(text).width <= maxWidth) return text;
-  const ell='…'; let lo=0, hi=text.length;
-  while(lo < hi){
-    const mid = Math.floor((lo+hi)/2);
-    const t = text.slice(0,mid).trim()+ell;
-    if(ctx.measureText(t).width <= maxWidth) lo=mid+1; else hi=mid;
-  }
-  return text.slice(0, lo-1).trim()+ell;
-}
-
-function drawOutsideLabel(ctx, xEdge, y, h, label, side, canvasW, opts={}){
-  const { bold=false, color='#111' } = opts;
-  ctx.textBaseline = 'middle';
-  ctx.font = `${bold? '700':'400'} 12px Calibri, Arial`;
-  ctx.fillStyle = color;
-  const padding = 20;
-  if(side==='right'){
-    const lineTo = xEdge + 12;
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(xEdge, y + h/2); ctx.lineTo(lineTo, y + h/2); ctx.stroke();
-    const avail = Math.max(40, canvasW - (lineTo + 8) - padding);
-    const txt = textEllipsis(ctx, label, avail);
-    ctx.textAlign = 'left'; ctx.fillText(txt, lineTo + 8, y + h/2 + 1);
-  }else{
-    const lineTo = xEdge - 12;
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(xEdge, y + h/2); ctx.lineTo(lineTo, y + h/2); ctx.stroke();
-    const avail = Math.max(40, lineTo - padding);
-    const txt = textEllipsis(ctx, label, avail);
-    ctx.textAlign = 'right'; ctx.fillText(txt, lineTo - 8, y + h/2 + 1);
-  }
-}
-
-function drawTwoLineLabel(ctx, monthTxt, yearTxt, centerX, headerH, maxWidth){
-  let size=13, ok=false;
-  while(size>=8){
-    ctx.font=`700 ${size}px Calibri, Arial`;
-    if(Math.max(ctx.measureText(monthTxt).width,ctx.measureText(yearTxt).width) <= maxWidth-4){ ok=true; break; }
-    size -= 1;
-  }
-  if(!ok) return false;
-  ctx.fillStyle='#111'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  const lineGap=Math.max(2,Math.round(size*.25)); const midY=headerH/2;
-  ctx.fillText(monthTxt, centerX, midY-(size/2)-(lineGap/2));
-  ctx.fillText(yearTxt,  centerX, midY+(size/2)+(lineGap/2));
-  return true;
-}
-
-function drawMonthsHeader(ctx, months, headerH){
-  const tryDraw=(step)=>{
-    for(let i=0;i<months.length;i++){
-      if(i%step) continue;
-      const m=months[i];
-      const lab=m.start.toLocaleDateString('fr-FR',{month:'short'});
-      const yy=String(m.start.getFullYear()).slice(-2);
-      if(!drawTwoLineLabel(ctx, lab, yy, m.x+m.w/2, headerH, m.w)) return false;
-    }
-    return true;
-  };
-  if(tryDraw(1)) return;
-  if(tryDraw(2)) return;
-  if(tryDraw(3)) return;
-  if(tryDraw(4)) return;
-  for(let i=0;i<months.length;i+=3){
-    const m0=months[i]; if(!m0) break;
-    const q=Math.floor(m0.start.getMonth()/3)+1;
-    const yy=String(m0.start.getFullYear()).slice(-2);
-    const m1=months[i+1]||m0, m2=months[i+2]||m0;
-    const xMid = (m0.x+m0.w/2 + m2.x+m2.w/2)/2;
-    drawTwoLineLabel(ctx, `T${q}`, yy, xMid, headerH, (m0.w+m1.w+m2.w));
-  }
-}
-
-function buildGanttDataFromPivot(pivot){
-  let phasesSrc = [];
-
-  if (pivot.phases && pivot.phases.length > 0) {
-    phasesSrc = pivot.phases;
-  } else if (pivot.feuilleDeRoute && Array.isArray(pivot.feuilleDeRoute.actions)) {
-    phasesSrc = [{
-      name: "Feuille de Route",
-      tasks: pivot.feuilleDeRoute.actions
-    }];
-  }
-
-  const phases = phasesSrc.map((ph,idx)=>{
-    const meta = PHASES_META[idx] || PHASES_META[PHASES_META.length-1];
-    const tasks = (ph.tasks || []).filter(t=>t.start && t.end).map(t=>({
-      title:(t.title || t.label || "").trim(),
-      start:t.start,
-      end:  t.end || t.start,
-      isKey:!!t.isKey,
-      meta
-    }));
-    return { meta, tasks };
-  });
-  return { phases };
-}
-
-function renderGanttFromPivot(pivot){
-  const container = document.getElementById("ganttContainer");
-  if(!container) return;
-  container.innerHTML = "";
-  if(!pivot){
-    container.innerHTML = `<div class="empty-state"><p>Aucune frise à afficher.</p></div>`;
-    return;
-  }
-
-  const dataG = buildGanttDataFromPivot(pivot);
-  const all  = dataG.phases.flatMap(p=>p.tasks);
-  if(all.length===0){
-    container.innerHTML = `<div class="empty-state"><p>Aucun chantier saisi pour l’instant.</p></div>`;
-    return;
-  }
-
-  const wrap = document.createElement("div");
-  wrap.className="gantt-wrap";
-  const canvas = document.createElement("canvas");
-  canvas.id="projectGantt";
-  wrap.appendChild(canvas);
-  container.appendChild(wrap);
-
-  const ctx = canvas.getContext("2d");
-
-  const minDate = new Date(Math.min(...all.map(t=>new Date(t.start))));
-  const maxDate = new Date(Math.max(...all.map(t=>new Date(t.end))));
-  const totalDays = Math.max(1, Math.round((maxDate-minDate)/86400000)+1);
-
-  const rightPane = canvas.parentElement;
-  const containerW = Math.max(900, rightPane.clientWidth || 900);
-
-  const leftPad  = (zoomFactor<=0)? 110 : 180;
-  const rightPad = 180;
-  const usableW  = containerW - leftPad - rightPad;
-  const baseRatio = usableW/totalDays;
-  const ratio = (zoomFactor<=0)? baseRatio : baseRatio*(1+zoomFactor*2);
-  const widthNeeded = leftPad + totalDays*ratio + rightPad;
-  canvas.width = (zoomFactor<=0)? containerW : Math.ceil(widthNeeded);
-
-  const headerH = 48;
-  const rowH = 26;
-  const margin = 16;
-
-  const totalRows = dataG.phases.reduce((acc,p)=>acc + (p.tasks.length||0),0);
-  const height = headerH + (totalRows*rowH) + 40;
-  canvas.height = height;
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  let cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-  const months=[];
-  while(cursor <= maxDate){
-    const mStart=new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-    const next=new Date(cursor.getFullYear(), cursor.getMonth()+1, 1);
-    const dayIdx=Math.floor((mStart-minDate)/86400000);
-    const x = leftPad + dayIdx*ratio;
-    const days=Math.max(1, Math.floor((next-mStart)/86400000));
-    const w=days*ratio;
-    months.push({start:mStart, next, x, w});
-    cursor=next;
-  }
-  months.forEach(m=>{
-    ctx.fillStyle = (m.start.getMonth()%2===0)? '#e1e4ec' : '#d5dae6';
-    ctx.fillRect(m.x, 0, m.w, canvas.height);
-    ctx.strokeStyle='#c2c8d3';
-    ctx.beginPath(); ctx.moveTo(m.x, 0); ctx.lineTo(m.x, canvas.height); ctx.stroke();
-  });
-  const endX = leftPad + totalDays*ratio;
-  ctx.beginPath(); ctx.moveTo(endX,0); ctx.lineTo(endX,canvas.height); ctx.stroke();
-
-  ctx.fillStyle='rgba(255,255,255,0.9)';
-  ctx.fillRect(0,0,canvas.width,headerH);
-  drawMonthsHeader(ctx, months, headerH);
-
-  let lastTaskEnd = -Infinity, lastTaskRef = null;
-  dataG.phases.forEach(p=>{
-    p.tasks.forEach(t=>{
-      const e=new Date(t.end).getTime();
-      if(e>lastTaskEnd){ lastTaskEnd=e; lastTaskRef=t; }
-    });
-  });
-
-  let y = headerH + 18;
-  dataG.phases.forEach(p=>{
-    const tasks = p.tasks || [];
-    if(!tasks.length) return;
-    tasks.forEach(t=>{
-      const s=new Date(t.start), e=new Date(t.end);
-      const d1=Math.max(0, Math.floor((s-minDate)/86400000));
-      const d2=Math.max(0, Math.floor((e-minDate)/86400000));
-      const x1=leftPad + d1*ratio;
-      const x2=leftPad + d2*ratio;
-      const h=14;
-
-      const labelFull = (t.start===t.end)
-        ? `${t.title} (le ${toFR(t.start)})`
-        : `${t.title} (du ${toFR(t.start)} au ${toFR(t.end)})`;
-      ctx.font="12px Calibri, Arial";
-      const labelNeed = ctx.measureText(labelFull).width + margin;
-
-      if(t.start===t.end){
-        const cx=x1, cy=y+h/2, r=7;
-        ctx.save();
-        ctx.shadowColor='rgba(34,40,55,0.18)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
-        ctx.fillStyle='#B30000';
-        ctx.beginPath(); ctx.moveTo(cx,cy-r); ctx.lineTo(cx+r,cy); ctx.lineTo(cx,cy+r); ctx.lineTo(cx-r,cy); ctx.closePath();
-        ctx.fill(); ctx.restore();
-
-        const preferRight = (cx + labelNeed <= canvas.width - margin);
-        const side = (t===lastTaskRef)? 'left' : (preferRight?'right':'left');
-        drawOutsideLabel(ctx, cx + (side==='right'?6:0), y, h, labelFull, side, canvas.width, {bold:true, color:'#B30000'});
-      }else{
-        const w=Math.max(12,(x2-x1)), r=7;
-        ctx.save();
-        ctx.shadowColor='rgba(34,40,55,0.16)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
-        const grad=ctx.createLinearGradient(x1,y,x1+w,y+h);
-        grad.addColorStop(0, t.meta.color); grad.addColorStop(1, t.meta.accent);
-        ctx.fillStyle=grad; ctx.strokeStyle='rgba(0,0,0,0.08)'; ctx.lineWidth=1;
-        ctx.beginPath();
-        ctx.moveTo(x1+r,y); ctx.lineTo(x1+w-r,y); ctx.quadraticCurveTo(x1+w,y,x1+w,y+r);
-        ctx.lineTo(x1+w,y+h-r); ctx.quadraticCurveTo(x1+w,y+h,x1+w-r,y+h);
-        ctx.lineTo(x1+r,y+h); ctx.quadraticCurveTo(x1,y+h,x1,y+h-r);
-        ctx.lineTo(x1,y+r); ctx.quadraticCurveTo(x1,y,x1+r,y); ctx.closePath();
-        ctx.fill(); ctx.stroke(); ctx.restore();
-
-        const preferRight = (x1 + w + labelNeed <= canvas.width - margin);
-        const side = (t===lastTaskRef)? 'left' : (preferRight?'right':'left');
-        const xEdge = (side==='right')? (x1+w) : x1;
-        drawOutsideLabel(ctx, xEdge, y, h, labelFull, side, canvas.width);
+      let cdp = Number(p?.charges?.cdp ?? 0);
+      let mco = Number(p?.charges?.mco ?? 0);
+      let tot = Number(p?.charges?.total ?? p.charge_estimee_jours ?? p.charge ?? 0);
+      if(tot > 0 && cdp === 0 && mco === 0){
+        cdp = Math.round(tot * 0.7);
+        mco = Math.max(0, tot - cdp);
+      } else if(cdp > 0 || mco > 0){
+        tot = cdp + mco;
       }
-      y+=26;
-    });
-    y+=6;
-  });
 
-  const legend = document.createElement("div");
-  legend.className="legend";
-  legend.innerHTML = `
-    <span class="legend-item"><span class="legend-color phase1"></span> Pré-cadrage</span>
-    <span class="legend-item"><span class="legend-color phase2"></span> Cadrage</span>
-    <span class="legend-item"><span class="legend-color phase3"></span> Conception</span>
-    <span class="legend-item"><span class="legend-color phase4"></span> Réalisation</span>
-    <span class="legend-item"><span class="legend-color phase5"></span> Recette</span>
-    <span class="legend-item"><span class="legend-color phase6"></span> Déploiement</span>
-  `;
-  container.appendChild(legend);
-}
+      const invK = Number(p?.budget?.investK ?? p?.budget?.amountK ?? p?.budget?.k ?? 0);
+      const fonctK = Number(p?.budget?.fonctK ?? 0);
+      const av = Math.max(0, Math.min(100, Number(p.avancement ?? p.avancement_pct ?? p.progress?.percent ?? 0) || 0));
 
-function renderTimeline(){
-  const hasOldPhases = pivotModel && Array.isArray(pivotModel.phases) && pivotModel.phases.length > 0;
-  const hasNewActions = pivotModel && pivotModel.feuilleDeRoute && Array.isArray(pivotModel.feuilleDeRoute.actions) && pivotModel.feuilleDeRoute.actions.length > 0;
+      const progId = String(p.programme_id ?? p.axe_strategique ?? "").trim();
 
-  if(hasOldPhases || hasNewActions){
-    renderGanttFromPivot(pivotModel);
-  }else{
-    const container = document.getElementById("ganttContainer");
-    if(container) container.innerHTML = `<div class="empty-state"><p>Aucun chantier issu du pivot.</p></div>`;
-  }
-}
-/* Rendu global */
-function ensureCharges(){
-  if(!data.charges){
-    data.charges = {
-      referenceYear: 2026, etpTotal: { budget: 105, actual: 0 },
-      domains: [
-        { code: "ETUDES", label: "CONSO ETP ETUDES", budgetEtp: 50, actualEtp: 0 },
-        { code: "PIIA",   label: "CONSO ETP PIIA",   budgetEtp: 25, actualEtp: 0 },
-        { code: "TIRS",   label: "CONSO ETP TIRS",   budgetEtp: 15, actualEtp: 0 },
-        { code: "SSI",    label: "CONSO ETP SSI",    budgetEtp: 15, actualEtp: 0 }
-      ]
-    };
-  }
-  if(!data.progress) data.progress = { percent: 0, label: "" };
-}
-
-function ensureBudgetChargesProjet(){
-  if(!data.budget) data.budget = { year: 2026, currency: "EUR", amount: 0, amountK: 0, comment: "" };
-  if(!data.chargesProjet) data.chargesProjet = { unit: "jours", assumption: "", teams: [], totalEstimated: 0 };
-  data.chargesProjet.teams = Array.isArray(data.chargesProjet.teams) ? data.chargesProjet.teams : [];
-  const defaults = [
-    { code:"ETUDES", label:"Études / Pilotage" },
-    { code:"PIIA",   label:"PIIA / Données / Interfaces" },
-    { code:"TIRS",   label:"TIRS / Infra / Réseau" },
-    { code:"SSI",    label:"SSI" }
-  ];
-  defaults.forEach(d=>{
-    if(!data.chargesProjet.teams.find(t=>t.code===d.code)){
-      data.chargesProjet.teams.push({ code:d.code, label:d.label, estimated: 0 });
+      return {
+        ...p,
+        id, nom, name: nom,
+        direction: String(p.direction || p.domain || "").trim(),
+        has_pivot, hasPivot: has_pivot,
+        status: p.status || (has_pivot ? "cadrage_valide" : "idee"),
+        phase: p.phase || "",
+        programme_id: progId,
+        axe_strategique: progId,
+        origine_besoin: p.origine_besoin || "",
+        description_besoin: p.description_besoin || "",
+        priorite, prio: priorite,
+        cdp_nom: String(p.cdp_nom || p.manager || p.chef_de_projet || "").trim(),
+        avancement: av,
+        avancement_pct: av,
+        budget: { year: Number(p?.budget?.year ?? 2026), amountK: invK, investK: invK, fonctK },
+        charges: { unite: "jours", cdp, mco, total: tot },
+        charge_estimee_jours: tot,
+        _last_pivot_update_at: p._last_pivot_update_at || p.updatedAt || p._created_at || nowISO()
+      };
     }
-  });
-  if(data.chargesProjet.totalEstimated == null){
-    data.chargesProjet.totalEstimated = data.chargesProjet.teams.reduce((s,t)=>s+(+t.estimated||0),0);
-  }
-}
 
-function renderBudgetChargesProjet(){
-  ensureBudgetChargesProjet();
+    function normalizeGovernance(j){
+      if(!j || typeof j !== "object") return null;
+      const g = JSON.parse(JSON.stringify(j));
+      g.meta = g.meta || { schema: "gouvernance-dnsi", version: "3.3", nom: "Gouvernance DNSI" };
+      g.portefeuille = g.portefeuille || {};
+      const rawProjs = Array.isArray(g.portefeuille.projets) ? g.portefeuille.projets : [];
+      g.portefeuille.projets = rawProjs.map(normalizeProjectRecord).filter(Boolean);
+      g.portefeuille.pivotsById = (g.portefeuille.pivotsById && typeof g.portefeuille.pivotsById === "object")
+        ? g.portefeuille.pivotsById
+        : {};
+      g.programmes = Array.isArray(g.programmes) ? g.programmes : (Array.isArray(g.politiques) ? g.politiques : []);
+      return g;
+    }
 
-  const b = data.budget || {};
-  const amountK = (b.amountK != null && b.amountK !== "") ? (+b.amountK||0) : ((b.amount!=null)? Math.round((+b.amount||0)/1000) : 0);
-  const year = b.year ? String(b.year) : "";
+    function loadGov(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return normalizeGovernance(safeJsonParse(raw));
+      return normalizeGovernance({ portefeuille: { projets: [], pivotsById: {} }, programmes: [] });
+    }
 
-  const budgetAmountK = document.getElementById("budgetAmountK");
-  const budgetYear = document.getElementById("budgetYear");
-  const budgetComment = document.getElementById("budgetComment");
+    function notifyUpdate(){
+      try{
+        const bc = new BroadcastChannel("dnsi-gouvernance");
+        bc.postMessage({ type: "GOUVERNANCE_UPDATED", source: "portefeuille" });
+        bc.close();
+      }catch(e){}
+    }
 
-  if(budgetAmountK) budgetAmountK.textContent = amountK ? String(amountK) : "—";
-  if(budgetYear) budgetYear.textContent = year ? ("BP " + year) : "";
-  if(budgetComment) budgetComment.textContent = (b.comment || "").trim();
+    function saveGov(g){
+      g.meta.lastUpdatedAt = nowISO();
+      g.meta.dernier_enregistrement = g.meta.lastUpdatedAt;
+      g.portefeuille.projets = (g.portefeuille.projets || []).map(normalizeProjectRecord);
+      g.portefeuille.pivotsById = (g.portefeuille.pivotsById && typeof g.portefeuille.pivotsById === "object")
+        ? g.portefeuille.pivotsById
+        : {};
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(g));
+      localStorage.setItem("dnsigov.portfolio", JSON.stringify({
+        projects: g.portefeuille.projets.map(p => ({
+          ...p, hasPivot: p.has_pivot, pivotStatus: p.has_pivot ? "avec" : "sans"
+        }))
+      }));
+      notifyUpdate();
+    }
 
-  const cp = data.chargesProjet || {};
-  const total = (cp.totalEstimated != null) ? (+cp.totalEstimated||0) : (cp.teams||[]).reduce((s,t)=>s+(+t.estimated||0),0);
-  const totalEl = document.getElementById("chargesProjetTotal");
-  if(totalEl) totalEl.textContent = total ? String(total) : "—";
+    let GOV = loadGov();
 
-  const teamsEl = document.getElementById("chargesProjetTeams");
-  if(teamsEl){
-    teamsEl.innerHTML = "";
-    (cp.teams || []).forEach(t=>{
-      const pill = document.createElement("div");
-      pill.className = "bc-pill";
-      const lab = (t.label || t.code || "").trim();
-      const est = (+t.estimated||0);
-      pill.innerHTML = `<span>${lab}</span><b>${est} j</b>`;
-      teamsEl.appendChild(pill);
+    /* =============================
+       Badges & Filtres Programmes
+    ============================== */
+    function resolveProgramme(progId){
+      if(!progId) return null;
+      const list = getProgrammesList(GOV);
+      return list.find(p => String(p.id) === String(progId)) || null;
+    }
+
+    function programmeBadge(proj){
+      const prg = resolveProgramme(proj.programme_id);
+      if(prg){
+        const col = prg.couleur || "#5b21b6";
+        const label = prg.code ? `${prg.code} · ${prg.titre}` : prg.titre;
+        return `<span class="badge" style="background:${escapeHtml(col)}16; border-color:${escapeHtml(col)}55; color:${escapeHtml(col)};" title="${escapeHtml(prg.id)} — ${escapeHtml(prg.titre)}">
+          ${escapeHtml(prg.icone || "🎯")} ${escapeHtml(label)}
+        </span>`;
+      }
+      return `<span class="badge b-orphan" title="Non rattaché à un programme">⚠️ Hors programme</span>`;
+    }
+
+    function statusBadge(hasPivot, status) {
+      if(hasPivot) return `<span class="badge b-pivot">✅ Lancé</span>`;
+      if(status === "pre_cadrage") return `<span class="badge b-precad">🔍 Pré-cadrage</span>`;
+      return `<span class="badge b-qualif">💡 À qualifier</span>`;
+    }
+
+    function prioBadge(p){
+      const v = normalizePriorityValue(p.priorite);
+      let cls = "b-prio2";
+      if(v==="P1") cls="b-prio1";
+      else if(v==="P2") cls="b-prio2";
+      else if(v==="P3") cls="b-prio3";
+      else if(v==="P4") cls="b-prio4";
+      return `<span class="badge ${cls}" style="font-size:11.5px; padding:3px 8px;">${v}</span>`;
+    }
+
+    function getFilteredProjects(projects){
+      const q = (el("fltSearch")?.value || "").toLowerCase().trim();
+      const d = el("fltDir")?.value || "";
+      const pr = el("fltPrio")?.value || "";
+      const pg = el("fltProg")?.value || "";
+      const pv = el("fltPivot")?.value || "";
+
+      return projects.filter(p => {
+        const prgObj = resolveProgramme(p.programme_id);
+        const prgSearch = prgObj ? `${prgObj.id} ${prgObj.code || ""} ${prgObj.titre}` : "hors programme";
+        if(q && !`${p.id} ${p.nom} ${p.cdp_nom} ${p.direction} ${prgSearch}`.toLowerCase().includes(q)) return false;
+        if(d && (p.direction || "").trim() !== d) return false;
+        if(pr && normalizePriorityValue(p.priorite) !== pr) return false;
+        if(pg === "__NONE__" && prgObj) return false;
+        if(pg && pg !== "__NONE__" && String(p.programme_id) !== pg) return false;
+        if(pv === "with" && !p.has_pivot) return false;
+        if(pv === "without" && p.has_pivot) return false;
+        return true;
+      });
+    }
+
+    function render(){
+      const allProjects = GOV.portefeuille.projets || [];
+      const pivotsMap = GOV.portefeuille.pivotsById || {};
+      const programmes = getProgrammesList(GOV);
+
+      const last = GOV?.meta?.lastUpdatedAt ? new Date(GOV.meta.lastUpdatedAt) : null;
+      el("chipSync").textContent = last ? ("Dernière MAJ : " + last.toLocaleTimeString("fr-FR", {hour:'2-digit', minute:'2-digit'})) : "—";
+
+      // Filtre Directions
+      const dirs = [...new Set(allProjects.map(p => (p.direction || "").trim()).filter(Boolean))].sort();
+      const selDir = el("fltDir");
+      const currentDir = selDir.value;
+      selDir.innerHTML = `<option value="">🏢 Toutes les directions</option>` + dirs.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join("");
+      if(dirs.includes(currentDir)) selDir.value = currentDir;
+
+      // Filtre Programmes + Hors programme
+      const selProg = el("fltProg");
+      const currentProg = selProg.value;
+      selProg.innerHTML =
+        `<option value="">🎯 Tous les programmes</option>` +
+        `<option value="__NONE__">⚠️ Hors programme (non rattachés)</option>` +
+        programmes.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.icone || "🎯")} ${escapeHtml(p.id)} — ${escapeHtml(p.titre)}</option>`).join("");
+      selProg.value = currentProg;
+
+      const projects = getFilteredProjects(allProjects);
+      el("chipCount").textContent = `${projects.length} / ${allProjects.length} demande(s)`;
+
+      // KPIs
+      let nbIdees = 0, nbPivots = 0, nbOrphans = 0, nbStoredPivots = 0;
+      for(const p of allProjects){
+        if(p.has_pivot) nbPivots++; else nbIdees++;
+        if(!resolveProgramme(p.programme_id)) nbOrphans++;
+        if(pivotsMap[String(p.id)]) nbStoredPivots++;
+      }
+      el("kpiIdees").textContent = nbIdees;
+      el("kpiPivots").textContent = nbPivots;
+      el("kpiPivotsStored").textContent = nbStoredPivots;
+      el("kpiOrphans").textContent = nbOrphans;
+      el("kpiOrphans").style.color = nbOrphans > 0 ? "#c2410c" : "#16a34a";
+
+      const tb = el("tbody");
+      tb.innerHTML = "";
+      const now = new Date();
+
+      if(projects.length === 0){
+        tb.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:28px; color:var(--muted);">Aucun projet ou demande ne correspond aux filtres.</td></tr>`;
+        return;
+      }
+
+      for(const p of projects){
+        const tr = document.createElement("tr");
+        const bInv = Number(p?.budget?.investK ?? 0);
+        const bFct = Number(p?.budget?.fonctK ?? 0);
+        const cdpVal = Number(p?.charges?.cdp ?? 0);
+        const mcoVal = Number(p?.charges?.mco ?? 0);
+        const totVal = cdpVal + mcoVal;
+        const statusVal = String(p.status || "idee");
+        const hasFullPivot = !!pivotsMap[String(p.id)];
+
+        let freshnessHtml = `<span class="small" style="color:#94a3b8">À affecter</span>`;
+        if (p.has_pivot) {
+          const days = diffDays(p._last_pivot_update_at, now);
+          let statusDot = "st-ok"; let msg = `${days}j`;
+          if (days > 30) { statusDot = "st-bad"; msg = "> 1 mois"; } else if (days > 15) { statusDot = "st-warn"; }
+          const cdpName = p.cdp_nom || "Non assigné";
+          freshnessHtml = `<div style="font-weight:800; font-size:12.5px;">${escapeHtml(cdpName)}</div><div class="small"><span class="status-dot ${statusDot}"></span> JSON : ${msg}</div>`;
+        } else if (p.cdp_nom) {
+          freshnessHtml = `<div style="font-weight:800; font-size:12.5px; color:#64748b">${escapeHtml(p.cdp_nom)}</div><div class="small">Sponsor / Référent</div>`;
+        }
+
+        let actHtml = "";
+        if(p.has_pivot) {
+          const openTitle = hasFullPivot
+            ? "Ouvrir dans Gestion-supports-projet (pivot complet synchronisé)"
+            : "Ouvrir dans Gestion-supports-projet (pré-rempli depuis le Portefeuille ou chargé depuis GitHub)";
+          actHtml = `<button class="iconbtn action" data-act="open" data-id="${encodeURIComponent(p.id)}" title="${escapeHtml(openTitle)}">🚀 Ouvrir</button>
+                     <button class="iconbtn" data-act="qualify" data-id="${encodeURIComponent(p.id)}" title="Modifier programme / priorité">🎯</button>`;
+        } else if(statusVal === "idee") {
+          actHtml = `<button class="iconbtn primary" data-act="qualify" data-id="${encodeURIComponent(p.id)}">🎯 Qualifier PMO</button>`;
+        } else if(statusVal === "pre_cadrage") {
+          actHtml = `<button class="iconbtn" data-act="init" data-id="${encodeURIComponent(p.id)}" style="background:#16a34a; color:#fff; border-color:#16a34a;">🛠️ JSON</button>
+                     <button class="iconbtn" data-act="qualify" data-id="${encodeURIComponent(p.id)}">✏️ Éditer</button>`;
+        }
+        actHtml += `<button class="iconbtn danger" data-act="remove" data-id="${encodeURIComponent(p.id)}" title="Supprimer">✕</button>`;
+
+        let budgetHtml = "—";
+        let chargeHtml = "—";
+        if(statusVal === "pre_cadrage" || p.has_pivot) {
+          budgetHtml = `<div><b>Inv: ${bInv}k</b></div><div class="small">Fct: ${bFct}k/an</div>`;
+          chargeHtml = `<div><b>Tot: ${totVal} j</b></div><div class="small">CDP:${cdpVal} MCO:${mcoVal}</div>`;
+        }
+
+        const phaseTxt = p.has_pivot
+          ? `<b>${escapeHtml(p.phase || "Lancé")}</b>${p.avancement ? `<div class="small">Av. ${p.avancement}%</div>` : ""}`
+          : (statusVal==="idee" ? "Intention métier" : "Pré-Cadré");
+
+        tr.innerHTML = `
+          <td class="col-id mono" style="font-weight:900; color:var(--lille-red);">${escapeHtml(p.id || "")}</td>
+          <td class="col-proj wrap">
+            <b style="font-size:13px;">${escapeHtml(p.nom || "")}</b>
+            <div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:5px;">
+              ${statusBadge(p.has_pivot, statusVal)}
+              ${hasFullPivot ? `<span class="badge" style="border-color:#93c5fd; background:#eff6ff; color:#1d4ed8;" title="Pivot complet présent en mémoire">🔗 Pivot</span>` : ""}
+              ${programmeBadge(p)}
+            </div>
+          </td>
+          <td class="col-dir">${escapeHtml(p.direction) || "—"}</td>
+          <td class="col-cdp">${freshnessHtml}</td>
+          <td class="col-stat">${phaseTxt}</td>
+          <td class="col-prio">${(statusVal!=="idee" || p.has_pivot) ? prioBadge(p) : "—"}</td>
+          <td class="col-bud">${budgetHtml}</td>
+          <td class="charge-td">${chargeHtml}</td>
+          <td class="actions-td"><div class="actions-col">${actHtml}</div></td>
+        `;
+        tb.appendChild(tr);
+      }
+
+      tb.querySelectorAll("button[data-act]").forEach(b=>{
+        b.addEventListener("click", ()=>{
+          const act = b.getAttribute("data-act");
+          const id = decodeURIComponent(b.getAttribute("data-id"));
+
+          if(act === "remove") {
+            if(confirm(`Supprimer définitivement la demande ${id} ?`)){
+              GOV.portefeuille.projets = GOV.portefeuille.projets.filter(x => String(x.id) !== id);
+              if(GOV.portefeuille.pivotsById) delete GOV.portefeuille.pivotsById[id];
+              saveGov(GOV); render(); toast("Supprimé.");
+            }
+          }
+          else if(act === "open") {
+            saveGov(GOV);
+            window.open(`${SUPPORT_PROJECT_URL}?id=${encodeURIComponent(id)}&from=ppm`, '_blank');
+          }
+          else if(act === "init") initializeProjectJson(id);
+          else if(act === "qualify") openModalQualif(id);
+        });
+      });
+    }
+
+    /* =============================
+       TEMPS 1 : CAPTER DEMANDE
+    ============================== */
+    function openModalIdee(){
+      el("iId").value=""; el("iName").value=""; el("iDir").value="";
+      el("iSponsor").value=""; el("iDescription").value=""; el("iOrigine").value="";
+      el("modalIdee").style.display = "flex";
+    }
+
+    el("btnCreateIdee").onclick = () => {
+      const id = String(el("iId").value||"").trim();
+      const name = String(el("iName").value||"").trim();
+      const desc = String(el("iDescription").value||"").trim();
+      const origine = String(el("iOrigine").value||"").trim();
+
+      if(!id || !name || !origine){
+        alert("L'ID, le Titre et l'Origine sont obligatoires pour la traçabilité.");
+        return;
+      }
+      if(GOV.portefeuille.projets.some(p => String(p.id) === id)){
+        alert("Cet ID de projet existe déjà.");
+        return;
+      }
+
+      GOV.portefeuille.projets.push(normalizeProjectRecord({
+        id, nom: name,
+        direction: el("iDir").value,
+        status: "idee",
+        has_pivot: false,
+        programme_id: "",
+        axe_strategique: "",
+        cdp_nom: el("iSponsor").value,
+        origine_besoin: origine,
+        description_besoin: desc
+      }));
+      saveGov(GOV); render(); el('modalIdee').style.display='none';
+      toast(`Demande ${id} captée avec succès.`);
+    };
+
+    /* =============================
+       TEMPS 2 : QUALIFICATION PMO & PROGRAMME
+    ============================== */
+    function openModalQualif(projectId) {
+      const proj = GOV.portefeuille.projets.find(p => String(p.id) === String(projectId));
+      if (!proj) return;
+
+      el("qIdProj").value = proj.id;
+      el("qDisplayTitle").textContent = `${proj.id} — ${proj.nom}`;
+      el("qDisplayDesc").textContent = proj.description_besoin || "Aucune description fournie par le métier.";
+
+      const originesLabels = {
+        dette: "Dette technique / Rationalisation",
+        obsolescence: "Fin de vie / Obsolescence",
+        marche: "Renouvellement de marché",
+        legal: "Obligation légale/réglementaire",
+        mandat: "Mandat / Décision DGA",
+        service: "Nouveau service usager",
+        interne: "Gain d'efficacité interne"
+      };
+      el("qDisplayOrigine").textContent = originesLabels[proj.origine_besoin] || proj.origine_besoin || "Non défini";
+
+      const programmes = getProgrammesList(GOV).filter(p => p.statut !== "cloture" && p.statut !== "inactif");
+      const selectProg = el("qProg");
+      selectProg.innerHTML =
+        `<option value="">⚠️ Hors programme (Socle / Isolé)</option>` +
+        programmes.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.icone || "🎯")} ${escapeHtml(p.id)}${p.code ? " · " + escapeHtml(p.code) : ""} — ${escapeHtml(p.titre)}</option>`).join("");
+
+      const currentPrg = resolveProgramme(proj.programme_id);
+      selectProg.value = currentPrg ? currentPrg.id : "";
+
+      el("qPrio").value = normalizePriorityValue(proj.priorite);
+      el("qTShirt").value = "";
+
+      el("qChargeCDP").value = proj.charges?.cdp || 0;
+      el("qChargeMCO").value = proj.charges?.mco || 0;
+      el("qBudgetK").value = proj.budget?.investK || 0;
+      el("qBudgetFonctK").value = proj.budget?.fonctK || 0;
+
+      el("modalQualif").style.display = "flex";
+    }
+
+    el("btnSaveQualif").onclick = () => {
+      const id = el("qIdProj").value;
+      const proj = GOV.portefeuille.projets.find(p => String(p.id) === id);
+      if(!proj) return;
+
+      if(!proj.has_pivot) proj.status = "pre_cadrage";
+      const chosenProg = el("qProg").value;
+      proj.programme_id = chosenProg;
+      proj.axe_strategique = chosenProg;
+      proj.priorite = el("qPrio").value;
+
+      const cdpVal = Number(el("qChargeCDP").value) || 0;
+      const mcoVal = Number(el("qChargeMCO").value) || 0;
+      proj.charges = { unite: "jours", cdp: cdpVal, mco: mcoVal, total: cdpVal + mcoVal };
+
+      const invK = Number(el("qBudgetK").value) || 0;
+      const fctK = Number(el("qBudgetFonctK").value) || 0;
+      proj.budget = { year: proj.budget?.year||2026, amountK: invK, investK: invK, fonctK: fctK };
+
+      saveGov(GOV); render(); el("modalQualif").style.display="none";
+      toast(`Projet ${id} qualifié ✅`);
+    };
+
+    /* =============================
+       Action 3 : Génération du JSON Projet (Format Pivot V1.1 compatible SIGF)
+    ============================== */
+    function initializeProjectJson(projectId) {
+      const proj = GOV.portefeuille.projets.find(p => String(p.id) === String(projectId));
+      if (!proj) return;
+
+      const prg = resolveProgramme(proj.programme_id);
+      const descInit = proj.description_besoin ? `Besoin métier : ${proj.description_besoin}` : "Projet initialisé par le PMO.";
+
+      const pivotTemplate = {
+        version: "1.1",
+        project: {
+          id: proj.id,
+          title: proj.nom,
+          domain: proj.direction,
+          directionPorteuse: proj.direction,
+          programmeId: prg ? prg.id : "",
+          programmeTitle: prg ? prg.titre : "Hors programme",
+          phaseCourante: "Cadrage",
+          priority: proj.priorite,
+          owner: "",
+          description: descInit,
+          actors: { directeurProjet: "", expertMetier: proj.cdp_nom || "", moe: "", prestataire: "" },
+          meteo: {
+            situation: "soleil_nuages", tendance: "stable", color: "orange",
+            resume: descInit,
+            actionsRealisees: ["Qualification stratégique PMO validée"],
+            actionsEnCours: ["Cadrage détaillé et lancement du projet"],
+            pointsAttention: [],
+            statutPlanning: "Vert", statutPerimetre: "Vert", statutRessources: "Vert"
+          },
+          progress: { percent: 0, label: "Initialisation" },
+          updatedAt: nowISO()
+        },
+        budget: {
+          year: proj.budget?.year || 2027, currency: "EUR",
+          amount: Math.round((proj.budget?.investK || 0) * 1000),
+          amountK: proj.budget?.investK || 0, fonctK: proj.budget?.fonctK || 0,
+          comment: "Budget évalué en phase de qualification PMO"
+        },
+        chargesProjet: {
+          unit: "jours",
+          totalEstimated: proj.charges?.total || 0,
+          assumption: "Chiffrage macro initial PMO",
+          teams: [
+            { code: "ETUDES", label: "Études / Pilotage", estimated: proj.charges?.cdp || 0 },
+            { code: "PIIA", label: "PIIA / Données / Interfaces", estimated: 0 },
+            { code: "TIRS", label: "TIRS / Infra / Réseau", estimated: proj.charges?.mco || 0 },
+            { code: "SSI", label: "SSI", estimated: 0 }
+          ]
+        },
+        phases: [],
+        actors: [],
+        raci: { version: "2.3", matrix: [] },
+        leaves: [],
+        planningDetailed: { timeWindow: { start: "", end: "" }, phases: [], actions: [], links: [], globalConflicts: [] },
+        feuilleDeRoute: { title: proj.nom, phases: [], actions: [] },
+        config: { sentinelleActive: false }
+      };
+
+      const jsonStr = JSON.stringify(pivotTemplate, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${proj.id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+      toast(`✅ Fichier ${proj.id}.json généré. Transmettez-le au CDP !`);
+    }
+
+    /* =============================
+       Entrée 2 : Audit & Chargement JSON CDP (Douane 4 pôles + pivotsById)
+    ============================== */
+    async function handlePivots(files){
+      const arr = Array.from(files || []);
+      if(!arr.length) return;
+      const projects = GOV.portefeuille.projets;
+      GOV.portefeuille.pivotsById = GOV.portefeuille.pivotsById || {};
+      const seen = new Set();
+      const report = { updated: [], created: [], missing: [] };
+
+      for(const f of arr){
+        try{
+          const txt = await f.text();
+          const j = safeJsonParse(txt);
+          if(!j) continue;
+
+          const proj = j.project || j;
+          const id = String(proj.id || proj.code || "").trim();
+          if(!id) continue;
+
+          seen.add(id);
+          const name = proj.title || proj.nom || proj.name || f.name;
+          const cdp = proj.actors?.moe || proj.manager || proj.chef_de_projet || proj.cdp || proj.owner || proj.actors?.directeurProjet || "";
+          const pDate = proj.updatedAt || proj.date || nowISO();
+          const progFromPivot = String(proj.programmeId || "").trim();
+          const avPct = Math.max(0, Math.min(100, Number(proj?.progress?.percent ?? j?.progress?.percent ?? 0) || 0));
+
+          // Agrégation complète des pôles (format SIGF : ETUDES+PIIA -> CDP ; TIRS+SSI -> MCO)
+          let cdpJ = 0, mcoJ = 0;
+          const cpObj = j.chargesProjet || proj.chargesProjet;
+          if(cpObj && Array.isArray(cpObj.teams) && cpObj.teams.length > 0){
+            for(const t of cpObj.teams){
+              const code = String(t.code || "").toUpperCase();
+              const est = Number(t.estimated ?? t.estimation ?? t.jours ?? 0) || 0;
+              if(["MCO", "INFRA", "TIRS", "SSI"].includes(code)) mcoJ += est;
+              else cdpJ += est;
+            }
+          } else {
+            cdpJ = Number(proj.charge || proj.charge_estimee_jours || 0) || 0;
+          }
+
+          const bObj = j.budget || proj.budget || {};
+          const bInv = Number(bObj.investK ?? bObj.amountK ?? (bObj.amount != null ? Math.round(Number(bObj.amount)/1000) : 0)) || 0;
+          const bFct = Number(bObj.fonctK ?? 0) || 0;
+
+          // Mémorisation du pivot complet pour le pont contextualisé vers Gestion-supports-projet-
+          GOV.portefeuille.pivotsById[id] = j;
+
+          const existing = projects.find(x => String(x.id) === id);
+          if(existing){
+            existing.nom = name;
+            existing.name = name;
+            existing.cdp_nom = cdp || existing.cdp_nom;
+            existing.has_pivot = true;
+            existing.hasPivot = true;
+            existing.status = "cadrage_valide";
+            existing.phase = proj.phaseCourante || existing.phase;
+            existing.avancement = avPct;
+            existing.avancement_pct = avPct;
+            existing._last_pivot_update_at = pDate;
+            if(progFromPivot && !existing.programme_id){
+              existing.programme_id = progFromPivot;
+              existing.axe_strategique = progFromPivot;
+            }
+            existing.charges = { unite:"jours", cdp:cdpJ, mco:mcoJ, total:cdpJ+mcoJ };
+            existing.charge_estimee_jours = cdpJ + mcoJ;
+            existing.budget = { year: bObj.year || existing.budget?.year || 2026, investK: bInv, fonctK: bFct || existing.budget?.fonctK || 0, amountK: bInv };
+            report.updated.push(existing);
+          }else{
+            const newP = normalizeProjectRecord({
+              id, nom: name, cdp_nom: cdp, has_pivot: true, phase: proj.phaseCourante || "Lancé",
+              direction: proj.domain || proj.directionPorteuse || "",
+              programme_id: progFromPivot,
+              avancement: avPct,
+              _last_pivot_update_at: pDate, charges: { cdp:cdpJ, mco:mcoJ, total: cdpJ+mcoJ },
+              budget: { year: bObj.year || 2026, investK: bInv, fonctK: bFct }
+            });
+            projects.push(newP);
+            report.created.push(newP);
+          }
+        }catch(e){ console.error(e); }
+      }
+
+      for(const p of projects){
+        if(p.has_pivot && !seen.has(p.id)) report.missing.push(p);
+      }
+
+      saveGov(GOV); render(); showIntegrationReport(report);
+    }
+
+    function showIntegrationReport(rep){
+      const lUp = el("listUpdated"); const lMis = el("listMissing"); const now = new Date();
+
+      const allGood = [...rep.created, ...rep.updated];
+      el("intUpdatedCount").textContent = allGood.length;
+      lUp.innerHTML = allGood.map(p => {
+        const days = diffDays(p._last_pivot_update_at, now);
+        let warnStr = "";
+        if(days > 30) warnStr = `<span style="color:#ef4444; font-weight:800;">(⚠️ Périmé : ${days}j)</span>`;
+        else if (p.charges.total === 0) warnStr = `<span style="color:#f59e0b; font-weight:800;">(⚠️ Charge à 0)</span>`;
+        return `<div class="report-item"><b>${escapeHtml(p.id)}</b> - ${escapeHtml(p.nom)} <br/><span class="small">CDP : <b>${escapeHtml(p.cdp_nom||"Non Renseigné")}</b> • Av. ${p.avancement||0}% • Charge ${p.charges.total}j • Maj ${new Date(p._last_pivot_update_at).toLocaleDateString('fr-FR')} ${warnStr}</span></div>`;
+      }).join("") || "<div class='small'>Aucun fichier traité.</div>";
+
+      el("intMissingCount").textContent = rep.missing.length;
+      lMis.innerHTML = rep.missing.map(p => `<div class="report-item" style="color:#991b1b"><b>${escapeHtml(p.id)}</b> - ${escapeHtml(p.nom)} <br/><span class="small">Dernière trace : ${new Date(p._last_pivot_update_at).toLocaleDateString('fr-FR')}</span></div>`).join("") || "<div class='small' style='color:#166534; font-weight:800;'>Aucun oubli ! ✅</div>";
+
+      el("modalIntegration").style.display = "flex";
+    }
+
+    /* =============================
+       Export JSON Gouvernance
+    ============================== */
+    function downloadGovJson(){
+      saveGov(GOV);
+      const blob = new Blob([JSON.stringify(GOV, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "Gouvernance.json";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+      toast("Fichier Gouvernance.json téléchargé ✅");
+    }
+
+    /* =============================
+       Wiring & Synchro Temps Réel
+    ============================== */
+    el("btnOpenDemande").onclick = openModalIdee;
+    el("btnLoadPivots").onclick = () => { el("filePivots").value = ""; el("filePivots").click(); };
+    el("filePivots").onchange = (e) => handlePivots(e.target.files);
+    el("btnPdf").onclick = () => window.print();
+    el("btnExportGov").onclick = downloadGovJson;
+    el("btnRefresh").onclick = () => { GOV = loadGov(); render(); toast("Portefeuille réactualisé 🔄"); };
+    el("btnSaveToGov").onclick = () => { saveGov(GOV); toast("Gouvernance locale sauvegardée ✅"); };
+
+    ["fltSearch","fltDir","fltPrio","fltProg","fltPivot"].forEach(id=>{
+      el(id).addEventListener("input", render);
+      el(id).addEventListener("change", render);
     });
-  }
+    el("btnResetFilters").onclick = () => {
+      ["fltSearch","fltDir","fltPrio","fltProg","fltPivot"].forEach(id=>el(id).value="");
+      render();
+    };
 
-  const aEl = document.getElementById("chargesProjetAssumption");
-  if(aEl) aEl.textContent = (cp.assumption || "").trim();
-}
-
-function renderProgress(){
-  ensureCharges();
-  const p = data.progress || {};
-  const pct = Math.max(0, Math.min(100, parseInt(p.percent || 0, 10) || 0));
-  const fill = document.getElementById("progressFill");
-  const pctLabel = document.getElementById("progressPercentLabel");
-  if(fill) fill.style.width = pct + "%";
-  if(pctLabel) pctLabel.textContent = pct + " %";
-}
-
-function renderCharges(){
-  ensureCharges();
-  const c = data.charges || {};
-  const yearEl = document.getElementById("chargesYear");
-  const totActEl = document.getElementById("chargesEtpActual");
-  const totBudEl = document.getElementById("chargesEtpBudget");
-  if(yearEl) yearEl.textContent = c.referenceYear || "";
-  if(totActEl) totActEl.textContent = (c.etpTotal && (c.etpTotal.actual ?? 0));
-  if(totBudEl) totBudEl.textContent = (c.etpTotal && (c.etpTotal.budget ?? 0));
-
-  const domContainer = document.getElementById("chargesDomains");
-  if(!domContainer) return;
-  domContainer.innerHTML = "";
-  const domains = Array.isArray(c.domains) ? c.domains : [];
-  if(!domains.length){
-    domContainer.innerHTML = "<div class=\"info\">Aucun domaine de charge défini.</div>";
-    return;
-  }
-  domains.forEach(d=>{
-    const row = document.createElement("div");
-    row.className = "charge-domain-row";
-    row.innerHTML = `
-      <div class="charge-domain-label">${d.label || d.code || ""}</div>
-      <div class="charge-domain-values">
-        <span class="charge-domain-actual">${d.actualEtp ?? 0}</span>
-        <span>/</span>
-        <span class="charge-domain-budget">${d.budgetEtp ?? 0}</span>
-        <span class="charge-domain-unit">ETP</span>
-      </div>`;
-    domContainer.appendChild(row);
-  });
-}
-
-function updateProgressPercent(v){
-  ensureCharges();
-  const n = parseInt(v,10);
-  data.progress.percent = isNaN(n) ? 0 : n;
-  renderProgress();
-}
-function updateProgressLabel(v){
-  ensureCharges();
-  data.progress.label = v || "";
-  renderTexts();
-  renderProgress();
-}
-function updateChargesEtpTotalActual(v){
-  ensureCharges();
-  const n = parseFloat(String(v).replace(",", "."));
-  data.charges.etpTotal.actual = isNaN(n) ? 0 : n;
-  renderCharges();
-}
-function findChargeDomain(code){
-  ensureCharges();
-  const list = data.charges.domains || [];
-  let d = list.find(x=>x.code === code);
-  if(!d){
-    d = { code, label: code, budgetEtp: 0, actualEtp: 0 };
-    list.push(d);
-  }
-  return d;
-}
-function updateChargesDomainActual(code,v){
-  const d = findChargeDomain(code);
-  const n = parseFloat(String(v).replace(",", "."));
-  d.actualEtp = isNaN(n) ? 0 : n;
-  renderCharges();
-}
-function renderAll(){
-  renderTexts();
-  renderLists();
-  renderStatus();
-  renderWeather();
-  renderProgress();
-  renderCharges();
-  renderBudgetChargesProjet();
-  renderTimeline();
-  scheduleAutoSave();
-}
-
-/* Éditeur */
-function openEditor(){
-  const e = $("#editor");
-  e.style.display = "flex";
-  $("#e_Nom_du_projet").value   = data.Nom_du_projet || "";
-  $("#e_Date_meteo").value      = toFR(data.Date_meteo || "");
-  $("#e_Description").value     = data.Description || "";
-  $("#e_Id_marche").value       = data.Id_marche || "";
-  $("#e_Direction_porteur").value = data.Direction_porteur || "";
-  $("#e_Phase_projet").value    = data.Phase_projet || "";
-  $("#e_Acteur_CP").value       = data.Acteur_CP || "";
-  $("#e_Acteur_Metier").value   = data.Acteur_Metier || "";
-  $("#e_Acteur_MOE").value      = data.Acteur_MOE || "";
-  $("#e_Acteur_Presta").value   = data.Acteur_Presta || "";
-
-  ensureCharges();
-  if(document.getElementById("e_progress_percent")){
-    document.getElementById("e_progress_percent").value = data.progress && (data.progress.percent ?? 0);
-  }
-  if(document.getElementById("e_progress_label")){
-    document.getElementById("e_progress_label").value = data.progress && (data.progress.label || "");
-  }
-  if(document.getElementById("e_charges_etp_actual")){
-    document.getElementById("e_charges_etp_actual").value = data.charges && data.charges.etpTotal && (data.charges.etpTotal.actual ?? 0);
-  }
-  const dEtudes = findChargeDomain("ETUDES");
-  const dPiia   = findChargeDomain("PIIA");
-  const dTirs   = findChargeDomain("TIRS");
-  const dSsi    = findChargeDomain("SSI");
-  if(document.getElementById("e_charges_etudes_actual")) document.getElementById("e_charges_etudes_actual").value = dEtudes.actualEtp ?? 0;
-  if(document.getElementById("e_charges_piia_actual"))   document.getElementById("e_charges_piia_actual").value   = dPiia.actualEtp ?? 0;
-  if(document.getElementById("e_charges_tirs_actual"))   document.getElementById("e_charges_tirs_actual").value   = dTirs.actualEtp ?? 0;
-  if(document.getElementById("e_charges_ssi_actual"))    document.getElementById("e_charges_ssi_actual").value    = dSsi.actualEtp ?? 0;
-
-  if(document.getElementById("e_budget_amountK")) document.getElementById("e_budget_amountK").value = (data.budget && data.budget.amountK != null) ? data.budget.amountK : 0;
-  if(document.getElementById("e_budget_year"))    document.getElementById("e_budget_year").value    = (data.budget && data.budget.year != null) ? data.budget.year : "";
-  if(document.getElementById("e_budget_comment")) document.getElementById("e_budget_comment").value = (data.budget && data.budget.comment) ? data.budget.comment : "";
-
-  const tEt = (data.chargesProjet && data.chargesProjet.teams || []).find(t=>t.code==="ETUDES");
-  const tPi = (data.chargesProjet && data.chargesProjet.teams || []).find(t=>t.code==="PIIA");
-  const tTi = (data.chargesProjet && data.chargesProjet.teams || []).find(t=>t.code==="TIRS");
-  const tSs = (data.chargesProjet && data.chargesProjet.teams || []).find(t=>t.code==="SSI");
-  if(document.getElementById("e_cp_etudes")) document.getElementById("e_cp_etudes").value = (tEt && tEt.estimated != null) ? tEt.estimated : 0;
-  if(document.getElementById("e_cp_piia"))   document.getElementById("e_cp_piia").value   = (tPi && tPi.estimated != null) ? tPi.estimated : 0;
-  if(document.getElementById("e_cp_tirs"))   document.getElementById("e_cp_tirs").value   = (tTi && tTi.estimated != null) ? tTi.estimated : 0;
-  if(document.getElementById("e_cp_ssi"))    document.getElementById("e_cp_ssi").value    = (tSs && tSs.estimated != null) ? tSs.estimated : 0;
-  if(document.getElementById("e_cp_assumption")) document.getElementById("e_cp_assumption").value = (data.chargesProjet && data.chargesProjet.assumption) ? data.chargesProjet.assumption : "";
-}
-
-function broadcastProjectUpdate() {
-  try {
-    const payload = pivotModel ? pivotModel : data;
-    new BroadcastChannel('gold-project-sync').postMessage({ type: "PROJECT_UPDATED", source: "fiche-projet", payload: payload });
-  } catch(e){}
-}
-
-function closeEditor(apply){
-  $("#editor").style.display = "none";
-  if(apply) {
-    renderAll();
-    autoSaveToLocalStorage();
-    broadcastProjectUpdate();
-  }
-}
-
-function live(k,v){
-  data[k] = v;
-  renderAll();
-  autoSaveToLocalStorage();
-  broadcastProjectUpdate(); 
-}
-
-function liveDate(fr){
-  data.Date_meteo = toISO(fr || "");
-  renderAll();
-  autoSaveToLocalStorage();
-  broadcastProjectUpdate(); 
-}
-
-function normaliseTrendCode(raw){
-  const t = (raw || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  if(t.includes("amelior")) return "amelioration";
-  if(t.includes("degrad"))  return "degradation";
-  if(t.includes("stable"))  return "stable";
-  return "stable";
-}
-
-function applyPivotToMeteo(pivot){
-  pivotModel = pivot;
-
-  const proj = pivot.project || {};
-  const a    = proj.actors || {};
-  const m    = proj.meteo  || {};
-
-  data.Nom_du_projet = proj.title || proj.name || proj.libelle || proj.id || data.Nom_du_projet || "";
-  data.Description       = proj.description || m.resume || data.Description || "";
-  data.Direction_porteur = proj.domain || proj.directionPorteuse || data.Direction_porteur || "";
-  data.Phase_projet      = proj.phaseCourante || data.Phase_projet || "";
-  data.Id_marche         = proj.id || data.Id_marche || "";
-
-  data.Acteur_CP         = proj.owner || a.directeurProjet || data.Acteur_CP || "";
-  data.Acteur_Metier     = a.expertMetier  || data.Acteur_Metier  || "";
-  data.Acteur_MOE        = a.moe           || data.Acteur_MOE     || "";
-  data.Acteur_Presta     = a.prestataire   || data.Acteur_Presta  || "";
-
-  const isoUpd = (proj.updatedAt || "").slice(0,10);
-  data.Date_meteo = isoUpd || data.Date_meteo || new Date().toISOString().slice(0,10);
-
-  const situation = (m.situation || "").toLowerCase();
-  const code = normaliseTrendCode(m.tendance || data.Tendance_code || "stable");
-
-  if(["soleil","soleil_nuages","soleil_nuages_pluie"].includes(situation)){
-    data.Tendance = situation;
-  }else{
-    const color = (m.color || "").toLowerCase();
-    if(color.includes("vert"))        data.Tendance = "soleil";
-    else if(color.includes("rouge"))  data.Tendance = "soleil_nuages_pluie";
-    else                              data.Tendance = "soleil_nuages";
-  }
-
- data.Tendance_code   = code;
-  data.Tendance_detail = m.tendanceCommentaire || m.tendanceDetail || m.tendance || data.Tendance_detail || "";
-
-  data.Statut_planning   = m.statutPlanning   || data.Statut_planning   || "Vert";
-  data.Statut_perimetre  = m.statutPerimetre  || data.Statut_perimetre  || "Vert";
-  data.Statut_ressources = m.statutRessources || data.Statut_ressources || "Vert";
-
-  data.Actions_realisees = Array.isArray(m.actionsRealisees) ? m.actionsRealisees.slice() : (data.Actions_realisees || []);
-  data.Actions_en_cours  = Array.isArray(m.actionsEnCours) ? m.actionsEnCours.slice() : (data.Actions_en_cours || []);
-  data.Points_attention  = Array.isArray(m.pointsAttention) ? m.pointsAttention.slice() : (data.Points_attention || []);
-
-  let actions = [];
-  if(pivot.feuilleDeRoute && Array.isArray(pivot.feuilleDeRoute.actions)){
-    actions = pivot.feuilleDeRoute.actions;
-  }else if(Array.isArray(pivot.phases)){
-    pivot.phases.forEach(ph=>{
-      (ph.tasks || []).forEach(t=>{
-        actions.push({ label: t.title, start: t.start, end: t.end, type: t.type, isKey: t.isKey });
+    ["modalIdee", "modalQualif", "modalIntegration"].forEach(id => {
+      el(id).addEventListener("click", e => {
+        if(e.target === el(id)) el(id).style.display = "none";
       });
     });
-  }
-  data.Planning = actions.map(a=>{
-    const s = (a.start || "").slice(0,10);
-    const e = (a.end   || "").slice(0,10);
-    return { intitule: a.label || a.title || "", debut: s, fin: e || s || "", type: a.type || "period", isKey: !!a.isKey };
-  });
 
-ensureCharges();
-  if(pivot.charges) data.charges = JSON.parse(JSON.stringify(pivot.charges));
-  
-  if(proj.progress){
-    data.progress = { percent: proj.progress.percent ?? 0, label: proj.progress.label || "" };
-  } else if (pivot.progress) {
-    data.progress = { percent: pivot.progress.percent ?? 0, label: pivot.progress.label || "" };
-  }
-  ensureBudgetChargesProjet();
-  if(pivot.budget){
-    const pb = pivot.budget || {};
-    data.budget = {
-      year: (pb.year != null ? pb.year : data.budget.year),
-      currency: pb.currency || data.budget.currency || "EUR",
-      amount: (pb.amount != null ? pb.amount : (data.budget.amount ?? 0)),
-      amountK: (pb.amountK != null ? pb.amountK : ((pb.amount!=null)? Math.round((+pb.amount||0)/1000) : (data.budget.amountK ?? 0))),
-      comment: pb.comment || ""
-    };
-  }
-  if(pivot.chargesProjet){
-    const pc = pivot.chargesProjet || {};
-    data.chargesProjet.unit = pc.unit || data.chargesProjet.unit || "jours";
-    data.chargesProjet.assumption = pc.assumption || "";
-    if(Array.isArray(pc.teams)){
-      data.chargesProjet.teams = pc.teams.map(t=>({
-        code: t.code, label: t.label || t.code, estimated: (t.estimated != null ? t.estimated : 0)
-      }));
-    }
-    data.chargesProjet.totalEstimated = (pc.totalEstimated != null) ? pc.totalEstimated : (data.chargesProjet.teams||[]).reduce((s,t)=>s+(+t.estimated||0),0);
-  }
-
-  renderAll();
-}
-
-function saveJson(){
-  try{
-    try {
-        const raw = localStorage.getItem("currentProjectJson");
-        if(raw) {
-            const parsed = JSON.parse(raw);
-            if(parsed && parsed.project) pivotModel = parsed;
+    window.addEventListener("storage", ev => {
+      if(ev.key === STORAGE_KEY){ GOV = loadGov(); render(); }
+    });
+    try{
+      const bc = new BroadcastChannel("dnsi-gouvernance");
+      bc.onmessage = ev => {
+        if(ev?.data?.type === "GOUVERNANCE_UPDATED" && ev?.data?.source !== "portefeuille"){
+          GOV = loadGov();
+          render();
         }
-    } catch(e) {}
+      };
+    }catch(e){}
 
-    let out;
-    if(pivotModel){
-      syncDataIntoPivot(pivotModel);
-      out = JSON.parse(JSON.stringify(pivotModel));
-      
-      if(!out.project) out.project = {};
-      if(!out.project.meteo) out.project.meteo = {};
-      
-      const tIcon = (data.Tendance || "").toLowerCase();
-      let color;
-      if(tIcon === "soleil")                 color = "vert";
-      else if(tIcon === "soleil_nuages")     color = "orange";
-      else                                   color = "rouge";
-
-     out.project.meteo.situation = data.Tendance || "soleil_nuages";
-      out.project.meteo.tendance  = data.Tendance_code || "stable";
-      out.project.meteo.color     = color;
-      out.project.meteo.resume    = data.Description || out.project.meteo.resume || "";
-      
-      out.project.meteo.statutPlanning   = data.Statut_planning || "Vert";
-      out.project.meteo.statutPerimetre  = data.Statut_perimetre || "Vert";
-      out.project.meteo.statutRessources = data.Statut_ressources || "Vert";
-
-      out.project.meteo.actionsRealisees       = data.Actions_realisees.slice();
-      out.project.meteo.actionsEnCours         = data.Actions_en_cours.slice();
-      out.project.meteo.pointsAttention        = data.Points_attention.slice();
-      out.project.meteo.tendanceDetail         = data.Tendance_detail || out.project.meteo.tendanceDetail || "";
-
-      if(out.meteo) delete out.meteo;
-
-      if(!out.project.actors) out.project.actors = {};
-      out.project.actors.directeurProjet = data.Acteur_CP      || "";
-      out.project.actors.expertMetier    = data.Acteur_Metier  || "";
-      out.project.actors.moe             = data.Acteur_MOE     || "";
-      out.project.actors.prestataire     = data.Acteur_Presta  || "";
-      out.project.phaseCourante          = data.Phase_projet   || out.project.phaseCourante || "";
-      out.project.updatedAt              = new Date().toISOString();
-      
-ensureCharges();
-      if(data.charges) out.charges = JSON.parse(JSON.stringify(data.charges));
-      
-      if(data.progress){
-        if (!out.project.progress) out.project.progress = {};
-        out.project.progress.percent = data.progress.percent || 0;
-        out.project.progress.label = data.progress.label || "";
-        
-        if(out.progress) delete out.progress;
-      }
-
-      ensureBudgetChargesProjet();      out.budget = JSON.parse(JSON.stringify(data.budget || {}));
-      out.chargesProjet = JSON.parse(JSON.stringify(data.chargesProjet || {}));
-
-    }else{
-      out = data;
-    }
-
-    if(pivotModel){ pivotModel = out; }
-    const json = JSON.stringify(out,null,2);
-
+    // Boot + Ouverture directe ?action=new depuis 0. Synthèse V2.7 + PWA
+    render();
     try{
-      localStorage.setItem("currentProjectJson", json);
-      clearAutoSave();
-    }catch(e){
-      console.warn("localStorage non disponible.", e);
-    }
-
-    const blob = new Blob([json],{type:"application/json"});
-    const a = document.createElement("a");
-    const d = (data.Date_meteo || new Date().toISOString().slice(0,10)).replace(/[^0-9-]/g,"");
-    a.href = URL.createObjectURL(blob);
-    a.download = `fiche_projet_${(data.Nom_du_projet || "modele").replace(/[^\w\-]+/g,"-")}_${d}.json`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },0);
-  }catch(e){
-    console.error(e);
-    alert("Téléchargement bloqué ou JSON trop lourd. Enregistre d’abord le fichier en local puis rouvre-le dans le navigateur.");
-  }
-}
-
-function triggerImport(){
-  const i = $("#importInput");
-  i.value = "";
-  i.click();
-}
-function doImport(inp){
-  const f = inp && inp.files && inp.files[0];
-  if(!f) return;
-  const r = new FileReader();
-  r.onload = e => {
-    const text = String(e.target.result || "");
-    try{
-      const parsed = JSON.parse(text);
-      if(parsed && parsed.project && (parsed.phases || parsed.feuilleDeRoute)){
-        applyPivotToMeteo(parsed);
-      }else{
-        pivotModel = null;
-        data = parsed;
-        renderAll();
+      const params = new URLSearchParams(window.location.search);
+      if(params.get("action") === "new"){
+        openModalIdee();
+        if(history && history.replaceState){
+          history.replaceState({}, "", window.location.pathname);
+        }
       }
-      try{
-        const toStore = pivotModel ? pivotModel : data;
-        localStorage.setItem("currentProjectJson", JSON.stringify(toStore));
-      }catch(e){
-        console.warn("localStorage non disponible.", e);
-      }
-      autoSaveToLocalStorage();
-      alert("Modèle importé ✅");
-    }catch(err){
-      console.error(err);
-      if(text.trim().startsWith("<")){
-        alert("Fichier HTML importé au lieu du JSON. Utilise le fichier .json.");
-      }else{
-        alert("JSON invalide.");
-      }
+    }catch(e){}
+
+    if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
     }
-  };
-  r.readAsText(f,"utf-8");
-}
-
-function loadFromPortalIfAny(){
-  try{
-    const params = new URLSearchParams(window.location.search);
-    const fromPortal = params.get("from") === "portal" || params.get("from") === "fiche-projet";
-    if(!fromPortal) return false;
-
-    const raw = localStorage.getItem("currentProjectJson");
-    if(!raw){
-      console.warn("currentProjectJson absent du localStorage.");
-      return false;
-    }
-
-    const parsed = JSON.parse(raw);
-
-    if(parsed && parsed.project && (parsed.phases || parsed.feuilleDeRoute)){
-      applyPivotToMeteo(parsed);
-    }else{
-      pivotModel = null;
-      data = parsed;
-      renderAll();
-    }
-    return true;
-  }catch(e){
-    console.error("Erreur chargement portail :", e);
-    return false;
-  }
-}
-
-function updateBudgetAmountK(v){
-  ensureCharges();
-  const n = parseFloat(v);
-  const k = isFinite(n) ? n : 0;
-  if(!data.budget) data.budget = { year: (data.charges && data.charges.referenceYear) || 2026, currency:"EUR", amount:0, amountK:0, comment:"" };
-  data.budget.amountK = k;
-  data.budget.amount  = Math.round(k * 1000);
-  renderBudgetChargesProjet();
-}
-
-function updateBudgetYear(v){
-  ensureCharges();
-  const n = parseInt(v,10);
-  if(!data.budget) data.budget = { year: 2026, currency:"EUR", amount:0, amountK:0, comment:"" };
-  data.budget.year = isFinite(n) ? n : (data.budget.year || 2026);
-}
-
-function updateBudgetComment(v){
-  ensureCharges();
-  if(!data.budget) data.budget = { year: 2026, currency:"EUR", amount:0, amountK:0, comment:"" };
-  data.budget.comment = (v || "").toString();
-  renderBudgetChargesProjet();
-}
-
-function updateChargesProjetTeam(code, v){
-  const n = parseFloat(v);
-  const val = isFinite(n) ? n : 0;
-  if(!data.chargesProjet) data.chargesProjet = { unit:"jours", assumption:"", teams:[], totalEstimated:0 };
-  if(!Array.isArray(data.chargesProjet.teams)) data.chargesProjet.teams = [];
-  let t = data.chargesProjet.teams.find(x=>x.code===code);
-  if(!t){
-    const labels = { ETUDES:"Études / Pilotage", PIIA:"PIIA / Données / Interfaces", TIRS:"TIRS / Infra / Réseau", SSI:"SSI" };
-    t = { code, label: labels[code] || code, estimated: 0 };
-    data.chargesProjet.teams.push(t);
-  }
-  t.estimated = val;
-  data.chargesProjet.totalEstimated = data.chargesProjet.teams.reduce((s,x)=>s + (+x.estimated||0), 0);
-  renderBudgetChargesProjet();
-}
-
-function updateChargesProjetAssumption(v){
-  if(!data.chargesProjet) data.chargesProjet = { unit:"jours", assumption:"", teams:[], totalEstimated:0 };
-  data.chargesProjet.assumption = (v || "").toString();
-  renderBudgetChargesProjet();
-}
-
-function refreshFromStorage(){
-  try{
-    const raw = localStorage.getItem("currentProjectJson");
-    if(!raw){ alert("Aucun projet en mémoire (localStorage)."); return; }
-    const parsed = JSON.parse(raw);
-    if(parsed && parsed.project && (parsed.phases || parsed.feuilleDeRoute)){
-      applyPivotToMeteo(parsed);
-    }else{
-      pivotModel = null;
-      data = parsed;
-      renderAll();
-    }
-    updateSentinelleUI();
-    alert("Projet réactualisé ✅");
-  }catch(e){
-    console.error(e);
-    alert("Impossible de réactualiser : projet en mémoire invalide.");
-  }
-}
-
-function projectIsReady(){
-  if(pivotModel) return true;
-  const descOK = data.Description && data.Description.trim().length > 10;
-  return !!descOK;
-}
-
-function openSupport(target, url){
-  if(!projectIsReady()){
-    alert("Complétez d’abord la présentation du projet (ou importez un JSON existant) avant d’ouvrir ce support.");
-    return;
-  }
-  try{
-    const existing = localStorage.getItem("currentProjectJson");
-    if(!existing){
-      const toStore = pivotModel ? pivotModel : data;
-      localStorage.setItem("currentProjectJson", JSON.stringify(toStore));
-    }
-  }catch(e){}
-  window.open(url + "?from=portal", "_blank");
-}
-
-function openFeuilleDeRoute(){ openSupport("fiche-projet","GOLD_FeuilleDeRoute.html"); }
-function openMeteo(){ openSupport("fiche-projet","GOLD_FicheMeteo.html"); }
-function openRaci(){ openSupport("fiche-projet","GOLD_RACI.html"); }
-function openPlanningDetaille(){ openSupport("fiche-projet","GOLD_Planning.html"); }
-function openConges(){ openSupport("fiche-projet","GOLD_Conges.html"); }
-
-/* ==========================================
-   ROUTEUR DYNAMIQUE (Deep Linking GitHub)
-   ========================================== */
-async function loadProjectFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const projectId = params.get("id");
-  
-  if (!projectId) {
-    return false;
-  }
-
-  showToast(`📡 Chargement de ${projectId} depuis GitHub...`);
-
-  // URL du fichier brut sur GitHub
-  const repoOwner = "sryzek"; 
-  const repoName = "Support-Projets"; // Assure-toi que ce nom est exact (sensible à la casse)
-  const jsonUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/pivots/${projectId}.json`;
-
-  try {
-    const response = await fetch(jsonUrl, { cache: "no-store" });
-    
-    if (!response.ok) {
-      throw new Error(`Fichier ${projectId}.json introuvable sur le dépôt ${repoName}.`);
-    }
-
-    const projectJson = await response.json();
-
-    if (projectJson && (projectJson.project || projectJson.phases || projectJson.feuilleDeRoute)) {
-      applyPivotToMeteo(projectJson);
-      
-      // Stockage local pour que la Météo et le RACI puissent le lire
-      localStorage.setItem("currentProjectJson", JSON.stringify(pivotModel || data));
-      
-      showToast(`✅ Projet ${projectId} chargé avec succès !`);
-      return true;
-    }
-  } catch (error) {
-    console.error("Erreur de routage :", error);
-    showToast(`❌ Impossible de charger ${projectId}.`);
-  }
-  return false;
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  // 1. On tente d'abord de charger depuis l'URL dynamique
-  const loadedFromUrl = await loadProjectFromUrl();
-  
-  if (!loadedFromUrl) {
-    // 2. Si pas d'URL (ou échec), comportement classique
-    const loaded = loadFromPortalIfAny();
-    
-    if(loaded){
-      try{ clearAutoSave(); }catch(e){}
-      if(pivotModel && pivotModel.config) pivotModel.config.sentinelleActive = false;
-      updateSentinelleUI();
-      return;
-    }
-    
-    try{ restoreAutoSaveIfAny(); }catch(e){}
-    renderAll();
-    
-    if(pivotModel && pivotModel.config) pivotModel.config.sentinelleActive = false;
-    updateSentinelleUI();
-  }
-});
-</script>
+  </script>
 </body>
 </html>
+'''
+
+fn_pf = "Gouvernance - 2. Portefeuille.html"
+with open(fn_pf, "w", encoding="utf-8") as f:
+    f.write(html_portefeuille)
+
+import re
+ids_defined = set(re.findall(r'id=["\']([^"\']+)["\']', html_portefeuille))
+script = re.search(r'<script>(.*?)</script>', html_portefeuille, re.S).group(1)
+ids_used = set(re.findall(r'el\(["\']([^"\']+)["\']\)', script))
+missing = ids_used - ids_defined
+print(f"Created {fn_pf}: {len(html_portefeuille)} chars, {len(html_portefeuille.splitlines())} lines")
+print("Missing DOM IDs:", missing)
+print("Script open/close:", html_portefeuille.count("<script"), html_portefeuille.count("</script>"))
+print("Has cite tag?:", "[cite:" in html_portefeuille)
+print("Has Gestion-supports-projet- URL?:", "https://sryzek.github.io/Gestion-supports-projet-/" in html_portefeuille)
